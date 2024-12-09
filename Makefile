@@ -40,7 +40,7 @@ deps:
 	go mod vendor
 
 build:
-	go build -o ./bin/authbase ./main.go
+	go build -o ./bin/authbase ./main/main.go
 
 clean:
 	@echo "Cleaning..."

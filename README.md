@@ -1,4 +1,4 @@
-# authbase is a simple authentication library.
+# authbase is a simple authentication service.
 
 ## Goal
 
