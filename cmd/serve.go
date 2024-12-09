@@ -35,9 +35,7 @@ var serveCmd = &cobra.Command{
 
 // init function to add flags to serveCmd
 func init() {
-	rootCmd.AddCommand(serveCmd)
 	var grpcPort, httpPort string
-
 	serveCmd.Flags().StringVar(&grpcPort, "gp", "7000", "Port to run grpc server on")
 	serveCmd.Flags().StringVar(&httpPort, "hp", "7001", "Port to run http server on")
 }

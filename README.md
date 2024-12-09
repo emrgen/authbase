@@ -71,7 +71,8 @@ authbase org migrate --org=org
 ############################################
 
 # Add a oauth provider
-authbase org provider add --name=org --provider=google --client-id=client-id --client-secret=client-secret
+# adding a prover automatically enables the strategy=oauth2
+authbase provider add --name=org --provider=google --client-id=client-id --client-secret=client-secret
 
 # Enable login strategy
 authbase strategy enable --org=org --strategy=password

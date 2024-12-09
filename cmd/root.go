@@ -25,4 +25,7 @@ func init() {
 	rootCmd.AddCommand(orgCommand)
 	rootCmd.AddCommand(userCommand)
 	rootCmd.AddCommand(memberCommand)
+	rootCmd.AddCommand(configCommand)
+	rootCmd.AddCommand(tokenCommand)
+	rootCmd.AddCommand(strategyCommand)
 }
