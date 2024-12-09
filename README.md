@@ -45,26 +45,26 @@ authbase token set --token=token --org=org-id
 ############################################
 
 # Create an organization
-authbase org create --name=org
+authbase org create --org=org
 
 # Get an organization
-authbase org get --name=org
+authbase org get --org=org
 
 # List all organizations
 authbase org list --limit=10 --offset=0
 
 # Delete an organization
-authbase org delete --name=org
+authbase org delete --org=org
 
 # Add database to an organization 
 # with separate db set, on migrate the organization will be migrated to the database
-authbase org db set --name=org --db-url=postgres://user:password@localhost:5432/db
+authbase org db set --org=org --db-url=postgres://user:password@localhost:5432/db
 
 # Add migration db to an organization
-authbase org migration db set --name=org --db-url=postgres://user:password@localhost:5432/db
+authbase org migration db set --org=org --db-url=postgres://user:password@localhost:5432/db
 
 # Migrate an organization
-authbase org migrate --name=org
+authbase org migrate --org=org
 
 ############################################
 # Provider commands
@@ -74,37 +74,37 @@ authbase org migrate --name=org
 authbase org provider add --name=org --provider=google --client-id=client-id --client-secret=client-secret
 
 # Enable login strategy
-authbase org strategy enable --name=org --strategy=password
-authbase org strategy enable --name=org --strategy=oath2
+authbase strategy enable --org=org --strategy=password
+authbase strategy enable --org=org --strategy=oath2
 
 # Disable login strategy
-authbase org strategy disable --name=org --strategy=password
-authbase org strategy disable --name=org --strategy=oath2
+authbase strategy disable --org=org --strategy=password
+authbase strategy disable --org=org --strategy=oath2
 
 # Get a provider
-authbase org provider get --name=org --provider=google
+authbase provider get --org=org --provider=google
 
 # List all providers
-authbase org provider list --name=org
+authbase provider list --org=org
 
 # Remove a oauth provider
-authbase org provider remove --name=org --provider=google
+authbase provider remove --org=org --provider=google
 
 ############################################
 # Config commands
 ############################################
 
 # Set a email config
-authbase org config code set --org=org --medium=email --value=smtp://user:password@localhost:587
+authbase config code set --org=org --medium=email --value=smtp://user:password@localhost:587
 
 # Get a email config
-authbase org config code get --org=org --medium=email
+authbase config code get --org=org --medium=email
 
 # Remove a email config
-authbase org config code remove --org=org --medium=email
+authbase config code remove --org=org --medium=email
 
 # Set otp config
-authbase org config opt set --org=org --key=phone --value=twilio://account-sid:auth-token@localhost:8080
+authbase config opt set --org=org --key=phone --value=twilio://account-sid:auth-token@localhost:8080
 
 ############################################
 # Member commands
