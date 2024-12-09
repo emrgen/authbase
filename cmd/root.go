@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/sirupsen/logrus"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -17,7 +18,11 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+
 }
+
+var Token string
+var Organization string
 
 func init() {
 	rootCmd.AddCommand(dbCmd)
@@ -28,4 +33,15 @@ func init() {
 	rootCmd.AddCommand(configCommand)
 	rootCmd.AddCommand(tokenCommand)
 	rootCmd.AddCommand(strategyCommand)
+	rootCmd.AddCommand(contextCommand)
+
+	ctx := readContext()
+	if ctx.Organization != "" {
+		rootCmd.PersistentFlags().StringVarP(&Organization, "organization", "o", ctx.Organization, "organization name")
+	}
+
+	if ctx.Token != "" {
+		logrus.Info("token: ", ctx.Token)
+		rootCmd.PersistentFlags().StringVarP(&Token, "token", "t", ctx.Token, "token")
+	}
 }

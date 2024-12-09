@@ -38,23 +38,23 @@ authbase config code set --medium=email --value=smtp://user:password@localhost:5
 authbase token create --org=org-id --user=admin --password=admin
 
 # Set context
-authbase token set --token=token --org=org-id
+authbase context set --token=token --org=org-id
 
 ############################################
 # Organization commands
 ############################################
 
 # Create an organization
-authbase org create --org=org
+authbase org create --name=org
 
 # Get an organization
-authbase org get --org=org
+authbase org get --name=org
 
 # List all organizations
 authbase org list --limit=10 --offset=0
 
 # Delete an organization
-authbase org delete --org=org
+authbase org delete --name=org
 
 # Add database to an organization 
 # with separate db set, on migrate the organization will be migrated to the database
