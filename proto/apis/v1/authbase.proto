@@ -212,3 +212,265 @@ service UserService {
     };
   }
 }
+
+message CreateOrganizationRequest {
+  string name = 1 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+}
+
+message CreateOrganizationResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+}
+
+message Organization {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+
+  string owner_id = 10 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message GetOrganizationRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetOrganizationResponse {
+  Organization organization = 1;
+}
+
+message ListOrganizationsRequest {
+  Page page = 1;
+}
+
+message ListOrganizationsResponse {
+  repeated Organization organizations = 1;
+}
+
+message UpdateOrganizationRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+}
+
+message UpdateOrganizationResponse {
+  Organization organization = 1;
+}
+
+message DeleteOrganizationRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteOrganizationResponse {
+  string message = 1;
+}
+
+message AddOauthProviderRequest {
+  string provider = 1;
+  string client_id = 2;
+  string client_secret = 3;
+  string organization_id = 4 [(validate.rules).string.uuid = true];
+}
+
+message AddOauthProviderResponse {
+  string message = 1;
+}
+
+message GetOauthProviderRequest {
+  string provider = 1;
+  string organization_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetOauthProviderResponse {
+  string client_id = 1;
+  string client_secret = 2;
+}
+
+message ListOauthProvidersRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListOauthProvidersResponse {
+  repeated string providers = 1;
+}
+
+message UpdateOauthProviderRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string provider = 2;
+  string client_id = 3;
+  string client_secret = 4;
+}
+
+message UpdateOauthProviderResponse {
+  string message = 1;
+}
+
+message DeleteOauthProviderRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string provider = 2;
+}
+
+message DeleteOauthProviderResponse {
+  string message = 1;
+}
+
+message ListOrganizationUsersRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message OrganizationUser {
+  User user = 1;
+  repeated Permission permissions = 2;
+}
+
+message ListOrganizationUsersResponse {
+  repeated OrganizationUser users = 1;
+}
+
+service OrganizationService {
+  rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse) {
+    option (google.api.http) = {
+      post: "/v1/organizations"
+      body: "*"
+    };
+  }
+
+  rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations/{id}"
+    };
+  }
+
+  rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations"
+    };
+  }
+
+  rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationResponse) {
+    option (google.api.http) = {
+      put: "/v1/organizations/{id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse) {
+    option (google.api.http) = {
+      delete: "/v1/organizations/{id}"
+    };
+  }
+
+  rpc AddOauthProvider(AddOauthProviderRequest) returns (AddOauthProviderResponse) {
+    option (google.api.http) = {
+      post: "/v1/organizations/{organization_id}/oauth-providers"
+      body: "*"
+    };
+  }
+
+  rpc GetOauthProvider(GetOauthProviderRequest) returns (GetOauthProviderResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations/{organization_id}/oauth-providers/{provider}"
+    };
+  }
+
+  rpc ListOauthProviders(ListOauthProvidersRequest) returns (ListOauthProvidersResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations/{organization_id}/oauth-providers"
+    };
+  }
+
+  rpc UpdateOauthProvider(UpdateOauthProviderRequest) returns (UpdateOauthProviderResponse) {
+    option (google.api.http) = {
+      put: "/v1/organizations/{organization_id}/oauth-providers/{provider}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
+    option (google.api.http) = {
+      delete: "/v1/organizations/{id}/oauth-providers/{provider}"
+    };
+  }
+
+  // List users of an organization with their permissions
+  rpc ListOrganizationUsers(ListOrganizationUsersRequest) returns (ListOrganizationUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations/{organization_id}/users"
+    };
+  }
+}
+
+enum Permission {
+  NONE = 0;
+  READ = 1;
+  WRITE = 2;
+}
+
+message CreatePermissionRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permissions = 3;
+}
+
+message CreatePermissionResponse {
+  string message = 1;
+}
+
+message GetPermissionRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetPermissionResponse {
+  repeated Permission permissions = 1;
+}
+
+message UpdatePermissionRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permissions = 3;
+}
+
+message UpdatePermissionResponse {
+  string message = 1;
+}
+
+message DeletePermissionRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeletePermissionResponse {
+  string message = 1;
+}
+
+service PermissionService {
+  rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse) {
+    option (google.api.http) = {
+      post: "/v1/permissions"
+      body: "*"
+    };
+  }
+
+  // Get permissions of a user in an organization
+  rpc GetPermission(GetPermissionRequest) returns (GetPermissionResponse) {
+    option (google.api.http) = {
+      get: "/v1/permissions/organizations/{organization_id}/users/{user_id}"
+    };
+  }
+
+  // Update permissions of a user in an organization
+  rpc UpdatePermission(UpdatePermissionRequest) returns (UpdatePermissionResponse) {
+    option (google.api.http) = {
+      put: "/v1/permissions/organizations/{organization_id}/users/{user_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse) {
+    option (google.api.http) = {
+      delete: "/v1/permissions/organizations/{organization_id}/users/{user_id}"
+    };
+  }
+}
