@@ -314,18 +314,18 @@ message DeleteOauthProviderResponse {
   string message = 1;
 }
 
-message ListOrganizationUsersRequest {
+message ListOrganizationMemberRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   Page page = 2;
 }
 
-message OrganizationUser {
+message OrganizationMember {
   User user = 1;
   repeated Permission permissions = 2;
 }
 
-message ListOrganizationUsersResponse {
-  repeated OrganizationUser users = 1;
+message ListOrganizationMemberResponse {
+  repeated OrganizationMember users = 1;
 }
 
 service OrganizationService {
@@ -394,9 +394,9 @@ service OrganizationService {
   }
 
   // List users of an organization with their permissions
-  rpc ListOrganizationUsers(ListOrganizationUsersRequest) returns (ListOrganizationUsersResponse) {
+  rpc ListOrganizationMember(ListOrganizationMemberRequest) returns (ListOrganizationMemberResponse) {
     option (google.api.http) = {
-      get: "/v1/organizations/{organization_id}/users"
+      get: "/v1/organizations/{organization_id}/members"
     };
   }
 }
@@ -409,7 +409,7 @@ enum Permission {
 
 message CreatePermissionRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permissions = 3;
 }
 
@@ -419,7 +419,7 @@ message CreatePermissionResponse {
 
 message GetPermissionRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message GetPermissionResponse {
@@ -428,7 +428,7 @@ message GetPermissionResponse {
 
 message UpdatePermissionRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permissions = 3;
 }
 
@@ -438,7 +438,7 @@ message UpdatePermissionResponse {
 
 message DeletePermissionRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message DeletePermissionResponse {
@@ -456,21 +456,21 @@ service PermissionService {
   // Get permissions of a user in an organization
   rpc GetPermission(GetPermissionRequest) returns (GetPermissionResponse) {
     option (google.api.http) = {
-      get: "/v1/permissions/organizations/{organization_id}/users/{user_id}"
+      get: "/v1/permissions/organizations/{organization_id}/member/{member_id}"
     };
   }
 
   // Update permissions of a user in an organization
   rpc UpdatePermission(UpdatePermissionRequest) returns (UpdatePermissionResponse) {
     option (google.api.http) = {
-      put: "/v1/permissions/organizations/{organization_id}/users/{user_id}"
+      put: "/v1/permissions/organizations/{organization_id}/member/{member_id}"
       body: "*"
     };
   }
 
   rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse) {
     option (google.api.http) = {
-      delete: "/v1/permissions/organizations/{organization_id}/users/{user_id}"
+      delete: "/v1/permissions/organizations/{organization_id}/member/{member_id}"
     };
   }
 }
