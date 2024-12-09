@@ -7,5 +7,21 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := db.AutoMigrate(&RefreshToken{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&Permission{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&Provider{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&Organization{}); err != nil {
+		return err
+	}
+
 	return nil
 }

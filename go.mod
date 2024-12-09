@@ -5,7 +5,9 @@ go 1.23.0
 require (
 	github.com/black-06/grpc-gateway-file v0.1.2
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gobuffalo/packr v1.30.1
+	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0
 	github.com/joho/godotenv v1.5.1
@@ -24,6 +26,8 @@ require (
 replace github.com/emrgen/tinydoc => ../tinydoc
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/gobuffalo/envy v1.10.2 // indirect
 	github.com/gobuffalo/packd v1.0.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

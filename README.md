@@ -26,7 +26,13 @@ make air
 
 ```bash
 # Create master organization. (The first organization is the master organization)
-authbase org create --name=master --user=admin --password=admin
+# if the password is provided, the email verification will not be required strictly but need to verify later.
+# without the password, if the email is not verified in 10 minutes, the organization will be deleted.
+# NOTE: need to set the email config before creating the organization.
+authbase org create --name=master --user=admin --email=email [--password=password] [--verify=true]
+
+# in case there is no org no need to set the org flag
+authbase config code set --medium=email --value=smtp://user:password@localhost:587
 
 # Create a user token
 authbase token create --org=org-id --user=admin --password=admin
@@ -89,16 +95,16 @@ authbase org provider remove --name=org --provider=google
 ############################################
 
 # Set a email config
-authbase org config code set --name=org --medium=email --value=smtp://user:password@localhost:587
+authbase org config code set --org=org --medium=email --value=smtp://user:password@localhost:587
 
 # Get a email config
-authbase org config code get --name=org --medium=email
+authbase org config code get --org=org --medium=email
 
 # Remove a email config
-authbase org config code remove --name=org --medium=email
+authbase org config code remove --org=org --medium=email
 
 # Set otp config
-authbase org config opt set --name=org --key=phone --value=twilio://account-sid:auth-token@localhost:8080
+authbase org config opt set --org=org --key=phone --value=twilio://account-sid:auth-token@localhost:8080
 
 ############################################
 # Member commands
@@ -177,9 +183,11 @@ func main() {
         log.Fatal(err)
     }
 
-    // Create a new organization.
+    // Create a new organization. 
     org, err := client.CreateOrganization(context.Background(), &protos.Organization{
         Name: "master",
+        Username: "admin",
+        Email:    "example@mail.com",
     })
     if err != nil {
         log.Fatal(err)
