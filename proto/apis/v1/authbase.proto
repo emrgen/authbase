@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package apis.v1;
+
+option go_package = "github.com/emrgen/authbase/proto/v1";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+message User {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string name = 3;
+
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message Page {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+message SignupRequest {
+  string email = 1 [(validate.rules).string.email = true];
+  string password = 2 [(validate.rules).string.min_len = 8, (validate.rules).string.max_len = 64];
+  string name = 3 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+}
+
+message Tokens {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+message SignupResponse {
+  optional Tokens tokens = 1;
+  bool email_verification_required = 2;
+}
+
+message LoginRequest {
+  string email = 1 [(validate.rules).string.email = true];
+  string password = 2 [(validate.rules).string.min_len = 8, (validate.rules).string.max_len = 64];
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message VerifyEmailResponse {
+  string message = 1;
+}
+
+service AuthService {
+  rpc Signup(SignupRequest) returns (SignupResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/signup"
+      body: "*"
+    };
+  }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/login"
+      body: "*"
+    };
+  }
+
+  rpc Refresh(RefreshRequest) returns (RefreshResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/refresh"
+      body: "*"
+    };
+  }
+
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/verify-email"
+      body: "*"
+    };
+  }
+}
+
+message AuthorizeRequest {
+  string provider = 1;
+  string organization = 2;
+  optional string access_token = 3;
+}
+
+message AuthorizeResponse {
+  optional Tokens tokens = 1;
+}
+
+message CallbackRequest {
+  string code = 1;
+  string state = 3;
+}
+
+message CallbackResponse {
+  optional Tokens tokens = 1;
+}
+
+message TokenRequest {
+  string code = 1;
+  string provider = 2;
+  string organization = 3;
+  string state = 4;
+}
+
+message TokenResponse {
+  Tokens tokens = 1;
+}
+
+service OauthService {
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {
+    option (google.api.http) = {
+      post: "/v1/oauth/authorize"
+      body: "*"
+    };
+  }
+
+  rpc Token(TokenRequest) returns (TokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/oauth/token"
+      body: "*"
+    };
+  }
+}
