@@ -39,7 +39,7 @@ deps:
 	go mod tidy
 	go mod vendor
 
-build:
+build: protoc
 	go build -o ./bin/authbase ./main/main.go
 
 clean:

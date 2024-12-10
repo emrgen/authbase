@@ -30,6 +30,25 @@ func createOrgCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create org",
 		Run: func(cmd *cobra.Command, args []string) {
+			if name == "" {
+				logrus.Errorf("missing required flags: --name")
+				return
+			}
+
+			if email == "" {
+				logrus.Errorf("missing required flags: --email")
+				return
+			}
+
+			if username == "" {
+				logrus.Errorf("missing required flags: --username")
+				return
+			}
+
+			if password == "" {
+				logrus.Infof("creating organization without password")
+			}
+
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
@@ -38,6 +57,7 @@ func createOrgCommand() *cobra.Command {
 
 			organization, err := client.CreateOrganization(context.Background(), &v1.CreateOrganizationRequest{
 				Name:     name,
+				Username: username,
 				Email:    email,
 				Password: &password,
 			})
