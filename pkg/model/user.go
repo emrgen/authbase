@@ -9,9 +9,11 @@ import (
 type User struct {
 	gorm.Model
 	ID             string `gorm:"primaryKey;uuid;not null;"`
-	Name           string `gorm:"not null"`
+	Username       string `gorm:"not null"`
 	Email          string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Password       string // hash of the password
+	SassAdmin      bool   `gorm:"not null;default:false"`
+	Member         bool   `gorm:"not null;default:false"`
 	OrganizationID string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Organization   *Organization
 	Verified       bool `gorm:"not null;default:false"`

@@ -6,8 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// AuthBaseStore is the interface for interacting with the database.
 type AuthBaseStore interface {
-	UserSore
+	UserStore
 	OrganizationStore
 	PermissionStore
 	ProviderStore
@@ -16,20 +17,23 @@ type AuthBaseStore interface {
 	Transaction(func(AuthBaseStore) error) error
 }
 
+// OrganizationStore is the interface for interacting with the organization database.
 type OrganizationStore interface {
 	// CreateOrganization creates a new organization in the database.
 	CreateOrganization(ctx context.Context, org *model.Organization) error
 	// GetOrganizationByID retrieves an organization by its ID.
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error)
 	// ListOrganizations retrieves a list of organizations.
-	ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, error)
+	ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, int, error)
 	// UpdateOrganization updates an organization in the database.
 	UpdateOrganization(ctx context.Context, org *model.Organization) error
 	// DeleteOrganization deletes an organization from the database.
 	DeleteOrganization(ctx context.Context, id uuid.UUID) error
 }
 
-type UserSore interface {
+// UserStore is the interface for interacting with the user database.
+// User can be a member or an end user.
+type UserStore interface {
 	// CreateUser creates a new user in the database.
 	CreateUser(ctx context.Context, user *model.User) error
 	// GetUserByEmail retrieves a user by their email address.
@@ -50,6 +54,7 @@ type UserSore interface {
 	VerifyUser(ctx context.Context, id uuid.UUID) error
 }
 
+// PermissionStore is the interface for interacting with the permission database.
 type PermissionStore interface {
 	// CreatePermission creates a new permission in the database.
 	CreatePermission(ctx context.Context, permission *model.Permission) error
@@ -63,6 +68,7 @@ type PermissionStore interface {
 	DeletePermission(ctx context.Context, orgID, userID uuid.UUID) error
 }
 
+// ProviderStore is the interface for interacting with the provider database.
 type ProviderStore interface {
 	// CreateProvider creates a new provider in the database.
 	CreateProvider(ctx context.Context, provider *model.Provider) error
@@ -76,6 +82,7 @@ type ProviderStore interface {
 	DeleteProvider(ctx context.Context, id uuid.UUID) error
 }
 
+// RefreshTokenStore is the interface for interacting with the refresh token database.
 type RefreshTokenStore interface {
 	// CreateRefreshToken creates a new refresh token in the database.
 	CreateRefreshToken(ctx context.Context, token *model.RefreshToken) error

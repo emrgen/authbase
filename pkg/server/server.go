@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/emrgen/authbase/pkg/cache"
+	"github.com/emrgen/authbase/pkg/config"
+	"github.com/emrgen/authbase/pkg/service"
 	"net"
 	"net/http"
 	"os"
@@ -50,8 +53,8 @@ func Start(grpcPort, httpPort string) error {
 	grpcPort = ":" + grpcPort
 	httpPort = ":" + httpPort
 
-	//cnf := config.LoadConfig()
-	//rdb := config.GetDb(cnf)
+	rdb := config.GetDB()
+	redis := cache.NewRedisClient()
 
 	gl, err := net.Listen("tcp", grpcPort)
 	if err != nil {
@@ -91,6 +94,7 @@ func Start(grpcPort, httpPort string) error {
 	endpoint := "localhost" + grpcPort
 
 	// Register the grpc server
+	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(rdb, redis))
 	//v1.RegisterQuizServiceServer(grpcServer, service.NewQuizService(rdb, quizCache))
 
 	// Register the rest gateway

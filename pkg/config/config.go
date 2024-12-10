@@ -23,6 +23,7 @@ type Config struct {
 type DBConfig struct {
 	Type             string
 	ConnectionString string
+	FilePath         string
 }
 
 // FromEnv loads the configuration from the environment variables
@@ -32,19 +33,13 @@ func FromEnv() (*Config, error) {
 		env = "development"
 	}
 
-	dbType := os.Getenv("DB_TYPE")
-	if dbType == "" {
-		dbType = "sqlite3"
-	}
-
-	dbConnectionString := os.Getenv("DB_CONNECTION_STRING")
-	if dbConnectionString == "" {
-		dbConnectionString = "authbase.db"
-	}
-
-	dbConfig := &DBConfig{
-		Type:             dbType,
-		ConnectionString: dbConnectionString,
+	dbConfig := &DBConfig{}
+	dbConfig.Type = os.Getenv("DB_TYPE")
+	if dbConfig.Type == "" || dbConfig.Type == "sqlite" {
+		dbConfig.Type = "sqlite"
+		dbConfig.FilePath = "./.tmp/db/authbase.db"
+	} else {
+		dbConfig.ConnectionString = os.Getenv("DB_CONNECTION_STRING")
 	}
 
 	config := &Config{

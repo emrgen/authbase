@@ -9,4 +9,5 @@ type Organization struct {
 	OwnerID string `gorm:"not null"`
 	Owner   *User  `gorm:"foreignKey:OwnerID"`
 	Config  string `gorm:"type:json"`
+	Master  bool   `gorm:"not null;default:false"`
 }

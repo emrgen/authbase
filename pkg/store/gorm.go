@@ -13,6 +13,10 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func NewGormStore(db *gorm.DB) *GormStore {
+	return &GormStore{db: db}
+}
+
 func (g *GormStore) CreateUser(ctx context.Context, user *model.User) error {
 	return g.db.Create(user).Error
 }
@@ -69,10 +73,15 @@ func (g *GormStore) GetOrganizationByID(ctx context.Context, id uuid.UUID) (*mod
 	return &org, err
 }
 
-func (g *GormStore) ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, error) {
+func (g *GormStore) ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, int, error) {
 	var orgs []*model.Organization
-	err := g.db.Limit(perPage).Offset(page * perPage).Find(&orgs).Error
-	return orgs, err
+	var total int
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		return g.db.Limit(perPage).Offset(page * perPage).Find(&orgs).Error
+	})
+
+	return orgs, total, err
 }
 
 func (g *GormStore) UpdateOrganization(ctx context.Context, org *model.Organization) error {

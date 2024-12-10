@@ -23,6 +23,12 @@ message Page {
   int32 size = 2;
 }
 
+message Meta {
+  int32 total = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
 message SignupRequest {
   string email = 1 [(validate.rules).string.email = true];
   string password = 2 [(validate.rules).string.min_len = 8, (validate.rules).string.max_len = 64];
@@ -218,6 +224,7 @@ message CreateOrganizationRequest {
   string username = 2 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
   string email = 3 [(validate.rules).string.email = true];
   optional string password = 4 [(validate.rules).string.min_len = 8, (validate.rules).string.max_len = 64];
+  optional bool verify_email = 5;
 }
 
 message CreateOrganizationResponse {
@@ -248,6 +255,7 @@ message ListOrganizationsRequest {
 
 message ListOrganizationsResponse {
   repeated Organization organizations = 1;
+  Meta meta = 2;
 }
 
 message UpdateOrganizationRequest {
@@ -317,20 +325,6 @@ message DeleteOauthProviderResponse {
   string message = 1;
 }
 
-message ListOrganizationMemberRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
-  Page page = 2;
-}
-
-message OrganizationMember {
-  User user = 1;
-  repeated Permission permissions = 2;
-}
-
-message ListOrganizationMemberResponse {
-  repeated OrganizationMember users = 1;
-}
-
 service OrganizationService {
   rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse) {
     option (google.api.http) = {
@@ -395,11 +389,92 @@ service OrganizationService {
       delete: "/v1/organizations/{id}/oauth-providers/{provider}"
     };
   }
+}
 
-  // List users of an organization with their permissions
-  rpc ListOrganizationMember(ListOrganizationMemberRequest) returns (ListOrganizationMemberResponse) {
+message Member {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string name = 3;
+  repeated Permission permissions = 4;
+}
+
+message CreateMemberRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  repeated Permission permissions = 3;
+}
+
+message CreateMemberResponse {
+  string message = 1;
+}
+
+message GetMemberRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetMemberResponse {
+  Member member = 1;
+}
+
+message ListMemberRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListMemberResponse {
+  repeated Member members = 1;
+}
+
+message UpdateMemberRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permissions = 3;
+}
+
+message UpdateMemberResponse {
+  string message = 1;
+}
+
+message DeleteMemberRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeleteMemberResponse {
+  string message = 1;
+}
+
+service MemberService {
+  rpc CreateMember(CreateMemberRequest) returns (CreateMemberResponse) {
+    option (google.api.http) = {
+      post: "/v1/organizations/{organization_id}/members"
+      body: "*"
+    };
+  }
+
+  rpc GetMember(GetMemberRequest) returns (GetMemberResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations/{organization_id}/members/{member_id}"
+    };
+  }
+
+  rpc ListMember(ListMemberRequest) returns (ListMemberResponse) {
     option (google.api.http) = {
       get: "/v1/organizations/{organization_id}/members"
+    };
+  }
+
+  rpc UpdateMember(UpdateMemberRequest) returns (UpdateMemberResponse) {
+    option (google.api.http) = {
+      put: "/v1/organizations/{organization_id}/members/{member_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteMember(DeleteMemberRequest) returns (DeleteMemberResponse) {
+    option (google.api.http) = {
+      delete: "/v1/members/organizations/{organization_id}/members/{member_id}"
     };
   }
 }
@@ -451,7 +526,7 @@ message DeletePermissionResponse {
 service PermissionService {
   rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse) {
     option (google.api.http) = {
-      post: "/v1/permissions"
+      post: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
       body: "*"
     };
   }
@@ -459,21 +534,21 @@ service PermissionService {
   // Get permissions of a user in an organization
   rpc GetPermission(GetPermissionRequest) returns (GetPermissionResponse) {
     option (google.api.http) = {
-      get: "/v1/permissions/organizations/{organization_id}/member/{member_id}"
+      get: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
     };
   }
 
   // Update permissions of a user in an organization
   rpc UpdatePermission(UpdatePermissionRequest) returns (UpdatePermissionResponse) {
     option (google.api.http) = {
-      put: "/v1/permissions/organizations/{organization_id}/member/{member_id}"
+      put: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
       body: "*"
     };
   }
 
   rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse) {
     option (google.api.http) = {
-      delete: "/v1/permissions/organizations/{organization_id}/member/{member_id}"
+      delete: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
     };
   }
 }
