@@ -72,10 +72,18 @@ func (g *GormStore) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return g.db.Delete(&user).Error
 }
 
-func (g *GormStore) ListUsersByOrg(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.User, error) {
+func (g *GormStore) ListUsersByOrg(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error) {
 	var users []*model.User
-	err := g.db.Where("organization_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
-	return users, err
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.User{}).Where("organization_id = ?", orgID).Count(&total).Error; err != nil {
+			return err
+		}
+		return g.db.Where("organization_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
+	})
+
+	return users, int(total), err
 }
 
 func (g *GormStore) DisableUser(ctx context.Context, id uuid.UUID) error {

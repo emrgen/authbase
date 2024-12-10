@@ -46,7 +46,7 @@ type UserStore interface {
 	// DeleteUser deletes a user from the database.
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	// ListUsersByOrg retrieves a list of users by organization.
-	ListUsersByOrg(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.User, error)
+	ListUsersByOrg(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error)
 	// DisableUser disables a user in the database.
 	DisableUser(ctx context.Context, id uuid.UUID) error
 	// EnableUser enables a user in the database.

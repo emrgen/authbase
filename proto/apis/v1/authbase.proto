@@ -12,7 +12,7 @@ option go_package = "github.com/emrgen/authbase/proto/v1";
 message User {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
-  string name = 3;
+  string username = 3;
 
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
@@ -273,12 +273,20 @@ service TokenService {
   }
 }
 
-message ListUsersRequest {
-  Page page = 1;
+message CreateUserRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3;
+  string password = 4 [
+    (validate.rules).string.min_len = 10,
+    (validate.rules).string.max_len = 11
+  ];
 }
 
-message ListUsersResponse {
-  repeated User users = 1;
+message CreateUserResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3;
 }
 
 message GetUserRequest {
@@ -289,10 +297,20 @@ message GetUserResponse {
   User user = 1;
 }
 
+message ListUsersRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  Meta meta = 2;
+}
+
 message UpdateUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string name = 3;
+  string username = 2;
+  string email = 3 [(validate.rules).string.email = true];
 }
 
 message UpdateUserResponse {
@@ -310,12 +328,21 @@ message DeleteUserResponse {
 // User service
 
 service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users"
+      body: "*"
+    };
+  }
+
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {get: "/v1/users/{id}"};
   }
 
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {get: "/v1/users"};
+    option (google.api.http) = {
+      get: "/v1/users/-/organizations/{organization_id}"
+    };
   }
 
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
