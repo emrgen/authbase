@@ -1,4 +1,4 @@
-package x
+package mail
 
 import (
 	gomail "gopkg.in/mail.v2"
