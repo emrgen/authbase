@@ -19,6 +19,11 @@ type UserService struct {
 	v1.UnimplementedUserServiceServer
 }
 
+// NewUserService creates a new user service.
+func NewUserService(store store.AuthBaseStore, cache *cache.Redis) *UserService {
+	return &UserService{store: store, cache: cache}
+}
+
 func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
 	user := model.User{
 		ID:             uuid.New().String(),

@@ -7,6 +7,7 @@ import (
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
 	"github.com/emrgen/authbase/pkg/service"
+	"github.com/emrgen/authbase/pkg/store"
 	"net"
 	"net/http"
 	"os"
@@ -47,25 +48,73 @@ func UnaryRequestTimeInterceptor() grpc.UnaryClientInterceptor {
 	}
 }
 
-func Start(grpcPort, httpPort string) error {
-	var err error
+type Server struct {
+	config     *config.Config
+	db         store.AuthBaseStore
+	redis      *cache.Redis
+	gl         net.Listener
+	rl         net.Listener
+	grpcServer *grpc.Server
+	mux        *runtime.ServeMux
+	httpPort   string
+	grpcPort   string
+}
+
+// NewServerFromEnv creates a new server instance from the environment configuration.
+func NewServerFromEnv() *Server {
+	cfg, err := config.FromEnv()
+	if err != nil {
+		logrus.Fatalf("error loading config: %v", err)
+	}
+
+	return NewServer(cfg)
+}
+
+// NewServer creates a new server instance.
+func NewServer(config *config.Config) *Server {
+	return &Server{config: config}
+}
+
+func (s *Server) Start(grpcPort, httpPort string) error {
+	if err := s.init(grpcPort, httpPort); err != nil {
+		return err
+	}
+
+	if err := s.registerServices(); err != nil {
+		return err
+	}
+
+	if err := s.run(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) init(grpcPort, httpPort string) error {
+	s.db = config.GetDB()
+	s.redis = cache.NewRedisClient()
 
 	grpcPort = ":" + grpcPort
 	httpPort = ":" + httpPort
-
-	rdb := config.GetDB()
-	redis := cache.NewRedisClient()
 
 	gl, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		return err
 	}
+	s.gl = gl
 
 	rl, err := net.Listen("tcp", httpPort)
 	if err != nil {
 		return err
 	}
+	s.rl = rl
 
+	return nil
+}
+
+func (s *Server) registerServices() error {
+	var err error
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),
@@ -91,26 +140,56 @@ func Start(grpcPort, httpPort string) error {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
 	}
-	endpoint := "localhost" + grpcPort
+	endpoint := "localhost" + s.grpcPort
+
+	rdb := s.db
+	redis := s.redis
 
 	// Register the grpc server
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(rdb, redis))
+	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(rdb, redis))
+	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(rdb, redis))
+	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(rdb, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(rdb, redis))
+	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(rdb, redis))
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(rdb, redis))
-	//v1.RegisterQuizServiceServer(grpcServer, service.NewQuizService(rdb, quizCache))
 
 	// Register the rest gateway
+	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterMemberServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
 	if err = v1.RegisterUserServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterPermissionServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterAuthServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterOauthServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
 		return err
 	}
 	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
 		return err
 	}
 
+	s.grpcServer = grpcServer
+
+	return err
+}
+
+// run the server and listen on grpc and http ports
+func (s *Server) run() error {
+
 	apiMux := http.NewServeMux()
 	openapiDocs := packr.NewBox("../../docs/v1")
 	docsPath := "/v1/docs/"
 	apiMux.Handle(docsPath, http.StripPrefix(docsPath, http.FileServer(openapiDocs)))
-	apiMux.Handle("/", mux)
+	apiMux.Handle("/", s.mux)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"}, // All origins are allowed
@@ -120,7 +199,7 @@ func Start(grpcPort, httpPort string) error {
 	})
 
 	restServer := &http.Server{
-		Addr:    httpPort,
+		Addr:    s.httpPort,
 		Handler: c.Handler(apiMux),
 	}
 
@@ -131,9 +210,9 @@ func Start(grpcPort, httpPort string) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		logrus.Info("starting rest gateway on: ", httpPort)
-		logrus.Info("click on the following link to view the API documentation: http://localhost", httpPort, "/v1/docs/")
-		if err := restServer.Serve(rl); err != nil {
+		logrus.Info("starting rest gateway on: ", s.httpPort)
+		logrus.Info("click on the following link to view the API documentation: http://localhost", s.httpPort, "/v1/docs/")
+		if err := restServer.Serve(s.rl); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				logrus.Errorf("error starting rest gateway: %v", err)
 			}
@@ -145,8 +224,8 @@ func Start(grpcPort, httpPort string) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		logrus.Info("starting grpc server on: ", grpcPort)
-		if err := grpcServer.Serve(gl); err != nil {
+		logrus.Info("starting grpc server on: ", s.grpcPort)
+		if err := s.grpcServer.Serve(s.gl); err != nil {
 			logrus.Infof("grpc failed to start: %v", err)
 		}
 		logrus.Infof("grpc server stopped")
@@ -162,10 +241,11 @@ func Start(grpcPort, httpPort string) error {
 	// clean Ctrl+C output
 	fmt.Println()
 
-	grpcServer.Stop()
-	err = restServer.Shutdown(context.Background())
+	s.grpcServer.Stop()
+	err := restServer.Shutdown(context.Background())
 	if err != nil {
 		logrus.Errorf("error stopping rest gateway: %v", err)
+		return err
 	}
 
 	wg.Wait()

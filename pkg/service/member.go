@@ -132,7 +132,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 		if request.GetPermissions() != nil {
 			permission.Permission = 0
 			for _, p := range request.GetPermissions() {
-				permission.Permission |= uint8(p.Number())
+				permission.Permission |= uint32(p.Number())
 			}
 		}
 

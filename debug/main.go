@@ -18,7 +18,9 @@ func main() {
 		httpPort = "4001"
 	}
 
-	err := server.Start(grpcPort, httpPort)
+	svr := server.NewServerFromEnv()
+
+	err := svr.Start(grpcPort, httpPort)
 	if err != nil {
 		return
 	}

@@ -17,6 +17,11 @@ type AuthService struct {
 	v1.UnimplementedAuthServiceServer
 }
 
+// NewAuthService creates a new AuthService
+func NewAuthService(store store.AuthBaseStore, cache *cache.Redis) *AuthService {
+	return &AuthService{store: store, cache: cache}
+}
+
 func (a *AuthService) CheckUserAlreadyExists(ctx context.Context, request *v1.CheckUserAlreadyExistsRequest) (*v1.CheckEmailAlreadyExistsResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {

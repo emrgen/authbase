@@ -3,7 +3,7 @@ package model
 type Permission struct {
 	OrganizationID string `gorm:"primaryKey;not null"`
 	UserID         string `gorm:"primaryKey;not null"`
-	Permission     uint8  `gorm:"not null;default:0"`
+	Permission     uint32 `gorm:"not null;default:0"`
 
 	Organization *Organization `gorm:"foreignKey:OrganizationID"`
 	User         *User         `gorm:"foreignKey:UserID"`
