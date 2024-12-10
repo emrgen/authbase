@@ -95,10 +95,14 @@ func Start(grpcPort, httpPort string) error {
 
 	// Register the grpc server
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(rdb, redis))
+	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(rdb, redis))
 	//v1.RegisterQuizServiceServer(grpcServer, service.NewQuizService(rdb, quizCache))
 
 	// Register the rest gateway
 	if err = v1.RegisterUserServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
 		return err
 	}
 

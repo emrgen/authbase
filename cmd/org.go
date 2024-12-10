@@ -21,7 +21,7 @@ func init() {
 }
 
 func createOrgCommand() *cobra.Command {
-	var name string
+	var organization string
 	var password string
 	var username string
 	var email string
@@ -30,8 +30,8 @@ func createOrgCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create org",
 		Run: func(cmd *cobra.Command, args []string) {
-			if name == "" {
-				logrus.Errorf("missing required flags: --name")
+			if organization == "" {
+				logrus.Errorf("missing required flags: --organization")
 				return
 			}
 
@@ -56,7 +56,7 @@ func createOrgCommand() *cobra.Command {
 			}
 
 			organization, err := client.CreateOrganization(context.Background(), &v1.CreateOrganizationRequest{
-				Name:     name,
+				Name:     organization,
 				Username: username,
 				Email:    email,
 				Password: &password,
@@ -70,7 +70,7 @@ func createOrgCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&name, "name", "n", "", "name of the organization")
+	command.Flags().StringVarP(&organization, "organization", "o", "", "organization of the organization")
 	command.Flags().StringVarP(&username, "username", "u", "", "username of the organization")
 	command.Flags().StringVarP(&email, "email", "e", "", "email of the organization")
 	command.Flags().StringVarP(&password, "password", "p", "", "password of the organization")

@@ -15,7 +15,7 @@ func GenerateToken() string {
 		panic(err.Error()) // rand should never fail
 	}
 
-	return removePadding(base64.URLEncoding.EncodeToString(b))
+	return base64EncodeStripped(string(b))
 }
 
 // RefreshToken creates a new random token
@@ -24,11 +24,7 @@ func RefreshToken() string {
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		panic(err.Error()) // rand should never fail
 	}
-	return removePadding(base64.URLEncoding.EncodeToString(b))
-}
-
-func removePadding(token string) string {
-	return strings.TrimRight(token, "=")
+	return base64EncodeStripped(string(b))
 }
 
 func Keygen() string {
@@ -37,5 +33,18 @@ func Keygen() string {
 		panic(err.Error()) // rand should never fail
 	}
 
-	return removePadding(base64.URLEncoding.EncodeToString(b))
+	return base64EncodeStripped(string(b))
+}
+
+func base64EncodeStripped(s string) string {
+	encoded := base64.StdEncoding.EncodeToString([]byte(s))
+	return strings.TrimRight(encoded, "=")
+}
+
+func base64DecodeStripped(s string) (string, error) {
+	if i := len(s) % 4; i != 0 {
+		s += strings.Repeat("=", 4-i)
+	}
+	decoded, err := base64.StdEncoding.DecodeString(s)
+	return string(decoded), err
 }

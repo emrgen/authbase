@@ -14,23 +14,33 @@ type GormStore struct {
 }
 
 func (g *GormStore) CreateToken(ctx context.Context, token *model.Token) error {
-	//TODO implement me
-	panic("implement me")
+	return g.db.Create(token).Error
 }
 
 func (g *GormStore) GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Token, error) {
-	//TODO implement me
-	panic("implement me")
+	var token model.Token
+	err := g.db.Where("id = ?", id).First(&token).Error
+	return &token, err
 }
 
 func (g *GormStore) ListUserTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error) {
-	//TODO implement me
-	panic("implement me")
+	var tokens []*model.Token
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Token{}).Count(&total).Error; err != nil {
+			return err
+		}
+		err := tx.Limit(perPage).Offset(page*perPage).Find(&tokens, "organization_id = ? AND user_id = ?", orgID, userID).Error
+
+		return err
+	})
+
+	return tokens, int(total), err
 }
 
 func (g *GormStore) DeleteToken(ctx context.Context, id uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
+	return g.db.Delete(&model.Token{ID: id.String()}).Error
 }
 
 func NewGormStore(db *gorm.DB) *GormStore {

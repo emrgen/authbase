@@ -14,7 +14,7 @@ func init() {
 func createStrategyCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "create",
-		Short: "create user",
+		Short: "create strategy",
 	}
 
 	return command

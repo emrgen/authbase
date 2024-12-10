@@ -9,6 +9,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
@@ -22,8 +23,16 @@ var _ v1.TokenServiceServer = new(TokenService)
 // TokenService is a service for token
 type TokenService struct {
 	store store.AuthBaseStore
-	cache cache.Redis
+	cache *cache.Redis
 	v1.UnimplementedTokenServiceServer
+}
+
+// NewTokenService creates a new token service
+func NewTokenService(store store.AuthBaseStore, cache *cache.Redis) *TokenService {
+	return &TokenService{
+		store: store,
+		cache: cache,
+	}
 }
 
 func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenRequest) (*v1.CreateTokenResponse, error) {
@@ -34,6 +43,8 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 		Token:          x.GenerateToken(),
 		Name:           request.GetName(),
 	}
+
+	logrus.Info("TokenService", token, request.GetOrganizationId())
 
 	if request.GetExpiresIn() != 0 {
 		duration := time.Second * time.Duration(request.GetExpiresIn())
@@ -112,10 +123,17 @@ func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensReq
 		return nil, err
 	}
 
-	page := request.GetPage()
+	page := &v1.Page{
+		Page: 0,
+		Size: 20,
+	}
+	if request.Page != nil {
+		page = request.GetPage()
+	}
 	size := max(page.Size, 20)
 
 	tokens, total, err := t.store.ListUserTokens(ctx, orgID, userID, int(page.Page), int(size))
+
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +141,8 @@ func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensReq
 	var tokenProtos []*v1.Token
 	for _, token := range tokens {
 		tokenProtos = append(tokenProtos, &v1.Token{
-			Id: token.ID,
+			Id:    token.ID,
+			Token: token.Token,
 		})
 	}
 
@@ -148,5 +167,6 @@ func (t *TokenService) DeleteToken(ctx context.Context, request *v1.DeleteTokenR
 		return nil, err
 	}
 
+	logrus.Errorf("delete token %v", request)
 	return &v1.DeleteTokenResponse{}, nil
 }

@@ -19,11 +19,11 @@ func init() {
 }
 
 type Context struct {
-	Organization string
-	Token        string
-	Username     string
-	Password     string
-	ExpireAt     int64
+	OrganizationId string `json:"organization_id"`
+	Token          string `json:"token"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	ExpireAt       int64  `json:"expire_at"`
 }
 
 func readContext() Context {
@@ -72,8 +72,8 @@ func setContextCommand() *cobra.Command {
 			viper.AddConfigPath("./.tmp")
 			viper.SetConfigType("yml")
 			viper.Set("context", Context{
-				Organization: organization,
-				Token:        token,
+				OrganizationId: organization,
+				Token:          token,
 			})
 
 			if err := viper.WriteConfig(); err != nil {
@@ -114,7 +114,7 @@ func verifyContext() {
 		return
 	}
 
-	if Organization == "" {
+	if OrganizationId == "" {
 		logrus.Error("missing required flags: --organization")
 		return
 	}
@@ -122,6 +122,6 @@ func verifyContext() {
 
 func bindContextFlags(command *cobra.Command) {
 	command.Flags().StringVarP(&Token, "token", "t", "", "token")
-	command.Flags().StringVarP(&Organization, "organization", "o", "", "organization")
+	command.Flags().StringVarP(&OrganizationId, "organization", "o", "", "organization")
 
 }

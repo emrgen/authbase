@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -22,7 +21,7 @@ func Execute() {
 }
 
 var Token string
-var Organization string
+var OrganizationId string
 var Username string
 var Password string
 
@@ -39,12 +38,11 @@ func init() {
 	rootCmd.AddCommand(keygenCommand)
 
 	ctx := readContext()
-	if ctx.Organization != "" {
-		rootCmd.PersistentFlags().StringVarP(&Organization, "organization", "o", ctx.Organization, "organization name")
+	if ctx.OrganizationId != "" {
+		rootCmd.PersistentFlags().StringVarP(&OrganizationId, "org-id", "o", ctx.OrganizationId, "organization id")
 	}
 
 	if ctx.Token != "" {
-		logrus.Info("token: ", ctx.Token)
 		rootCmd.PersistentFlags().StringVarP(&Token, "token", "t", ctx.Token, "token")
 	}
 

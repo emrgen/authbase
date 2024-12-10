@@ -171,7 +171,7 @@ message Token {
 }
 
 message CreateTokenRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string organization_id = 1;
   string email = 2 [(validate.rules).string.min_len = 6, (validate.rules).string.max_len = 64];
   string password = 3 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
   optional int64 expires_in = 4; // in seconds
@@ -181,6 +181,7 @@ message CreateTokenRequest {
 message CreateTokenResponse {
   string id = 1 [(validate.rules).string.uuid = true];
   string token = 2;
+  google.protobuf.Timestamp expires_at = 10;
 }
 
 message GetTokenRequest {
