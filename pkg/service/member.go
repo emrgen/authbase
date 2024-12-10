@@ -6,6 +6,7 @@ import (
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
+	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
 )
 
@@ -81,15 +82,7 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 		return nil, err
 	}
 
-	page := v1.Page{
-		Page: 0,
-		Size: 20,
-	}
-	if request.GetPage() != nil {
-		page.Page = request.GetPage().Page
-		page.Size = request.GetPage().Size
-	}
-
+	page := x.GetPageFromRequest(request)
 	members, total, err := m.store.ListUsersByOrg(ctx, true, orgID, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err

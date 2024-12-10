@@ -6,6 +6,7 @@ import (
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
+	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -60,16 +61,7 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 		return nil, err
 	}
 
-	page := v1.Page{
-		Page: 0,
-		Size: 20,
-	}
-
-	if request.GetPage() != nil {
-		page.Page = request.GetPage().Page
-		page.Size = request.GetPage().Size
-	}
-
+	page := x.GetPageFromRequest(request)
 	users, total, err := u.store.ListUsersByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
 
 	var userProtos []*v1.User

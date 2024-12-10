@@ -140,31 +140,6 @@ func (g *GormStore) DeleteOrganization(ctx context.Context, id uuid.UUID) error 
 	return g.db.Delete(&org).Error
 }
 
-func (g *GormStore) CreatePermission(ctx context.Context, permission *model.Permission) error {
-	return g.db.Create(permission).Error
-}
-
-func (g *GormStore) GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error) {
-	var permission model.Permission
-	err := g.db.Where("organization_id = ? AND user_id = ?", orgID, userID).First(&permission).Error
-	return &permission, err
-}
-
-func (g *GormStore) ListPermissions(ctx context.Context, page, perPage int) ([]*model.Permission, error) {
-	var permissions []*model.Permission
-	err := g.db.Limit(perPage).Offset(page * perPage).Find(&permissions).Error
-	return permissions, err
-}
-
-func (g *GormStore) UpdatePermission(ctx context.Context, permission *model.Permission) error {
-	return g.db.Save(permission).Error
-}
-
-func (g *GormStore) DeletePermission(ctx context.Context, orgID, userID uuid.UUID) error {
-	permission := model.Permission{OrganizationID: orgID.String(), UserID: userID.String()}
-	return g.db.Delete(&permission).Error
-}
-
 func (g *GormStore) CreateProvider(ctx context.Context, provider *model.Provider) error {
 	return g.db.Create(provider).Error
 }

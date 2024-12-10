@@ -10,7 +10,6 @@ import (
 type AuthBaseStore interface {
 	UserStore
 	OrganizationStore
-	PermissionStore
 	ProviderStore
 	RefreshTokenStore
 	TokenStore
@@ -55,20 +54,6 @@ type UserStore interface {
 	VerifyUser(ctx context.Context, id uuid.UUID) error
 	// UserExists checks if a user exists in the database.
 	UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error)
-}
-
-// PermissionStore is the interface for interacting with the permission database.
-type PermissionStore interface {
-	// CreatePermission creates a new permission in the database.
-	CreatePermission(ctx context.Context, permission *model.Permission) error
-	// GetPermissionByID retrieves a permission by its ID.
-	GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error)
-	// ListPermissions retrieves a list of permissions.
-	ListPermissions(ctx context.Context, page, perPage int) ([]*model.Permission, error)
-	// UpdatePermission updates a permission in the database.
-	UpdatePermission(ctx context.Context, permission *model.Permission) error
-	// DeletePermission deletes a permission from the database.
-	DeletePermission(ctx context.Context, orgID, userID uuid.UUID) error
 }
 
 // ProviderStore is the interface for interacting with the provider database.
