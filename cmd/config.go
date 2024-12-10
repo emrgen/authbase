@@ -34,15 +34,7 @@ func setCodeMediumCommand() *cobra.Command {
 		Use:   "set",
 		Short: "set code medium",
 		Run: func(cmd *cobra.Command, args []string) {
-			if Token == "" {
-				logrus.Error("missing required flags: --token")
-				return
-			}
-
-			if Organization == "" {
-				logrus.Error("missing required flags: --organization")
-				return
-			}
+			verifyContext()
 
 			if medium == "" {
 				logrus.Error("missing required flags: --medium")
@@ -66,8 +58,7 @@ func setCodeMediumCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&Token, "token", "t", "", "token")
-	command.Flags().StringVarP(&Organization, "organization", "o", "", "organization")
+	bindContextFlags(command)
 	command.Flags().StringVarP(&medium, "medium", "m", "", "medium")
 	command.Flags().StringVarP(&via, "via", "v", "", "via")
 

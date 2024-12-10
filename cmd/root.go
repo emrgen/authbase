@@ -23,6 +23,8 @@ func Execute() {
 
 var Token string
 var Organization string
+var Username string
+var Password string
 
 func init() {
 	rootCmd.AddCommand(dbCmd)
@@ -43,5 +45,13 @@ func init() {
 	if ctx.Token != "" {
 		logrus.Info("token: ", ctx.Token)
 		rootCmd.PersistentFlags().StringVarP(&Token, "token", "t", ctx.Token, "token")
+	}
+
+	if ctx.Username != "" {
+		rootCmd.PersistentFlags().StringVarP(&Username, "username", "u", ctx.Username, "username")
+	}
+
+	if ctx.Password != "" {
+		rootCmd.PersistentFlags().StringVarP(&Password, "password", "p", ctx.Password, "password")
 	}
 }

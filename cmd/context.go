@@ -21,6 +21,8 @@ func init() {
 type Context struct {
 	Organization string
 	Token        string
+	Username     string
+	Password     string
 	ExpireAt     int64
 }
 
@@ -39,6 +41,17 @@ func readContext() Context {
 	}
 
 	return context
+}
+
+func writeContext(context Context) {
+	viper.SetConfigName("authbase")
+	viper.AddConfigPath("./.tmp")
+	viper.SetConfigType("yml")
+	viper.Set("context", context)
+
+	if err := viper.WriteConfig(); err != nil {
+		fmt.Println("error writing config file: ", err)
+	}
 }
 
 // saves the context info to the config file in ~/.config/authbase
@@ -93,4 +106,22 @@ func resetContextCommand() *cobra.Command {
 	}
 
 	return command
+}
+
+func verifyContext() {
+	if Token == "" {
+		logrus.Error("missing required flags: --token")
+		return
+	}
+
+	if Organization == "" {
+		logrus.Error("missing required flags: --organization")
+		return
+	}
+}
+
+func bindContextFlags(command *cobra.Command) {
+	command.Flags().StringVarP(&Token, "token", "t", "", "token")
+	command.Flags().StringVarP(&Organization, "organization", "o", "", "organization")
+
 }
