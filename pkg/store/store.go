@@ -53,6 +53,8 @@ type UserStore interface {
 	EnableUser(ctx context.Context, id uuid.UUID) error
 	// VerifyUser verifies a user in the database.
 	VerifyUser(ctx context.Context, id uuid.UUID) error
+	// UserExists checks if a user exists in the database.
+	UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error)
 }
 
 // PermissionStore is the interface for interacting with the permission database.

@@ -27,5 +27,9 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := db.AutoMigrate(&VerificationCode{}); err != nil {
+		return err
+	}
+
 	return nil
 }

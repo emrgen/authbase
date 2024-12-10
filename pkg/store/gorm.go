@@ -93,6 +93,12 @@ func (g *GormStore) VerifyUser(ctx context.Context, id uuid.UUID) error {
 	return g.db.Model(&user).Update("verified", true).Update("verified_at", gorm.Expr("NOW()")).Error
 }
 
+func (g *GormStore) UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error) {
+	var users []*model.User
+	err := g.db.Where("organization_id = ? AND (username = ? OR email = ?)", orgID, username, email).Find(&users).Error
+	return users, err
+}
+
 func (g *GormStore) CreateOrganization(ctx context.Context, org *model.Organization) error {
 	return g.db.Create(org).Error
 }

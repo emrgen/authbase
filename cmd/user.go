@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"context"
 	"github.com/emrgen/authbase"
+	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -140,4 +142,66 @@ func deleteUserCommand() *cobra.Command {
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 
 	return command
+}
+
+func registerUserCommand() *cobra.Command {
+	var organizationId string
+	var username string
+	var email string
+	var password string
+
+	command := &cobra.Command{
+		Use:   "register",
+		Short: "register user",
+		Run: func(cmd *cobra.Command, args []string) {
+			if organizationId == "" {
+				logrus.Errorf("missing required flag: --organization-id")
+				return
+			}
+
+			if username == "" {
+				logrus.Errorf("missing required flag: --username")
+				return
+			}
+
+			if email == "" {
+				logrus.Errorf("missing required flag: --email")
+				return
+			}
+
+			if password == "" {
+				logrus.Errorf("missing required flag: --password")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+
+			res, err := client.Register(context.Background(), &v1.RegisterRequest{
+				OrganizationId: organizationId,
+				Username:       username,
+				Email:          email,
+				Password:       password,
+			})
+			if err != nil {
+				logrus.Errorf("failed to register user: %v", err)
+				return
+			}
+
+			logrus.Infof("register user: %v", res)
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&organizationId, "organization-id", "o", "", "organization id")
+	command.Flags().StringVarP(&username, "username", "u", "", "username")
+	command.Flags().StringVarP(&email, "email", "e", "", "email")
+	command.Flags().StringVarP(&password, "password", "p", "", "password")
+
+	return command
+
 }

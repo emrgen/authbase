@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package apis.v1;
 
-option go_package = "github.com/emrgen/authbase/proto/v1";
-
 import "google/api/annotations.proto";
-import "protoc-gen-openapiv2/options/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 import "validate/validate.proto";
+
+option go_package = "github.com/emrgen/authbase/proto/v1";
 
 message User {
   string id = 1 [(validate.rules).string.uuid = true];
@@ -29,10 +29,22 @@ message Meta {
   int32 size = 3;
 }
 
-message SignupRequest {
-  string email = 1 [(validate.rules).string.email = true];
-  string password = 2 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
-  string name = 3 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+message RegisterRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string username = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  string email = 3 [(validate.rules).string.email = true];
+  string password = 4 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message RegisterResponse {
+  optional Tokens tokens = 1;
+  bool email_verification_required = 2;
 }
 
 message Tokens {
@@ -41,14 +53,12 @@ message Tokens {
   google.protobuf.Timestamp expires_at = 3;
 }
 
-message SignupResponse {
-  optional Tokens tokens = 1;
-  bool email_verification_required = 2;
-}
-
 message LoginRequest {
   string email = 1 [(validate.rules).string.email = true];
-  string password = 2 [(validate.rules).string.min_len = 8, (validate.rules).string.max_len = 64];
+  string password = 2 [
+    (validate.rules).string.min_len = 8,
+    (validate.rules).string.max_len = 64
+  ];
 }
 
 message LoginResponse {
@@ -75,10 +85,31 @@ message VerifyEmailResponse {
   string message = 1;
 }
 
+message CheckUserAlreadyExistsRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message CheckEmailAlreadyExistsResponse {
+  bool email_exists = 1;
+  bool username_exists = 2;
+}
+
 // Auth service
 
 service AuthService {
-  rpc Signup(SignupRequest) returns (SignupResponse) {
+  rpc CheckUserAlreadyExists(CheckUserAlreadyExistsRequest) returns (CheckEmailAlreadyExistsResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/check-user"
+      body: "*"
+    };
+  }
+
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
       post: "/v1/auth/signup"
       body: "*"
@@ -172,8 +203,14 @@ message Token {
 
 message CreateTokenRequest {
   string organization_id = 1;
-  string email = 2 [(validate.rules).string.min_len = 6, (validate.rules).string.max_len = 64];
-  string password = 3 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+  string email = 2 [
+    (validate.rules).string.min_len = 6,
+    (validate.rules).string.max_len = 64
+  ];
+  string password = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
   optional int64 expires_in = 4; // in seconds
   optional string name = 5;
 }
@@ -224,21 +261,15 @@ service TokenService {
   }
 
   rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {
-    option (google.api.http) = {
-      get: "/v1/tokens/{id}"
-    };
+    option (google.api.http) = {get: "/v1/tokens/{id}"};
   }
 
   rpc ListTokens(ListTokensRequest) returns (ListTokensResponse) {
-    option (google.api.http) = {
-      get: "/v1/tokens/-/organizations/{organization_id}/users/{user_id}"
-    };
+    option (google.api.http) = {get: "/v1/tokens/-/organizations/{organization_id}/users/{user_id}"};
   }
 
   rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse) {
-    option (google.api.http) = {
-      delete: "/v1/tokens/{id}"
-    };
+    option (google.api.http) = {delete: "/v1/tokens/{id}"};
   }
 }
 
@@ -280,15 +311,11 @@ message DeleteUserResponse {
 
 service UserService {
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
-    option (google.api.http) = {
-      get: "/v1/users/{id}"
-    };
+    option (google.api.http) = {get: "/v1/users/{id}"};
   }
 
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {
-      get: "/v1/users"
-    };
+    option (google.api.http) = {get: "/v1/users"};
   }
 
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
@@ -299,17 +326,24 @@ service UserService {
   }
 
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
-    option (google.api.http) = {
-      delete: "/v1/users/{id}"
-    };
+    option (google.api.http) = {delete: "/v1/users/{id}"};
   }
 }
 
 message CreateOrganizationRequest {
-  string name = 1 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
-  string username = 2 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+  string name = 1 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  string username = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
   string email = 3 [(validate.rules).string.email = true];
-  optional string password = 4 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+  optional string password = 4 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
   optional bool verify_email = 5;
 }
 
@@ -346,7 +380,10 @@ message ListOrganizationsResponse {
 
 message UpdateOrganizationRequest {
   string id = 1 [(validate.rules).string.uuid = true];
-  string name = 2 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+  string name = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
 }
 
 message UpdateOrganizationResponse {
@@ -422,15 +459,11 @@ service OrganizationService {
   }
 
   rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/{id}"
-    };
+    option (google.api.http) = {get: "/v1/organizations/{id}"};
   }
 
   rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations"
-    };
+    option (google.api.http) = {get: "/v1/organizations"};
   }
 
   rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationResponse) {
@@ -441,9 +474,7 @@ service OrganizationService {
   }
 
   rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse) {
-    option (google.api.http) = {
-      delete: "/v1/organizations/{id}"
-    };
+    option (google.api.http) = {delete: "/v1/organizations/{id}"};
   }
 
   rpc AddOauthProvider(AddOauthProviderRequest) returns (AddOauthProviderResponse) {
@@ -454,15 +485,11 @@ service OrganizationService {
   }
 
   rpc GetOauthProvider(GetOauthProviderRequest) returns (GetOauthProviderResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/{organization_id}/oauth-providers/{provider}"
-    };
+    option (google.api.http) = {get: "/v1/organizations/{organization_id}/oauth-providers/{provider}"};
   }
 
   rpc ListOauthProviders(ListOauthProvidersRequest) returns (ListOauthProvidersResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/{organization_id}/oauth-providers"
-    };
+    option (google.api.http) = {get: "/v1/organizations/{organization_id}/oauth-providers"};
   }
 
   rpc UpdateOauthProvider(UpdateOauthProviderRequest) returns (UpdateOauthProviderResponse) {
@@ -473,9 +500,7 @@ service OrganizationService {
   }
 
   rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
-    option (google.api.http) = {
-      delete: "/v1/organizations/{id}/oauth-providers/{provider}"
-    };
+    option (google.api.http) = {delete: "/v1/organizations/{id}/oauth-providers/{provider}"};
   }
 }
 
@@ -544,15 +569,11 @@ service MemberService {
   }
 
   rpc GetMember(GetMemberRequest) returns (GetMemberResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/{organization_id}/members/{member_id}"
-    };
+    option (google.api.http) = {get: "/v1/organizations/{organization_id}/members/{member_id}"};
   }
 
   rpc ListMember(ListMemberRequest) returns (ListMemberResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/{organization_id}/members"
-    };
+    option (google.api.http) = {get: "/v1/organizations/{organization_id}/members"};
   }
 
   rpc UpdateMember(UpdateMemberRequest) returns (UpdateMemberResponse) {
@@ -563,9 +584,7 @@ service MemberService {
   }
 
   rpc DeleteMember(DeleteMemberRequest) returns (DeleteMemberResponse) {
-    option (google.api.http) = {
-      delete: "/v1/members/organizations/{organization_id}/members/{member_id}"
-    };
+    option (google.api.http) = {delete: "/v1/members/organizations/{organization_id}/members/{member_id}"};
   }
 }
 
@@ -625,9 +644,7 @@ service PermissionService {
 
   // Get permissions of a user in an organization
   rpc GetPermission(GetPermissionRequest) returns (GetPermissionResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
-    };
+    option (google.api.http) = {get: "/v1/organizations/{organization_id}/members/{member_id}/permissions"};
   }
 
   // Update permissions of a user in an organization
@@ -639,8 +656,6 @@ service PermissionService {
   }
 
   rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse) {
-    option (google.api.http) = {
-      delete: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
-    };
+    option (google.api.http) = {delete: "/v1/organizations/{organization_id}/members/{member_id}/permissions"};
   }
 }
