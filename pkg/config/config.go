@@ -18,6 +18,7 @@ const (
 type Config struct {
 	Environment Environment
 	DB          *DBConfig
+	AppKey      string
 }
 
 type DBConfig struct {
@@ -42,9 +43,12 @@ func FromEnv() (*Config, error) {
 		dbConfig.ConnectionString = os.Getenv("DB_CONNECTION_STRING")
 	}
 
+	appKey := os.Getenv("APP_KEY")
+
 	config := &Config{
 		Environment: Environment(env),
 		DB:          dbConfig,
+		AppKey:      appKey,
 	}
 
 	return config, nil

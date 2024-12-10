@@ -13,6 +13,26 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) CreateToken(ctx context.Context, token *model.Token) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Token, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) ListUserTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) DeleteToken(ctx context.Context, id uuid.UUID) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewGormStore(db *gorm.DB) *GormStore {
 	return &GormStore{db: db}
 }
@@ -75,13 +95,16 @@ func (g *GormStore) GetOrganizationByID(ctx context.Context, id uuid.UUID) (*mod
 
 func (g *GormStore) ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, int, error) {
 	var orgs []*model.Organization
-	var total int
+	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Organization{}).Count(&total).Error; err != nil {
+			return err
+		}
 		return g.db.Limit(perPage).Offset(page * perPage).Find(&orgs).Error
 	})
 
-	return orgs, total, err
+	return orgs, int(total), err
 }
 
 func (g *GormStore) UpdateOrganization(ctx context.Context, org *model.Organization) error {

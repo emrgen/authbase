@@ -75,6 +75,8 @@ message VerifyEmailResponse {
   string message = 1;
 }
 
+// Auth service
+
 service AuthService {
   rpc Signup(SignupRequest) returns (SignupResponse) {
     option (google.api.http) = {
@@ -158,6 +160,87 @@ service OauthService {
   }
 }
 
+message Token {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string token = 3;
+  string organization_id = 4;
+  string user_id = 5;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+message CreateTokenRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.min_len = 6, (validate.rules).string.max_len = 64];
+  string password = 3 [(validate.rules).string.min_len = 3, (validate.rules).string.max_len = 64];
+  optional int64 expires_in = 4; // in seconds
+  optional string name = 5;
+}
+
+message CreateTokenResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string token = 2;
+}
+
+message GetTokenRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetTokenResponse {
+  Token token = 1;
+}
+
+message ListTokensRequest {
+  string user_id = 1 [(validate.rules).string.uuid = true];
+  string organization_id = 2 [(validate.rules).string.uuid = true];
+  optional string token = 3;
+  optional string password = 4;
+  Page page = 5;
+}
+
+message ListTokensResponse {
+  repeated Token tokens = 1;
+  Meta meta = 2;
+}
+
+message DeleteTokenRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteTokenResponse {
+  string message = 1;
+}
+
+// Token service
+
+service TokenService {
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/tokens/organizations/{organization_id}"
+      body: "*"
+    };
+  }
+
+  rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {
+    option (google.api.http) = {
+      get: "/v1/tokens/{id}"
+    };
+  }
+
+  rpc ListTokens(ListTokensRequest) returns (ListTokensResponse) {
+    option (google.api.http) = {
+      get: "/v1/tokens/-/organizations/{organization_id}/users/{user_id}"
+    };
+  }
+
+  rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse) {
+    option (google.api.http) = {
+      delete: "/v1/tokens/{id}"
+    };
+  }
+}
+
 message ListUsersRequest {
   Page page = 1;
 }
@@ -191,6 +274,8 @@ message DeleteUserRequest {
 message DeleteUserResponse {
   string message = 1;
 }
+
+// User service
 
 service UserService {
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
@@ -325,6 +410,8 @@ message DeleteOauthProviderResponse {
   string message = 1;
 }
 
+// Organization service
+
 service OrganizationService {
   rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse) {
     option (google.api.http) = {
@@ -445,6 +532,8 @@ message DeleteMemberResponse {
   string message = 1;
 }
 
+// Member service
+
 service MemberService {
   rpc CreateMember(CreateMemberRequest) returns (CreateMemberResponse) {
     option (google.api.http) = {
@@ -522,6 +611,8 @@ message DeletePermissionRequest {
 message DeletePermissionResponse {
   string message = 1;
 }
+
+// Permission service
 
 service PermissionService {
   rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse) {

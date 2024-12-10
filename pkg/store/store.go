@@ -13,6 +13,7 @@ type AuthBaseStore interface {
 	PermissionStore
 	ProviderStore
 	RefreshTokenStore
+	TokenStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -94,4 +95,16 @@ type RefreshTokenStore interface {
 	UpdateRefreshToken(ctx context.Context, token *model.RefreshToken) error
 	// DeleteRefreshToken deletes a refresh token from the database.
 	DeleteRefreshToken(ctx context.Context, id uuid.UUID) error
+}
+
+// TokenStore is the interface for interacting with the token database.
+type TokenStore interface {
+	// CreateToken creates a new token in the database.
+	CreateToken(ctx context.Context, token *model.Token) error
+	// GetTokenByID retrieves a token by its ID.
+	GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Token, error)
+	// ListUserTokens retrieves a list of tokens by user.
+	ListUserTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error)
+	// DeleteToken updates a token in the database.
+	DeleteToken(ctx context.Context, id uuid.UUID) error
 }

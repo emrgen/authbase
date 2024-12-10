@@ -23,5 +23,9 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := db.AutoMigrate(&Token{}); err != nil {
+		return err
+	}
+
 	return nil
 }

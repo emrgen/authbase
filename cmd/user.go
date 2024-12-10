@@ -43,6 +43,8 @@ func createUserCommand() *cobra.Command {
 				return
 			}
 
+			//client.CreateUser()
+
 			logrus.Infof("user created successfully %v", "")
 		},
 	}

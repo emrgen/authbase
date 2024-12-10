@@ -37,9 +37,8 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 	}
 
 	org := model.Organization{
-		ID:      uuid.New().String(),
-		Name:    request.GetName(),
-		OwnerID: user.ID,
+		ID:   uuid.New().String(),
+		Name: request.GetName(),
 	}
 
 	user.OrganizationID = org.ID
@@ -50,6 +49,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		if total == 0 {
 			org.Master = true
 			user.SassAdmin = true
+			org.OwnerID = user.ID
 		}
 
 		err := tx.CreateOrganization(ctx, &org)
@@ -59,7 +59,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 
 		// if password is provided, email verification is not strictly required
 		if password == "" || verifyEmail {
-			verificationCode := x.SecureToken()
+			verificationCode := x.RefreshToken()
 			// save the code to the db
 			err := o.cache.Set("email:"+user.Email, verificationCode, time.Hour)
 			if err != nil {

@@ -12,6 +12,7 @@ type Client interface {
 	v1.PermissionServiceClient
 	v1.AuthServiceClient
 	v1.OauthServiceClient
+	v1.TokenServiceClient
 }
 
 type client struct {
@@ -20,6 +21,7 @@ type client struct {
 	v1.PermissionServiceClient
 	v1.AuthServiceClient
 	v1.OauthServiceClient
+	v1.TokenServiceClient
 }
 
 func NewClient(port string) (Client, error) {
@@ -33,5 +35,6 @@ func NewClient(port string) (Client, error) {
 		PermissionServiceClient:   v1.NewPermissionServiceClient(conn),
 		AuthServiceClient:         v1.NewAuthServiceClient(conn),
 		OauthServiceClient:        v1.NewOauthServiceClient(conn),
+		TokenServiceClient:        v1.NewTokenServiceClient(conn),
 	}, nil
 }

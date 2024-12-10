@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"context"
 	"github.com/emrgen/authbase"
+	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -91,13 +93,23 @@ func listTokenCommand() *cobra.Command {
 				return
 			}
 
-			_, err := authbase.NewClient(":4000")
+			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
 				return
 			}
 
+			res, err := client.ListTokens(context.Background(), &v1.ListTokensRequest{
+				OrganizationId: "",
+			})
+			if err != nil {
+				return
+			}
+
 			logrus.Infof("token list")
+			for _, token := range res.Tokens {
+				logrus.Infof("token %v", token)
+			}
 		},
 	}
 

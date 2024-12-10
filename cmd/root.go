@@ -36,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(tokenCommand)
 	rootCmd.AddCommand(strategyCommand)
 	rootCmd.AddCommand(contextCommand)
+	rootCmd.AddCommand(keygenCommand)
 
 	ctx := readContext()
 	if ctx.Organization != "" {
