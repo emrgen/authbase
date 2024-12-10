@@ -340,9 +340,7 @@ service UserService {
   }
 
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {
-      get: "/v1/users/-/organizations/{organization_id}"
-    };
+    option (google.api.http) = {get: "/v1/users/-/organizations/{organization_id}"};
   }
 
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
@@ -534,18 +532,22 @@ service OrganizationService {
 message Member {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
-  string name = 3;
+  string username = 3;
   repeated Permission permissions = 4;
 }
 
 message CreateMemberRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  repeated Permission permissions = 3;
+  string username = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  string email = 3 [(validate.rules).string.email = true];
+  repeated Permission permissions = 4;
 }
 
 message CreateMemberResponse {
-  string message = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
 }
 
 message GetMemberRequest {
@@ -564,16 +566,20 @@ message ListMemberRequest {
 
 message ListMemberResponse {
   repeated Member members = 1;
+  Meta meta = 2;
 }
 
 message UpdateMemberRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
-  repeated Permission permissions = 3;
+  string username = 3;
+  string email = 4 [(validate.rules).string.email = true];
+  repeated Permission permissions = 5;
 }
 
 message UpdateMemberResponse {
-  string message = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
+  string message = 2;
 }
 
 message DeleteMemberRequest {

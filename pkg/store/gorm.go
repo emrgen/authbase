@@ -72,15 +72,15 @@ func (g *GormStore) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return g.db.Delete(&user).Error
 }
 
-func (g *GormStore) ListUsersByOrg(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error) {
+func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error) {
 	var users []*model.User
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.User{}).Where("organization_id = ?", orgID).Count(&total).Error; err != nil {
+		if err := tx.Model(&model.User{}).Where("organization_id = ? AND member = ?", orgID, member).Count(&total).Error; err != nil {
 			return err
 		}
-		return g.db.Where("organization_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
+		return g.db.Where("organization_id = ? AND member = ?", orgID, member).Limit(perPage).Offset(page * perPage).Find(&users).Error
 	})
 
 	return users, int(total), err
@@ -144,9 +144,9 @@ func (g *GormStore) CreatePermission(ctx context.Context, permission *model.Perm
 	return g.db.Create(permission).Error
 }
 
-func (g *GormStore) GetPermissionByID(ctx context.Context, id uuid.UUID) (*model.Permission, error) {
+func (g *GormStore) GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error) {
 	var permission model.Permission
-	err := g.db.Where("id = ?", id).First(&permission).Error
+	err := g.db.Where("organization_id = ? AND user_id = ?", orgID, userID).First(&permission).Error
 	return &permission, err
 }
 

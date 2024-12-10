@@ -46,7 +46,7 @@ type UserStore interface {
 	// DeleteUser deletes a user from the database.
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	// ListUsersByOrg retrieves a list of users by organization.
-	ListUsersByOrg(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error)
+	ListUsersByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error)
 	// DisableUser disables a user in the database.
 	DisableUser(ctx context.Context, id uuid.UUID) error
 	// EnableUser enables a user in the database.
@@ -62,7 +62,7 @@ type PermissionStore interface {
 	// CreatePermission creates a new permission in the database.
 	CreatePermission(ctx context.Context, permission *model.Permission) error
 	// GetPermissionByID retrieves a permission by its ID.
-	GetPermissionByID(ctx context.Context, id uuid.UUID) (*model.Permission, error)
+	GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error)
 	// ListPermissions retrieves a list of permissions.
 	ListPermissions(ctx context.Context, page, perPage int) ([]*model.Permission, error)
 	// UpdatePermission updates a permission in the database.

@@ -70,7 +70,7 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 		page.Size = request.GetPage().Size
 	}
 
-	users, total, err := u.store.ListUsersByOrg(ctx, orgID, int(page.Page), int(page.Size))
+	users, total, err := u.store.ListUsersByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
 
 	var userProtos []*v1.User
 	for _, user := range users {
