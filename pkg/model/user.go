@@ -12,15 +12,16 @@ type User struct {
 	Username       string `gorm:"not null"`
 	Email          string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Password       string // hash of the password
+	Salt           string
 	SassAdmin      bool   `gorm:"not null;default:false"`
 	Member         bool   `gorm:"not null;default:false"`
 	OrganizationID string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Organization   *Organization
 	Verified       bool `gorm:"not null;default:false"`
-	VerifiedAt     *time.Time
+	VerifiedAt     time.Time
 	Disabled       bool `gorm:"not null;default:false"`
-	DisabledAt     *time.Time
+	DisabledAt     time.Time
 	Recovered      bool `gorm:"not null;default:false"`
-	RecoveredAt    *time.Time
+	RecoveredAt    time.Time
 	RecoveredBy    string `gorm:"uuid;"`
 }

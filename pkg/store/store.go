@@ -14,6 +14,7 @@ type AuthBaseStore interface {
 	ProviderStore
 	RefreshTokenStore
 	TokenStore
+	VerificationCodeStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -90,13 +91,13 @@ type RefreshTokenStore interface {
 	// CreateRefreshToken creates a new refresh token in the database.
 	CreateRefreshToken(ctx context.Context, token *model.RefreshToken) error
 	// GetRefreshTokenByID retrieves a
-	GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (*model.RefreshToken, error)
+	GetRefreshTokenByID(ctx context.Context, token string) (*model.RefreshToken, error)
 	// ListRefreshTokens retrieves a list of refresh tokens.
 	ListRefreshTokens(ctx context.Context, page, perPage int) ([]*model.RefreshToken, error)
 	// UpdateRefreshToken updates a refresh token in the database.
 	UpdateRefreshToken(ctx context.Context, token *model.RefreshToken) error
 	// DeleteRefreshToken deletes a refresh token from the database.
-	DeleteRefreshToken(ctx context.Context, id uuid.UUID) error
+	DeleteRefreshToken(ctx context.Context, token string) error
 }
 
 // TokenStore is the interface for interacting with the token database.
@@ -109,4 +110,13 @@ type TokenStore interface {
 	ListUserTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error)
 	// DeleteToken updates a token in the database.
 	DeleteToken(ctx context.Context, id uuid.UUID) error
+}
+
+type VerificationCodeStore interface {
+	// CreateVerificationCode creates a new code
+	CreateVerificationCode(ctx context.Context, code *model.VerificationCode) error
+	// GetVerificationCode retrieves a code by hash id
+	GetVerificationCode(ctx context.Context, code string) (*model.VerificationCode, error)
+	// DeleteVerificationCode deletes the code
+	DeleteVerificationCode(ctx context.Context, code string) error
 }

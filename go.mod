@@ -16,6 +16,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.9.0
+	golang.org/x/crypto v0.29.0
 	golang.org/x/sys v0.27.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20241118233622-e639e219e697
 	google.golang.org/grpc v1.68.0

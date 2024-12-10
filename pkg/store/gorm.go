@@ -13,6 +13,21 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) CreateVerificationCode(ctx context.Context, code *model.VerificationCode) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) GetVerificationCode(ctx context.Context, code string) (*model.VerificationCode, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) DeleteVerificationCode(ctx context.Context, code string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (g *GormStore) CreateToken(ctx context.Context, token *model.Token) error {
 	return g.db.Create(token).Error
 }
@@ -194,9 +209,9 @@ func (g *GormStore) CreateRefreshToken(ctx context.Context, token *model.Refresh
 	return g.db.Create(token).Error
 }
 
-func (g *GormStore) GetRefreshTokenByID(ctx context.Context, id uuid.UUID) (*model.RefreshToken, error) {
+func (g *GormStore) GetRefreshTokenByID(ctx context.Context, refreshToken string) (*model.RefreshToken, error) {
 	var token model.RefreshToken
-	err := g.db.Where("id = ?", id).First(&token).Error
+	err := g.db.Where("token = ?", refreshToken).First(&token).Error
 	return &token, err
 }
 
@@ -210,8 +225,8 @@ func (g *GormStore) UpdateRefreshToken(ctx context.Context, token *model.Refresh
 	return g.db.Save(token).Error
 }
 
-func (g *GormStore) DeleteRefreshToken(ctx context.Context, id uuid.UUID) error {
-	return g.db.Delete(&model.RefreshToken{ID: id.String()}).Error
+func (g *GormStore) DeleteRefreshToken(ctx context.Context, token string) error {
+	return g.db.Delete(&model.RefreshToken{Token: token}).Error
 }
 
 func (g *GormStore) Migrate() error {

@@ -69,7 +69,14 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 			// send email verification email
 			logrus.Infof("verification code: %s", verificationCode)
 		} else if password != "" {
-			user.Password = password
+			secret := x.Keygen()
+			hash, err := x.HashPassword(password, secret)
+			if err != nil {
+				return err
+			}
+
+			user.Password = string(hash)
+			user.Salt = secret
 		}
 
 		err = tx.CreateUser(ctx, &user)
