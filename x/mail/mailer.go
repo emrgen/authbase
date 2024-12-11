@@ -1,9 +1,54 @@
 package mail
 
 import (
+	"github.com/google/uuid"
 	gomail "gopkg.in/mail.v2"
 	"os"
 )
+
+type MailerProvider interface {
+	Provide(orgID uuid.UUID) Mailer
+}
+
+type Mailer interface {
+	SendMail(from, to, subject, body string) error
+}
+
+type Manager struct {
+	host string
+	port int
+	user string
+	pass string
+}
+
+func NewMailerProvider(host string, port int, user, pass string) *Manager {
+	return &Manager{
+		host: host,
+		port: port,
+		user: user,
+		pass: pass,
+	}
+}
+
+func (m *Manager) Provide(orgID uuid.UUID) Mailer {
+	return &MailerImpl{
+		host: m.host,
+		port: m.port,
+		user: m.user,
+		pass: m.pass,
+	}
+}
+
+type MailerImpl struct {
+	host string
+	port int
+	user string
+	pass string
+}
+
+func (m *MailerImpl) SendMail(from, to, subject, body string) error {
+	return SendMail(from, to, subject, body)
+}
 
 func SendMail(from, to, subject, body string) error {
 	m := gomail.NewMessage()

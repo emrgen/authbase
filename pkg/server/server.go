@@ -8,6 +8,7 @@ import (
 	"github.com/emrgen/authbase/pkg/config"
 	"github.com/emrgen/authbase/pkg/service"
 	"github.com/emrgen/authbase/pkg/store"
+	"github.com/emrgen/authbase/x/mail"
 	"net"
 	"net/http"
 	"os"
@@ -144,13 +145,16 @@ func (s *Server) registerServices() error {
 
 	rdb := s.db
 	redis := s.redis
+	mailProvider := mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
+
+	storeProvider := store.NewDefaultProvider(rdb)
 
 	// Register the grpc server
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(rdb, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(rdb, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(rdb, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(rdb, redis))
-	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(rdb, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(storeProvider, mailProvider, redis))
 	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(rdb, redis))
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(rdb, redis))
 

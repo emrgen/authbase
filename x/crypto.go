@@ -9,6 +9,15 @@ import (
 	"strings"
 )
 
+func GenerateCode() string {
+	b := make([]byte, 6)
+	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+		panic(err.Error()) // rand should never fail
+	}
+
+	return base64EncodeStripped(string(b))
+}
+
 func GenerateToken() string {
 	b := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
