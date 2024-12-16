@@ -39,11 +39,11 @@ func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.UserEmail
 		return nil, err
 	}
 
-	authStore, err := a.store.Provide(orgID)
+	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
-	users, err := authStore.UserExists(ctx, orgID, request.GetUsername(), request.GetEmail())
+	users, err := as.UserExists(ctx, orgID, request.GetUsername(), request.GetEmail())
 	var emailExists bool
 	var usernameExists bool
 	for _, user := range users {
@@ -70,7 +70,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	password := request.GetPassword()
 	orgID := uuid.MustParse(request.GetOrganizationId())
 
-	as, err := a.store.Provide(orgID)
+	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	password := request.GetPassword()
 
 	orgID := uuid.MustParse(request.GetOrganizationId())
-	as, err := a.store.Provide(orgID)
+	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
@@ -256,13 +256,12 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 	}
 
 	jti := uuid.MustParse(claims.Jti)
-	orgID := uuid.MustParse(claims.OrganizationID)
-	authStore, err := a.store.Provide(orgID)
+	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
 
-	err = authStore.DeleteSession(ctx, jti)
+	err = as.DeleteSession(ctx, jti)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +290,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	}
 
 	orgID := uuid.MustParse(request.GetOrganizationId())
-	as, err := a.store.Provide(orgID)
+	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
@@ -362,14 +361,13 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 // VerifyEmail verifies the email of a user and sets the verified field to true
 func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRequest) (*v1.VerifyEmailResponse, error) {
 	var err error
-	orgID := uuid.MustParse(request.GetOrganizationId())
-	authStore, err := a.store.Provide(orgID)
+	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
 
 	// check if the email is already verified
-	err = authStore.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		code, err := tx.GetVerificationCode(ctx, request.GetToken())
 		if err != nil {
 			return err

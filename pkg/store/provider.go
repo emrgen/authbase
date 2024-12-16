@@ -81,6 +81,7 @@ func (s *MultiStoreProvider) Provide(projectID uuid.UUID) (AuthBaseStore, error)
 		return nil, err
 	}
 
+	// cache the store for the given project ID
 	s.Stores[projectID] = store
 
 	return store, nil

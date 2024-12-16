@@ -51,7 +51,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			// TODO: if http cookie is present use that
 
 			// user Bearer token for authentication
-			token, err := TokenFromHeader(ctx, "Bearer")
+			token, err := tokenFromHeader(ctx, "Bearer")
 			if err != nil {
 				return nil, err
 			}
@@ -68,7 +68,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 	}
 }
 
-func TokenFromHeader(ctx context.Context, expectedScheme string) (string, error) {
+func tokenFromHeader(ctx context.Context, expectedScheme string) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", errors.New("metadata not found")
