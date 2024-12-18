@@ -4,6 +4,7 @@ import (
 	"context"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
+	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/google/uuid"
 )
@@ -21,8 +22,33 @@ func NewPermissionService(store store.AuthBaseStore, cache *cache.Redis) *Permis
 }
 
 func (p *PermissionService) CreatePermission(ctx context.Context, request *v1.CreatePermissionRequest) (*v1.CreatePermissionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	userID, err := uuid.Parse(request.GetMemberId())
+	if err != nil {
+		return nil, err
+	}
+
+	permission := uint32(0)
+	for _, perm := range request.GetPermissions() {
+		permission |= uint32(perm)
+	}
+
+	permissionModel := model.Permission{
+		OrganizationID: orgID.String(),
+		UserID:         userID.String(),
+		Permission:     permission,
+	}
+
+	err = p.store.CreatePermission(ctx, &permissionModel)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.CreatePermissionResponse{Message: "Permission created successfully"}, nil
 }
 
 func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPermissionRequest) (*v1.GetPermissionResponse, error) {

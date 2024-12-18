@@ -641,7 +641,8 @@ message CreatePermissionRequest {
 }
 
 message CreatePermissionResponse {
-  string message = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
+  string message = 2;
 }
 
 message GetPermissionRequest {

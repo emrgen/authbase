@@ -24,6 +24,7 @@ func NewUserService(store store.AuthBaseStore, cache *cache.Redis) *UserService 
 	return &UserService{store: store, cache: cache}
 }
 
+// CreateUser creates a new user.
 func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
 	user := model.User{
 		ID:             uuid.New().String(),
@@ -41,6 +42,7 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 	}, nil
 }
 
+// GetUser gets a user by ID.
 func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (*v1.GetUserResponse, error) {
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
@@ -60,6 +62,7 @@ func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (
 	}, nil
 }
 
+// ListUsers lists users.
 func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
@@ -83,6 +86,7 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 	return &v1.ListUsersResponse{Users: userProtos, Meta: &v1.Meta{Total: int32(total)}}, nil
 }
 
+// UpdateUser updates a user.
 func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequest) (*v1.UpdateUserResponse, error) {
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
@@ -121,6 +125,7 @@ func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequ
 	}, nil
 }
 
+// DeleteUser deletes a user.
 func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error) {
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
