@@ -22,6 +22,7 @@ func NewMemberService(store store.AuthBaseStore, cache *cache.Redis) *MemberServ
 	return &MemberService{store: store, cache: cache}
 }
 
+// CreateMember creates a member of an organization
 func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemberRequest) (*v1.CreateMemberResponse, error) {
 	member := model.User{
 		ID:             uuid.New().String(),
@@ -31,13 +32,14 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 		Member:         true,
 	}
 
+	// create a permission for the new member
 	permission := model.Permission{
 		OrganizationID: request.GetOrganizationId(),
 		UserID:         member.ID,
 	}
 
+	// if the user already exists, return an error
 	err := m.store.Transaction(func(tx store.AuthBaseStore) error {
-
 		if err := tx.CreateUser(ctx, &member); err != nil {
 			return err
 		}
@@ -57,6 +59,7 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 	}, nil
 }
 
+// GetMember gets a member by ID of an organization
 func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequest) (*v1.GetMemberResponse, error) {
 	id, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
@@ -76,6 +79,7 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 	}, nil
 }
 
+// ListMember lists members of an organization
 func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRequest) (*v1.ListMemberResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
@@ -102,6 +106,7 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 	}, nil
 }
 
+// UpdateMember updates a member of an organization
 func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemberRequest) (*v1.UpdateMemberResponse, error) {
 	memberID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
@@ -158,6 +163,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 	}, nil
 }
 
+// DeleteMember deletes a member of an organization
 func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemberRequest) (*v1.DeleteMemberResponse, error) {
 	memberID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
