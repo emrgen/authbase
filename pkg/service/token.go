@@ -27,7 +27,7 @@ type TokenService struct {
 	v1.UnimplementedTokenServiceServer
 }
 
-// NewTokenService creates a new token service
+// NewTokenService creates new an offline token service
 func NewTokenService(store store.AuthBaseStore, cache *cache.Redis) *TokenService {
 	return &TokenService{
 		store: store,
@@ -35,6 +35,7 @@ func NewTokenService(store store.AuthBaseStore, cache *cache.Redis) *TokenServic
 	}
 }
 
+// CreateToken creates an offline new token
 func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenRequest) (*v1.CreateTokenResponse, error) {
 	// create a new token
 	token := &model.Token{
@@ -89,6 +90,7 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 	}, nil
 }
 
+// GetToken gets a token by id
 func (t *TokenService) GetToken(ctx context.Context, request *v1.GetTokenRequest) (*v1.GetTokenResponse, error) {
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
@@ -112,6 +114,7 @@ func (t *TokenService) GetToken(ctx context.Context, request *v1.GetTokenRequest
 	}, nil
 }
 
+// ListTokens lists offline tokens by organization id and user id
 func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensRequest) (*v1.ListTokensResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
@@ -156,6 +159,7 @@ func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensReq
 	}, nil
 }
 
+// DeleteToken deletes a offline token by id
 func (t *TokenService) DeleteToken(ctx context.Context, request *v1.DeleteTokenRequest) (*v1.DeleteTokenResponse, error) {
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
