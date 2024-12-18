@@ -204,3 +204,8 @@ func main() {
     }
 }
 ```
+
+## Progress
+
+- [x] Create organization
+- [x] Get organization

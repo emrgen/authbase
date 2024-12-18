@@ -1,14 +1,26 @@
-import React from 'react';
-import {Text} from 'ink';
+import React, {useState} from 'react';
+import {Box, Text} from 'ink';
+import Divider from 'ink-divider'
+import {TextInput} from '@inkjs/ui';
 
 type Props = {
 	name: string | undefined;
 };
 
 export default function App({name = 'Stranger'}: Props) {
+	const [greeting, setGreeting] = useState('Hello');
 	return (
-		<Text>
-			Hello, <Text color="green">{name}</Text>
-		</Text>
+		<>
+			<Divider title="Welcome to TUI" width={50}/>
+			<Box>
+				<TextInput onChange={setGreeting} placeholder="Type a greeting"/>
+			</Box>
+
+			<Box>
+				<Text>
+					{`${greeting}, ${name}!`}
+				</Text>
+			</Box>
+		</>
 	);
 }

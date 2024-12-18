@@ -7,6 +7,7 @@ import (
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
+	"github.com/emrgen/authbase/x/utils"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -119,7 +120,7 @@ func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.G
 }
 
 func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1.ListOrganizationsRequest) (*v1.ListOrganizationsResponse, error) {
-	page := request.GetPage()
+	page := utils.GetPage(request)
 
 	orgs, total, err := o.store.ListOrganizations(ctx, int(page.Page), int(page.Size))
 	if err != nil {
@@ -132,6 +133,7 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 			Id:        org.ID,
 			Name:      org.Name,
 			OwnerId:   org.OwnerID,
+			Master:    org.Master,
 			CreatedAt: timestamppb.New(org.CreatedAt),
 			UpdatedAt: timestamppb.New(org.UpdatedAt),
 		})

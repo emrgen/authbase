@@ -4,8 +4,11 @@ import (
 	"context"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"os"
+	"strconv"
 )
 
 var orgCommand = &cobra.Command{
@@ -82,6 +85,28 @@ func listOrgCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "list org",
+		Run: func(cmd *cobra.Command, args []string) {
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("error creating client: %v", err)
+				return
+			}
+
+			organizations, err := client.ListOrganizations(context.Background(), &v1.ListOrganizationsRequest{})
+			if err != nil {
+				logrus.Errorf("error listing organizations: %v", err)
+				return
+			}
+
+			// print the organizations in a table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "ID", "Name", "Owner ID", "Master"})
+			for i, organization := range organizations.Organizations {
+				table.Append([]string{strconv.FormatInt(int64(i+1), 10), organization.Id, organization.Name, organization.OwnerId, strconv.FormatBool(organization.Master)})
+			}
+
+			table.Render()
+		},
 	}
 
 	return command
