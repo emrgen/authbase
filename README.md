@@ -209,3 +209,4 @@ func main() {
 
 - [x] Create organization
 - [x] Get organization
+- [x] list organization
