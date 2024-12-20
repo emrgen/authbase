@@ -66,12 +66,43 @@ func listUserCommand() *cobra.Command {
 		Use:   "list",
 		Short: "list user",
 		Run: func(cmd *cobra.Command, args []string) {
-			verifyContext()
+			//verifyContext()
 
-			_, err := authbase.NewClient(":4000")
+			if OrganizationId == "" {
+				logrus.Errorf("missing required flag: --organization-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
+				return
 			}
+			defer client.Close()
+
+			res, err := client.ListUsers(context.Background(), &v1.ListUsersRequest{
+				OrganizationId: OrganizationId,
+			})
+			if err != nil {
+				logrus.Errorf("failed to list users: %v", err)
+				return
+			}
+
+			// print response in table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt"})
+			for i, user := range res.Users {
+				table.Append([]string{
+					string(i),
+					user.Id,
+					user.Email,
+					user.Username,
+					user.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
+					user.UpdatedAt.AsTime().Format("2006-01-02 15:04:05"),
+				})
+			}
+
+			table.Render()
 		},
 	}
 
