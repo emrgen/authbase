@@ -1,0 +1,36 @@
+"use client";
+
+import { createListCollection } from "@chakra-ui/react";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+} from "../ui/select";
+
+export const OrgSelect = () => {
+  return (
+    <SelectRoot collection={frameworks} size="sm" width="full">
+      <SelectTrigger>
+        <SelectValueText placeholder="Select Organization" />
+      </SelectTrigger>
+      <SelectContent>
+        {frameworks.items.map((movie) => (
+          <SelectItem item={movie} key={movie.value}>
+            {movie.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </SelectRoot>
+  );
+};
+
+const frameworks = createListCollection({
+  items: [
+    { label: 'master', value: 'master' },
+    { label: 'dev', value: 'dev' },
+    { label: 'feature', value: 'feature' },
+    { label: 'bugfix', value: 'bugfix' },
+  ],
+});
