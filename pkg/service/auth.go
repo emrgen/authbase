@@ -11,6 +11,7 @@ import (
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
@@ -153,13 +154,18 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	}
 
 	// generate tokens
-	token := x.GenerateJWTToken(user.ID, user.OrganizationID)
+	token, err := x.GenerateJWTToken(user.ID, user.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
 	expireIn := token.ExpireAt.Sub(token.IssuedAt)
 	// save tokens to cache
 	err = a.cache.Set(token.AccessToken, user.ID, expireIn)
 	if err != nil {
 		return nil, err
 	}
+
+	logrus.Info("token: ", token)
 
 	refreshExpireAt := time.Now().Add(5 * 24 * time.Hour)
 
@@ -183,11 +189,20 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 
 	// return tokens
 	return &v1.LoginResponse{
-		AccessToken:      token.AccessToken,
-		RefreshToken:     token.RefreshToken,
-		ExpiresAt:        timestamppb.New(token.ExpireAt),
-		IssuedAt:         timestamppb.New(token.IssuedAt),
-		RefreshExpiresAt: timestamppb.New(refreshExpireAt),
+		User: &v1.User{
+			Id:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: timestamppb.New(user.CreatedAt),
+			UpdatedAt: timestamppb.New(user.UpdatedAt),
+		},
+		Token: &v1.AuthToken{
+			AccessToken:      token.AccessToken,
+			RefreshToken:     token.RefreshToken,
+			ExpiresAt:        timestamppb.New(token.ExpireAt),
+			IssuedAt:         timestamppb.New(token.IssuedAt),
+			RefreshExpiresAt: timestamppb.New(refreshExpireAt),
+		},
 	}, nil
 }
 
@@ -245,7 +260,10 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	//	return nil
 	//})
 
-	jwtToken := x.GenerateJWTToken(userID, organizationID)
+	jwtToken, err := x.GenerateJWTToken(userID, organizationID)
+	if err != nil {
+		return nil, err
+	}
 
 	return &v1.RefreshResponse{
 		AccessToken:  jwtToken.AccessToken,

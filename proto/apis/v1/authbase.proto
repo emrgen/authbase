@@ -16,6 +16,7 @@ message User {
 
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
+  optional google.protobuf.Timestamp verified_at = 12;
 }
 
 message Page {
@@ -55,18 +56,23 @@ message Tokens {
 message LoginRequest {
   string email = 2 [(validate.rules).string.email = true];
   string password = 3 [
-    (validate.rules).string.min_len = 8,
+    (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
-  optional string organization_id = 4 [(validate.rules).string.uuid = true];
+  string organization_id = 4 [(validate.rules).string.uuid = true];
 }
 
-message LoginResponse {
+message AuthToken {
   string access_token = 1;
   string refresh_token = 2;
   google.protobuf.Timestamp expires_at = 3;
   google.protobuf.Timestamp issued_at = 4;
   google.protobuf.Timestamp refresh_expires_at = 5;
+}
+
+message LoginResponse {
+  User user = 1;
+  AuthToken token = 2;
 }
 
 message RefreshRequest {

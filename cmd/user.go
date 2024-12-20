@@ -4,8 +4,10 @@ import (
 	"context"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var userCommand = &cobra.Command{
@@ -15,6 +17,7 @@ var userCommand = &cobra.Command{
 
 func init() {
 	userCommand.AddCommand(createUserCommand())
+	userCommand.AddCommand(loginUserCommand())
 	userCommand.AddCommand(listUserCommand())
 	userCommand.AddCommand(updateUserCommand())
 	userCommand.AddCommand(deleteUserCommand())
@@ -204,4 +207,66 @@ func registerUserCommand() *cobra.Command {
 
 	return command
 
+}
+
+func loginUserCommand() *cobra.Command {
+	var email string
+	var password string
+
+	command := &cobra.Command{
+		Use:   "login",
+		Short: "login user",
+		Run: func(cmd *cobra.Command, args []string) {
+			if OrganizationId == "" {
+				logrus.Errorf("missing required flag: --organization-id")
+				return
+			}
+
+			if email == "" {
+				logrus.Errorf("missing required flag: --email")
+				return
+			}
+
+			if password == "" {
+				logrus.Errorf("missing required flag: --password")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.Login(context.Background(), &v1.LoginRequest{
+				Email:          email,
+				Password:       password,
+				OrganizationId: OrganizationId,
+			})
+			if err != nil {
+				logrus.Errorf("failed to login user: %v", err)
+				return
+			}
+
+			// print response in table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt", "Token"})
+			table.Append([]string{
+				"1", res.User.Id, res.User.Email, res.User.Username,
+				res.User.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
+				res.User.UpdatedAt.AsTime().Format("2006-01-02 15:04:05"),
+				res.Token.AccessToken,
+			})
+
+			table.Render()
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&email, "email", "e", "", "email")
+	command.Flags().StringVarP(&password, "password", "p", "", "password")
+
+	return command
 }

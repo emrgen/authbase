@@ -18,11 +18,11 @@ type User struct {
 	Member         bool   `gorm:"not null;default:false"`
 	OrganizationID string `gorm:"not null;uniqueIndex:compositeIndex;uniqueIndex:userOrganizationIndex;"`
 	Organization   *Organization
-	Verified       bool `gorm:"not null;default:false"`
-	VerifiedAt     time.Time
-	Disabled       bool `gorm:"not null;default:false"`
-	DisabledAt     time.Time
-	Recovered      bool `gorm:"not null;default:false"`
-	RecoveredAt    time.Time
-	RecoveredBy    string `gorm:"uuid;"`
+	Verified       bool      `gorm:"not null;default:false"`
+	VerifiedAt     time.Time `gorm:"default:null"`
+	Disabled       bool      `gorm:"not null;default:false"`
+	DisabledAt     time.Time `gorm:"default:null"`
+	Recovered      bool      `gorm:"not null;default:false"`
+	RecoveredAt    time.Time `gorm:"default:null"`
+	RecoveredBy    string    `gorm:"uuid;"`
 }

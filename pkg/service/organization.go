@@ -38,10 +38,10 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 	}
 
 	org := model.Organization{
-		ID:   uuid.New().String(),
-		Name: request.GetName(),
+		ID:      uuid.New().String(),
+		Name:    request.GetName(),
+		OwnerID: user.ID,
 	}
-
 	user.OrganizationID = org.ID
 
 	// if this is the first organization, make the organization is the master organization

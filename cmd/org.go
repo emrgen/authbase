@@ -58,6 +58,7 @@ func createOrgCommand() *cobra.Command {
 				logrus.Errorf("error creating client: %v", err)
 				return
 			}
+			defer client.Close()
 
 			// create the master organization
 			if master {

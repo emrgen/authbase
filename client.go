@@ -4,6 +4,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"io"
 )
 
 type Client interface {
@@ -14,9 +15,11 @@ type Client interface {
 	v1.AuthServiceClient
 	v1.OauthServiceClient
 	v1.TokenServiceClient
+	io.Closer
 }
 
 type client struct {
+	conn *grpc.ClientConn
 	v1.AdminOrganizationServiceClient
 	v1.OrganizationServiceClient
 	v1.UserServiceClient
@@ -32,6 +35,7 @@ func NewClient(port string) (Client, error) {
 		return nil, err
 	}
 	return &client{
+		conn:                           conn,
 		OrganizationServiceClient:      v1.NewOrganizationServiceClient(conn),
 		UserServiceClient:              v1.NewUserServiceClient(conn),
 		PermissionServiceClient:        v1.NewPermissionServiceClient(conn),
@@ -40,4 +44,8 @@ func NewClient(port string) (Client, error) {
 		TokenServiceClient:             v1.NewTokenServiceClient(conn),
 		AdminOrganizationServiceClient: v1.NewAdminOrganizationServiceClient(conn),
 	}, nil
+}
+
+func (c *client) Close() error {
+	return c.conn.Close()
 }

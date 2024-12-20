@@ -206,6 +206,7 @@ func (s *Server) run() error {
 	apiMux.Handle(docsPath, http.StripPrefix(docsPath, http.FileServer(openapiDocs)))
 	apiMux.Handle("/", s.mux)
 
+	// CORS middleware
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"}, // All origins are allowed
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT"},
