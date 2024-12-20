@@ -14,6 +14,7 @@ var (
 // AuthBaseStore is the interface for interacting with the database.
 type AuthBaseStore interface {
 	UserStore
+	SessionStore
 	OrganizationStore
 	PermissionStore
 	ProviderStore
@@ -63,6 +64,15 @@ type UserStore interface {
 	VerifyUser(ctx context.Context, id uuid.UUID) error
 	// UserExists checks if a user exists in the database.
 	UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error)
+}
+
+type SessionStore interface {
+	// CreateSession creates a new session in the database.
+	CreateSession(ctx context.Context, session *model.Session) error
+	// ListSessions retrieves a list of sessions.
+	ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error)
+	// DeleteSession deletes a session from the database.
+	DeleteSession(ctx context.Context, userID uuid.UUID) error
 }
 
 // PermissionStore is the interface for interacting with the permission database.

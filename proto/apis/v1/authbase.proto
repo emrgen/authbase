@@ -337,6 +337,25 @@ message DeleteUserResponse {
   string message = 1;
 }
 
+message ActiveUsersRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  optional Page page = 2;
+}
+
+message ActiveUsersResponse {
+  repeated User users = 1;
+  Meta meta = 2;
+}
+
+message DeactivateUserRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeactivateUserResponse {
+  string message = 1;
+}
+
 // User service
 
 service UserService {
@@ -364,6 +383,14 @@ service UserService {
 
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
     option (google.api.http) = {delete: "/v1/users/{id}"};
+  }
+
+  rpc ActiveUsers(ActiveUsersRequest) returns (ActiveUsersResponse) {
+    option (google.api.http) = {get: "/v1/users/active"};
+  }
+
+  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse) {
+    option (google.api.http) = {delete: "/v1/users/-/deactivate/{user_id}"};
   }
 }
 
@@ -505,9 +532,7 @@ service OrganizationService {
   }
 
   rpc GetOrganizationId(GetOrganizationIdRequest) returns (GetOrganizationIdResponse) {
-    option (google.api.http) = {
-      get: "/v1/organizations/-/name/{name}"
-    };
+    option (google.api.http) = {get: "/v1/organizations/-/name/{name}"};
   }
 
   rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse) {

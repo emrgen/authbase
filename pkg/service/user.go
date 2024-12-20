@@ -152,3 +152,49 @@ func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequ
 		Message: "User deleted successfully.",
 	}, nil
 }
+
+func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRequest) (*v1.ActiveUsersResponse, error) {
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+	page := x.GetPageFromRequest(request)
+
+	sessions, err := u.store.ListSessions(ctx, orgID, int(page.Page), int(page.Size))
+	if err != nil {
+		return nil, err
+	}
+
+	var userProtos []*v1.User
+	for _, session := range sessions {
+		user := session.User
+		if user == nil {
+			continue
+		}
+		userProtos = append(userProtos, &v1.User{
+			Id:        session.UserID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: timestamppb.New(user.CreatedAt),
+			UpdatedAt: timestamppb.New(user.UpdatedAt),
+		})
+	}
+
+	return &v1.ActiveUsersResponse{Users: userProtos}, nil
+}
+
+func (u *UserService) DeactivateUser(ctx context.Context, request *v1.DeactivateUserRequest) (*v1.DeactivateUserResponse, error) {
+	userID, err := uuid.Parse(request.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = u.store.DeleteSession(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DeactivateUserResponse{
+		Message: "User deactivated successfully.",
+	}, nil
+}
