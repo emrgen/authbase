@@ -7,7 +7,7 @@ type Organization struct {
 	ID      string `gorm:"primaryKey;uuid;not null;"`
 	Name    string `gorm:"not null;unique"`
 	OwnerID string `gorm:"not null"`
-	Owner   *User  `gorm:"foreignKey:OwnerID"`
+	Owner   *User  `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE;"` // deleting the owner will delete the organization
 	Config  string `gorm:"type:json"`
 	Master  bool   `gorm:"not null;default:false"`
 }

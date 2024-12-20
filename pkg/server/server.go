@@ -50,15 +50,16 @@ func UnaryRequestTimeInterceptor() grpc.UnaryClientInterceptor {
 }
 
 type Server struct {
-	config     *config.Config
-	db         store.AuthBaseStore
-	redis      *cache.Redis
-	gl         net.Listener
-	rl         net.Listener
-	grpcServer *grpc.Server
-	mux        *runtime.ServeMux
-	httpPort   string
-	grpcPort   string
+	config          *config.Config
+	db              store.AuthBaseStore
+	redis           *cache.Redis
+	adminOrgService v1.AdminOrganizationServiceServer
+	gl              net.Listener
+	rl              net.Listener
+	grpcServer      *grpc.Server
+	mux             *runtime.ServeMux
+	httpPort        string
+	grpcPort        string
 }
 
 // NewServerFromEnv creates a new server instance from the environment configuration.
@@ -95,6 +96,11 @@ func (s *Server) Start(grpcPort, httpPort string) error {
 func (s *Server) init(grpcPort, httpPort string) error {
 	s.db = config.GetDB()
 	s.redis = cache.NewRedisClient()
+
+	err := s.db.Migrate()
+	if err != nil {
+		return err
+	}
 
 	grpcPort = ":" + grpcPort
 	httpPort = ":" + httpPort
@@ -149,7 +155,10 @@ func (s *Server) registerServices() error {
 
 	storeProvider := store.NewDefaultProvider(rdb)
 
+	//s.adminOrgService = service.NewAdminOrganizationService(rdb, redis)
+
 	// Register the grpc server
+	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(rdb, redis))
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(rdb, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(rdb, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(rdb, redis))
@@ -159,6 +168,9 @@ func (s *Server) registerServices() error {
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(rdb, redis))
 
 	// Register the rest gateway
+	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+		return err
+	}
 	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
 		return err
 	}
@@ -188,7 +200,6 @@ func (s *Server) registerServices() error {
 
 // run the server and listen on grpc and http ports
 func (s *Server) run() error {
-
 	apiMux := http.NewServeMux()
 	openapiDocs := packr.NewBox("../../docs/v1")
 	docsPath := "/v1/docs/"
@@ -237,6 +248,25 @@ func (s *Server) run() error {
 
 	time.Sleep(1 * time.Second)
 	logrus.Infof("Press Ctrl+C to stop the server")
+
+	// if an admin organization is provided, create the org and the super admin user
+	if s.config.AdminOrg.Valid() {
+		logrus.Infof("creating admin organization: %v", s.config.AdminOrg)
+		adminOrgService := service.NewAdminOrganizationService(s.db, s.redis)
+		_, err := adminOrgService.CreateAdminOrganization(context.TODO(), &v1.CreateAdminOrganizationRequest{
+			Name:     s.config.AdminOrg.Username,
+			Email:    s.config.AdminOrg.Email,
+			Password: &s.config.AdminOrg.Password,
+		})
+		if err != nil {
+			if !errors.Is(err, store.ErrOrganizationExists) {
+				logrus.Infof("admin organization already exists, skipping creation")
+			} else {
+				logrus.Errorf("error creating admin organization: %v", err)
+				return err
+			}
+		}
+	}
 
 	// listen for interrupt signal to gracefully shut down the server
 	sigs := make(chan os.Signal, 1)

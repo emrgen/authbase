@@ -50,7 +50,6 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		if total == 0 {
 			org.Master = true
 			user.SassAdmin = true
-			org.OwnerID = user.ID
 		}
 
 		err := tx.CreateOrganization(ctx, &org)
@@ -59,6 +58,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		}
 
 		// if password is provided, email verification is not strictly required
+		// FIXME: if the mail server config is provider the email verification will fail with error
 		if password == "" || verifyEmail {
 			verificationCode := x.RefreshToken()
 			// save the code to the db
@@ -67,8 +67,13 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 				return err
 			}
 
-			// send email verification email
-			logrus.Infof("verification code: %s", verificationCode)
+			if password == "" {
+				// send email password reset email
+				logrus.Infof("reset password code: %s", verificationCode)
+			} else {
+				// send email verification email
+				logrus.Infof("verification code: %s", verificationCode)
+			}
 		} else if password != "" {
 			secret := x.Keygen()
 			hash, err := x.HashPassword(password, secret)

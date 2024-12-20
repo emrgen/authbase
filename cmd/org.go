@@ -28,6 +28,7 @@ func createOrgCommand() *cobra.Command {
 	var password string
 	var username string
 	var email string
+	var master bool
 
 	command := &cobra.Command{
 		Use:   "create",
@@ -58,18 +59,33 @@ func createOrgCommand() *cobra.Command {
 				return
 			}
 
-			organization, err := client.CreateOrganization(context.Background(), &v1.CreateOrganizationRequest{
-				Name:     organization,
-				Username: username,
-				Email:    email,
-				Password: &password,
-			})
-			if err != nil {
-				logrus.Errorf("error creating organization: %v", err)
-				return
+			// create the master organization
+			if master {
+				logrus.Infof("creating master organization")
+				organization, err := client.CreateAdminOrganization(context.Background(), &v1.CreateAdminOrganizationRequest{
+					Name:     organization,
+					Username: username,
+					Email:    email,
+					Password: &password,
+				})
+				if err != nil {
+					logrus.Errorf("error creating master organization: %v", err)
+					return
+				}
+				logrus.Infof("master organization created: %v", organization)
+			} else {
+				organization, err := client.CreateOrganization(context.Background(), &v1.CreateOrganizationRequest{
+					Name:     organization,
+					Username: username,
+					Email:    email,
+					Password: &password,
+				})
+				if err != nil {
+					logrus.Errorf("error creating organization: %v", err)
+					return
+				}
+				logrus.Infof("organization created: %v", organization)
 			}
-
-			logrus.Infof("organization created: %v", organization)
 		},
 	}
 
@@ -77,6 +93,7 @@ func createOrgCommand() *cobra.Command {
 	command.Flags().StringVarP(&username, "username", "u", "", "username of the organization")
 	command.Flags().StringVarP(&email, "email", "e", "", "email of the organization")
 	command.Flags().StringVarP(&password, "password", "p", "", "password of the organization")
+	command.Flags().BoolVarP(&master, "master", "m", false, "master organization")
 
 	return command
 }

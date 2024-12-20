@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -123,7 +124,15 @@ func (g *GormStore) UserExists(ctx context.Context, orgID uuid.UUID, username, e
 }
 
 func (g *GormStore) CreateOrganization(ctx context.Context, org *model.Organization) error {
-	return g.db.Create(org).Error
+	err := g.db.Create(org).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrCheckConstraintViolated) {
+			return ErrOrganizationExists
+		}
+	}
+
+	return err
 }
 
 func (g *GormStore) GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error) {

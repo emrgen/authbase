@@ -2,8 +2,13 @@ package store
 
 import (
 	"context"
+	"errors"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
+)
+
+var (
+	ErrOrganizationExists = errors.New("organization already exists")
 )
 
 // AuthBaseStore is the interface for interacting with the database.

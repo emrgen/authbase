@@ -7,6 +7,7 @@ import (
 )
 
 type Client interface {
+	v1.AdminOrganizationServiceClient
 	v1.OrganizationServiceClient
 	v1.UserServiceClient
 	v1.PermissionServiceClient
@@ -16,6 +17,7 @@ type Client interface {
 }
 
 type client struct {
+	v1.AdminOrganizationServiceClient
 	v1.OrganizationServiceClient
 	v1.UserServiceClient
 	v1.PermissionServiceClient
@@ -30,11 +32,12 @@ func NewClient(port string) (Client, error) {
 		return nil, err
 	}
 	return &client{
-		OrganizationServiceClient: v1.NewOrganizationServiceClient(conn),
-		UserServiceClient:         v1.NewUserServiceClient(conn),
-		PermissionServiceClient:   v1.NewPermissionServiceClient(conn),
-		AuthServiceClient:         v1.NewAuthServiceClient(conn),
-		OauthServiceClient:        v1.NewOauthServiceClient(conn),
-		TokenServiceClient:        v1.NewTokenServiceClient(conn),
+		OrganizationServiceClient:      v1.NewOrganizationServiceClient(conn),
+		UserServiceClient:              v1.NewUserServiceClient(conn),
+		PermissionServiceClient:        v1.NewPermissionServiceClient(conn),
+		AuthServiceClient:              v1.NewAuthServiceClient(conn),
+		OauthServiceClient:             v1.NewOauthServiceClient(conn),
+		TokenServiceClient:             v1.NewTokenServiceClient(conn),
+		AdminOrganizationServiceClient: v1.NewAdminOrganizationServiceClient(conn),
 	}, nil
 }

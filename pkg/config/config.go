@@ -19,6 +19,7 @@ type Config struct {
 	Environment Environment
 	DB          *DBConfig
 	AppKey      string
+	AdminOrg    *AdminOrgConfig
 }
 
 type DBConfig struct {
@@ -45,10 +46,17 @@ func FromEnv() (*Config, error) {
 
 	appKey := os.Getenv("APP_KEY")
 
+	adminOrgConfig := &AdminOrgConfig{}
+	adminOrgConfig.OrgName = os.Getenv("ADMIN_ORGANIZATION_NAME")
+	adminOrgConfig.Username = os.Getenv("SUPER_ADMIN_USERNAME")
+	adminOrgConfig.Email = os.Getenv("SUPER_ADMIN_EMAIL")
+	adminOrgConfig.Password = os.Getenv("SUPER_ADMIN_PASSWORD")
+
 	config := &Config{
 		Environment: Environment(env),
 		DB:          dbConfig,
 		AppKey:      appKey,
+		AdminOrg:    adminOrgConfig,
 	}
 
 	return config, nil
