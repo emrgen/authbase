@@ -75,6 +75,14 @@ message LoginResponse {
   AuthToken token = 2;
 }
 
+message LogoutRequest {
+  string access_token = 1;
+}
+
+message LogoutResponse {
+  string message = 1;
+}
+
 message RefreshRequest {
   string refresh_token = 1;
   optional string organization_id = 2 [(validate.rules).string.uuid = true];
@@ -135,6 +143,13 @@ service AuthService {
     };
   }
 
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/logout"
+      body: "*"
+    };
+  }
+
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {
     option (google.api.http) = {
       post: "/v1/auth/refresh"
@@ -178,6 +193,14 @@ message TokenRequest {
 
 message TokenResponse {
   Tokens tokens = 1;
+}
+
+message OauthLogoutRequest {
+  string access_token = 3;
+}
+
+message OauthLogoutResponse {
+  string message = 1;
 }
 
 service OauthService {

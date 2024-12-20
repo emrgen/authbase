@@ -26,6 +26,11 @@ func (o *OauthService) Authorize(ctx context.Context, request *v1.AuthorizeReque
 	panic("implement me")
 }
 
+func (o *OauthService) Logout(ctx context.Context, request *v1.OauthLogoutRequest) (*v1.OauthLogoutResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Callback handles the callback request after authorization
 func (o *OauthService) Callback(ctx context.Context, request *v1.CallbackRequest) (*v1.CallbackResponse, error) {
 	//TODO implement me

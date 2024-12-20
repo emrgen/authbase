@@ -14,6 +14,10 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error {
+	return g.db.Delete(&model.Session{UserID: userID.String()}).Error
+}
+
 func (g *GormStore) ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error) {
 	var sessions []*model.Session
 	err := g.db.Limit(perPage).Offset(page*perPage).Preload("User").Find(&sessions, "organization_id = ?", orgID).Error
@@ -24,8 +28,9 @@ func (g *GormStore) CreateSession(ctx context.Context, session *model.Session) e
 	return g.db.Create(session).Error
 }
 
-func (g *GormStore) DeleteSession(ctx context.Context, userID uuid.UUID) error {
-	return g.db.Delete(&model.Session{UserID: userID.String()}).Error
+func (g *GormStore) DeleteSession(ctx context.Context, id uuid.UUID) error {
+	session := model.Session{ID: id.String()}
+	return g.db.Delete(&session).Error
 }
 
 func (g *GormStore) CreateVerificationCode(ctx context.Context, code *model.VerificationCode) error {

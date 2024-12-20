@@ -171,12 +171,31 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 
 	// save the token to the db
 	// TODO: save the token to the db in encrypted form
-	err = authStore.CreateRefreshToken(ctx, &model.RefreshToken{
-		Token:          token.RefreshToken,
-		OrganizationID: user.OrganizationID,
-		UserID:         user.ID,
-		ExpireAt:       refreshExpireAt,
-		IssuedAt:       token.IssuedAt,
+	err = authStore.Transaction(func(tx store.AuthBaseStore) error {
+		err = authStore.CreateRefreshToken(ctx, &model.RefreshToken{
+			Token:          token.RefreshToken,
+			OrganizationID: user.OrganizationID,
+			UserID:         user.ID,
+			ExpireAt:       refreshExpireAt,
+			IssuedAt:       token.IssuedAt,
+		})
+		if err != nil {
+			return err
+		}
+
+		// create a new session
+		// user the jti as the session id
+		// this will allow multiple sessions for a user at the same time
+		err = authStore.CreateSession(ctx, &model.Session{
+			ID:             jti,
+			UserID:         user.ID,
+			OrganizationID: user.OrganizationID,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -199,6 +218,30 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 			RefreshExpiresAt: timestamppb.New(refreshExpireAt),
 		},
 	}, nil
+}
+
+func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v1.LogoutResponse, error) {
+	// check if the token is still valid
+	accessToken := request.GetAccessToken()
+	claims, err := x.VerifyJWTToken(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	jti := uuid.MustParse(claims.Jti)
+	orgID := uuid.MustParse(claims.OrgID)
+	authStore, err := a.store.Provide(orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = authStore.DeleteSession(ctx, jti)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.LogoutResponse{Message: "logged out"}, nil
+
 }
 
 // Refresh generates a new access token using the refresh token

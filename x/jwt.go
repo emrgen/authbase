@@ -18,7 +18,8 @@ func init() {
 
 type Claims struct {
 	Username   string `json:"username"`
-	Org        string `json:"org"`
+	OrgID      string `json:"org_id"`
+	UserID     string `json:"user_id"`
 	Permission uint32 `json:"permission"`
 	Jti        string `json:"jti"`
 }
@@ -33,11 +34,11 @@ type JWTToken struct {
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(userID, organizationID, jti string) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": userID,
-		"org":      organizationID,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(),
-		"iat":      time.Now().Unix(),
-		"jti":      jti,
+		"user_id": userID,
+		"org_id":  organizationID,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"iat":     time.Now().Unix(),
+		"jti":     jti,
 	})
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
@@ -66,8 +67,8 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	claims := token.Claims.(jwt.MapClaims)
 
 	return &Claims{
-		Username: claims["username"].(string),
-		Org:      claims["org"].(string),
-		Jti:      claims["jti"].(string),
+		UserID: claims["user_id"].(string),
+		OrgID:  claims["org"].(string),
+		Jti:    claims["jti"].(string),
 	}, nil
 }

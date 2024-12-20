@@ -72,7 +72,9 @@ type SessionStore interface {
 	// ListSessions retrieves a list of sessions.
 	ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error)
 	// DeleteSession deletes a session from the database.
-	DeleteSession(ctx context.Context, userID uuid.UUID) error
+	DeleteSession(ctx context.Context, id uuid.UUID) error
+	// DeleteSessionByUserID deletes a session from the database by user ID.
+	DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
 // PermissionStore is the interface for interacting with the permission database.

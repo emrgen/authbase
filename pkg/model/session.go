@@ -11,5 +11,5 @@ type Session struct {
 	UserID         string
 	User           *User `gorm:"foreignKey:UserID;OnDelete:CASCADE;"`
 	OrganizationID string
-	ExpireAt       time.Time `gorm:"default:null"`
+	ExpiredAt      time.Time `gorm:"default:null"`
 }
