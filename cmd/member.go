@@ -24,7 +24,7 @@ func createMemberCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "create",
-		Short: "create user",
+		Short: "create member",
 		Run: func(cmd *cobra.Command, args []string) {
 			verifyContext()
 			if username == "" {

@@ -8,7 +8,7 @@ var strategyCommand = &cobra.Command{
 }
 
 func init() {
-	userCommand.AddCommand(createStrategyCommand())
+	strategyCommand.AddCommand(createStrategyCommand())
 }
 
 func createStrategyCommand() *cobra.Command {

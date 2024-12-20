@@ -25,13 +25,18 @@ func init() {
 
 func createUserCommand() *cobra.Command {
 	var username string
+	var password string
 	var email string
 
 	command := &cobra.Command{
 		Use:   "create",
 		Short: "create user",
 		Run: func(cmd *cobra.Command, args []string) {
-			verifyContext()
+			if OrganizationId == "" {
+				logrus.Errorf("missing required flag: --organization-id")
+				return
+			}
+
 			if username == "" {
 				logrus.Errorf("missing required flag: --username")
 				return
@@ -42,21 +47,41 @@ func createUserCommand() *cobra.Command {
 				return
 			}
 
-			_, err := authbase.NewClient(":4000")
+			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
+			defer client.Close()
 
-			//client.CreateUser()
+			user, err := client.CreateUser(context.Background(), &v1.CreateUserRequest{
+				OrganizationId: OrganizationId,
+				Email:          email,
+				Username:       username,
+				Password:       "password",
+			})
+			if err != nil {
+				logrus.Errorf("failed to create user: %v", err)
+				return
+			}
 
+			logrus.Errorf("OrganizationId: %v", OrganizationId)
 			logrus.Infof("user created successfully %v", "")
+
+			// print response in table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt"})
+			table.Append([]string{
+				"1", user.Id, user.Email, user.Username,
+			})
+			table.Render()
 		},
 	}
 
 	bindContextFlags(command)
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
+	command.Flags().StringVarP(&password, "password", "p", "", "password")
 
 	return command
 }
