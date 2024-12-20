@@ -31,6 +31,7 @@ func NewAuthService(store store.AuthBaseStoreProvider, mailer mail.MailerProvide
 	return &AuthService{store: store, mailer: mailer, cache: cache}
 }
 
+// CheckUserAlreadyExists checks if a user with the given email or username already exists in an organization
 func (a *AuthService) CheckUserAlreadyExists(ctx context.Context, request *v1.CheckUserAlreadyExistsRequest) (*v1.CheckEmailAlreadyExistsResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
@@ -129,6 +130,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	}, nil
 }
 
+// Login logs in a user and returns an access token and a refresh token
 func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.LoginResponse, error) {
 	email := request.GetEmail()
 	password := request.GetPassword()
@@ -154,28 +156,21 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	}
 
 	// generate tokens
-	token, err := x.GenerateJWTToken(user.ID, user.OrganizationID)
+	jti := uuid.New().String()
+	token, err := x.GenerateJWTToken(user.ID, user.OrganizationID, jti)
 	if err != nil {
 		return nil, err
 	}
-	expireIn := token.ExpireAt.Sub(token.IssuedAt)
-	// save tokens to cache
-	err = a.cache.Set(token.AccessToken, user.ID, expireIn)
-	if err != nil {
-		return nil, err
-	}
-
 	logrus.Info("token: ", token)
-
 	refreshExpireAt := time.Now().Add(5 * 24 * time.Hour)
-
-	// save refresh token to cache
-	err = a.cache.Set(token.RefreshToken, user.ID, 5*24*time.Hour)
+	// save refresh token to cache, it will be used to validate the refresh token request
+	err = a.cache.Set(jti, user.ID, 5*24*time.Hour)
 	if err != nil {
 		return nil, err
 	}
 
 	// save the token to the db
+	// TODO: save the token to the db in encrypted form
 	err = authStore.CreateRefreshToken(ctx, &model.RefreshToken{
 		Token:          token.RefreshToken,
 		OrganizationID: user.OrganizationID,
@@ -206,14 +201,20 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	}, nil
 }
 
+// Refresh generates a new access token using the refresh token
 func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (*v1.RefreshResponse, error) {
-	var tokenExists bool
+	var foundToken bool
 	var userID string
 	var organizationID string
 
 	// check if the refresh token is still valid
 	refreshToken := request.GetRefreshToken()
-	tokenStr, err := a.cache.Get(refreshToken)
+	claims, err := x.VerifyJWTToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenStr, err := a.cache.Get(claims.Jti)
 	if err != nil {
 		// if no value in cache check the db
 		return nil, err
@@ -233,10 +234,10 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		}
 		userID = token.UserID
 		organizationID = token.OrganizationID
-		tokenExists = true
+		foundToken = true
 	}
 
-	if !tokenExists {
+	if !foundToken {
 		// check the db
 		token, err := authStore.GetRefreshTokenByID(ctx, refreshToken)
 		if err != nil {
@@ -247,20 +248,12 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 			return nil, errors.New("token not found, need to login again")
 		}
 
-		tokenExists = true
+		foundToken = true
 		userID = token.UserID
 		organizationID = token.OrganizationID
 	}
 
-	//TODO: if the refresh token is invalidated create and save a new refresh token in db+cache
-	//newRefreshToken := x.GenerateToken()
-	//expireAt := time.Now().Add(defaultExpireIn)
-	//issuedAt := time.Now()
-	//a.store.Transaction(func(tx store.AuthBaseStore) error {
-	//	return nil
-	//})
-
-	jwtToken, err := x.GenerateJWTToken(userID, organizationID)
+	jwtToken, err := x.GenerateJWTToken(userID, organizationID, claims.Jti)
 	if err != nil {
 		return nil, err
 	}
@@ -273,6 +266,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	}, nil
 }
 
+// VerifyEmail verifies the email of a user and sets the verified field to true
 func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRequest) (*v1.VerifyEmailResponse, error) {
 	var err error
 	orgID := uuid.MustParse(request.GetOrganizationId())

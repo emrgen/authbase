@@ -135,6 +135,15 @@ func (g *GormStore) CreateOrganization(ctx context.Context, org *model.Organizat
 	return err
 }
 
+// GetOrganizationByName retrieves an organization by name
+// TODO: heavily rate limited and should be used with caution,
+// maybe use reCAPTCHA to verify the user is not a bot
+func (g *GormStore) GetOrganizationByName(ctx context.Context, name string) (*model.Organization, error) {
+	var org model.Organization
+	err := g.db.Where("name = ?", name).First(&org).Error
+	return &org, err
+}
+
 func (g *GormStore) GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error) {
 	var org model.Organization
 	err := g.db.Where("id = ?", id).First(&org).Error

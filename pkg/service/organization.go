@@ -102,6 +102,19 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 	}, nil
 }
 
+// GetOrganizationId gets the organization ID, given the name
+func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1.GetOrganizationIdRequest) (*v1.GetOrganizationIdResponse, error) {
+	org, err := o.store.GetOrganizationByName(ctx, request.GetName())
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetOrganizationIdResponse{
+		Id:   org.ID,
+		Name: org.Name,
+	}, nil
+}
+
 func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.GetOrganizationRequest) (*v1.GetOrganizationResponse, error) {
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {

@@ -28,6 +28,8 @@ type AuthBaseStore interface {
 type OrganizationStore interface {
 	// CreateOrganization creates a new organization in the database.
 	CreateOrganization(ctx context.Context, org *model.Organization) error
+	// GetOrganizationByName retrieves an organization by its name.
+	GetOrganizationByName(ctx context.Context, name string) (*model.Organization, error)
 	// GetOrganizationByID retrieves an organization by its ID.
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error)
 	// ListOrganizations retrieves a list of organizations.

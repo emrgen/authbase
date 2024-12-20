@@ -33,6 +33,17 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 		OrganizationID: request.GetOrganizationId(),
 	}
 
+	password := request.GetPassword()
+	if password != "" {
+		salt := x.Keygen()
+		hashedPassword, err := x.HashPassword(password, salt)
+		if err != nil {
+			return nil, err
+		}
+		user.Password = string(hashedPassword)
+		user.Salt = salt
+	}
+
 	if err := u.store.CreateUser(ctx, &user); err != nil {
 		return nil, err
 	}

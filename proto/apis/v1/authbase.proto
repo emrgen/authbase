@@ -406,6 +406,15 @@ message GetOrganizationResponse {
   Organization organization = 1;
 }
 
+message GetOrganizationIdRequest {
+  string name = 1;
+}
+
+message GetOrganizationIdResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+}
+
 message ListOrganizationsRequest {
   Page page = 1;
 }
@@ -492,6 +501,12 @@ service OrganizationService {
     option (google.api.http) = {
       post: "/v1/organizations"
       body: "*"
+    };
+  }
+
+  rpc GetOrganizationId(GetOrganizationIdRequest) returns (GetOrganizationIdResponse) {
+    option (google.api.http) = {
+      get: "/v1/organizations/-/name/{name}"
     };
   }
 
