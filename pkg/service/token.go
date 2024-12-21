@@ -6,6 +6,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
@@ -22,6 +23,7 @@ var _ v1.TokenServiceServer = new(TokenService)
 
 // TokenService is a service for token
 type TokenService struct {
+	perm  permission.AuthBasePermission
 	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedTokenServiceServer
@@ -38,6 +40,16 @@ func NewTokenService(store store.Provider, cache *cache.Redis) *TokenService {
 // CreateToken creates an offline new token
 func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenRequest) (*v1.CreateTokenResponse, error) {
 	as, err := store.GetProjectStore(ctx, t.store)
+	if err != nil {
+		return nil, err
+	}
+
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.perm.CheckOrganizationPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +123,11 @@ func (t *TokenService) GetToken(ctx context.Context, request *v1.GetTokenRequest
 		return nil, err
 	}
 
+	err = t.perm.CheckOrganizationPermission(ctx, uuid.MustParse(token.OrganizationID), "read")
+	if err != nil {
+		return nil, err
+	}
+
 	return &v1.GetTokenResponse{
 		Token: &v1.Token{
 			Id:             token.ID,
@@ -131,6 +148,11 @@ func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensReq
 	}
 
 	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.perm.CheckOrganizationPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +207,16 @@ func (t *TokenService) DeleteToken(ctx context.Context, request *v1.DeleteTokenR
 		return nil, err
 	}
 
+	token, err := as.GetTokenByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.perm.CheckOrganizationPermission(ctx, uuid.MustParse(token.OrganizationID), "write")
+	if err != nil {
+		return nil, err
+	}
+
 	err = as.DeleteToken(ctx, id)
 	if err != nil {
 		return nil, err
@@ -195,6 +227,7 @@ func (t *TokenService) DeleteToken(ctx context.Context, request *v1.DeleteTokenR
 }
 
 // VerifyToken verifies a token and returns the organization id and user id
+// no need to check the permission here
 func (t *TokenService) VerifyToken(ctx context.Context, request *v1.VerifyTokenRequest) (*v1.VerifyTokenResponse, error) {
 	token := request.GetToken()
 	jwt, err := x.VerifyJWTToken(token)

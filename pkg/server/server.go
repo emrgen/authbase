@@ -7,7 +7,6 @@ import (
 	gatewayfile "github.com/black-06/grpc-gateway-file"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
-	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/service"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x/mail"
@@ -170,7 +169,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(s.provider, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(s.provider, redis))
-	v1.RegisterUserServiceServer(grpcServer, permission.NewCheckedUserService(service.NewUserService(s.provider, redis), nil))
+	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(s.provider, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(s.provider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, mailProvider, redis))
 	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(s.provider, redis))

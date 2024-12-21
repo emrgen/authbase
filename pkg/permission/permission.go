@@ -2,7 +2,19 @@ package permission
 
 import (
 	"context"
+	"errors"
+	"github.com/emrgen/authbase/pkg/store"
+	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+)
+
+type ObjectType string
+
+const (
+	ObjectTypeUser               ObjectType = "user"
+	ObjectTypeOrganization       ObjectType = "organization"
+	ObjectTypeProject            ObjectType = "project"
+	ObjectTypeMasterOrganization ObjectType = "master/organization"
 )
 
 type Permission interface {
@@ -42,28 +54,18 @@ func (a *AuthZed) Check(ctx context.Context, objectID uuid.UUID, objectType stri
 }
 
 type MemberPermission interface {
-	CreateMemberPermission(ctx context.Context, subjectID uuid.UUID) error
-	DeleteMemberPermission(ctx context.Context, subjectID uuid.UUID) error
-	CheckMemberPermission(ctx context.Context, subjectID uuid.UUID, objectID uuid.UUID, objectType string, relation string) (bool, error)
-}
+	//CreatePermission(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
+	//DeletePermission(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
 
-type UserPermission interface {
-	CreateUserPermission(ctx context.Context, subjectID uuid.UUID) error
-	DeleteUserPermission(ctx context.Context, subjectID uuid.UUID) error
-	CheckUserPermission(ctx context.Context, subjectID uuid.UUID, objectID uuid.UUID, objectType string, relation string) (bool, error)
-}
-
-type OrganizationPermission interface {
-	CreateOrganizationPermission(ctx context.Context, subjectID uuid.UUID) error
-	DeleteOrganizationPermission(ctx context.Context, subjectID uuid.UUID) error
-	CheckOrganizationPermission(ctx context.Context, subjectID uuid.UUID, objectID uuid.UUID, objectType string, relation string) (bool, error)
+	// CheckMasterOrganizationPermission checks if the user has the permission to perform
+	CheckMasterOrganizationPermission(ctx context.Context, relation string) error
+	// CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
+	CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error
 }
 
 // AuthBasePermission is an interface representing the authbase permissions that are used in the service layer
 type AuthBasePermission interface {
 	MemberPermission
-	UserPermission
-	OrganizationPermission
 }
 
 // AuthZedPermission is a struct that implements the AuthBasePermission interface
@@ -71,53 +73,131 @@ type AuthBasePermission interface {
 type AuthZedPermission struct {
 }
 
-func (a *AuthZedPermission) CreateUserPermission(ctx context.Context, subjectID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthZedPermission) DeleteUserPermission(ctx context.Context, subjectID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthZedPermission) CheckUserPermission(ctx context.Context, subjectID uuid.UUID, objectID uuid.UUID, objectType string, relation string) (bool, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-var _ AuthBasePermission = new(AuthZedPermission)
-
 func NewAuthZedPermission() *AuthZedPermission {
 	return &AuthZedPermission{}
 }
 
-func (a *AuthZedPermission) CreateMemberPermission(ctx context.Context, subjectID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
+type StoreBasedPermission struct {
+	store store.AuthBaseStore
 }
 
-func (a *AuthZedPermission) DeleteMemberPermission(ctx context.Context, subjectID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
+var _ AuthBasePermission = new(StoreBasedPermission)
+
+func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Context, relation string) error {
+	userID, err := x.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	user, err := s.store.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if relation == "write" {
+		if user.Organization.Master {
+			permission, err := s.store.GetPermissionByID(ctx, uuid.MustParse(user.OrganizationID), userID)
+			if err != nil {
+				return err
+			}
+
+			// check if the user has the write permission
+			if permission.Permission&uint32(1) == 1 {
+				return nil
+			}
+
+			return x.ErrUnauthorized
+		} else {
+			return x.ErrUnauthorized
+		}
+	}
+
+	if relation == "read" {
+		// being a member of master org the user has implicit read permission
+		if user.Organization.Master {
+			return nil
+		} else {
+			return x.ErrUnauthorized
+		}
+	}
+
+	return x.ErrUnauthorized
 }
 
-func (a *AuthZedPermission) CheckMemberPermission(ctx context.Context, subjectID uuid.UUID, objectID uuid.UUID, objectType string, relation string) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
+	userID, err := x.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	if relation == "write" {
+		err := s.CheckMasterOrganizationPermission(ctx, "write")
+		if errors.Is(err, x.ErrUnauthorized) {
+			_, err := x.GetUserID(ctx)
+			if err != nil {
+				return err
+			}
+
+			permission, err := s.store.GetPermissionByID(ctx, orgID, userID)
+			if err != nil {
+				return err
+			}
+
+			// check if the user has the write permission
+			if permission.Permission&uint32(1) == 1 {
+				return nil
+			}
+
+			return x.ErrUnauthorized
+		}
+		if err != nil {
+			return err
+		}
+
+		return x.ErrUnauthorized
+	}
+
+	if relation == "read" {
+		err := s.CheckMasterOrganizationPermission(ctx, "read")
+		if errors.Is(err, x.ErrUnauthorized) {
+			_, err := x.GetUserID(ctx)
+			if err != nil {
+				return err
+			}
+
+			permission, err := s.store.GetPermissionByID(ctx, orgID, userID)
+			if err != nil {
+				return err
+			}
+
+			// check if the user has the write permission
+			if permission.Permission&uint32(1) == 1 {
+				return nil
+			}
+
+			return x.ErrUnauthorized
+		}
+
+		return err
+	}
+
+	return x.ErrUnauthorized
 }
 
-func (a *AuthZedPermission) CreateOrganizationPermission(ctx context.Context, subjectID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
+// NullAuthbasePermission is a struct that implements the AuthBasePermission interface
+type NullAuthbasePermission struct {
 }
 
-func (a *AuthZedPermission) DeleteOrganizationPermission(ctx context.Context, subjectID uuid.UUID) error {
-	//TODO implement me
-	panic("implement me")
+func NewNullAuthbasePermission() *NullAuthbasePermission {
+	return &NullAuthbasePermission{}
 }
 
-func (a *AuthZedPermission) CheckOrganizationPermission(ctx context.Context, subjectID uuid.UUID, objectID uuid.UUID, objectType string, relation string) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+var _ AuthBasePermission = new(NullAuthbasePermission)
+
+func (n *NullAuthbasePermission) CheckMasterOrganizationPermission(ctx context.Context, relation string) error {
+	return nil
+}
+
+func (n *NullAuthbasePermission) CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
+	return nil
 }

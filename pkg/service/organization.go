@@ -5,6 +5,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/utils"
@@ -17,6 +18,7 @@ import (
 var _ v1.OrganizationServiceServer = new(OrganizationService)
 
 type OrganizationService struct {
+	perm  permission.MemberPermission
 	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedOrganizationServiceServer
@@ -28,6 +30,12 @@ func NewOrganizationService(store store.Provider, cache *cache.Redis) *Organizat
 }
 
 func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v1.CreateOrganizationRequest) (*v1.CreateOrganizationResponse, error) {
+	var err error
+	err = o.perm.CheckMasterOrganizationPermission(ctx, "write")
+	if err != nil {
+		return nil, err
+	}
+
 	as := o.store.Default()
 	password := request.GetPassword()
 	verifyEmail := request.GetVerifyEmail()
@@ -46,7 +54,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 	user.OrganizationID = org.ID
 
 	// if this is the first organization, make the organization is the master organization
-	err := as.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		_, total, _ := tx.ListOrganizations(ctx, 1, 1)
 		if total == 0 {
 			org.Master = true
@@ -119,6 +127,13 @@ func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1
 }
 
 func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.GetOrganizationRequest) (*v1.GetOrganizationResponse, error) {
+	var err error
+
+	err = o.perm.CheckMasterOrganizationPermission(ctx, "read")
+	if err != nil {
+		return nil, err
+	}
+
 	as := o.store.Default()
 
 	id, err := uuid.Parse(request.GetId())
@@ -143,6 +158,13 @@ func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.G
 }
 
 func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1.ListOrganizationsRequest) (*v1.ListOrganizationsResponse, error) {
+	var err error
+
+	err = o.perm.CheckMasterOrganizationPermission(ctx, "read")
+	if err != nil {
+		return nil, err
+	}
+
 	as := o.store.Default()
 	page := utils.GetPage(request)
 
@@ -171,16 +193,21 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 			Size:  page.Size,
 		},
 	}, nil
-
 }
 
 func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v1.UpdateOrganizationRequest) (*v1.UpdateOrganizationResponse, error) {
-	as := o.store.Default()
+	var err error
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
+	err = o.perm.CheckOrganizationPermission(ctx, id, "write")
+	if err != nil {
+		return nil, err
+	}
+
+	as := o.store.Default()
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		org, err := tx.GetOrganizationByID(ctx, id)
 		if err != nil {
@@ -204,13 +231,17 @@ func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v
 }
 
 func (o *OrganizationService) DeleteOrganization(ctx context.Context, request *v1.DeleteOrganizationRequest) (*v1.DeleteOrganizationResponse, error) {
-	as := o.store.Default()
 
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
+	err = o.perm.CheckOrganizationPermission(ctx, id, "write")
+	if err != nil {
+		return nil, err
+	}
 
+	as := o.store.Default()
 	err = as.DeleteOrganization(ctx, id)
 	if err != nil {
 		return nil, err

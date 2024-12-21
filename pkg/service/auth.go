@@ -32,6 +32,7 @@ func NewAuthService(store store.Provider, mailer mail.MailerProvider, cache *cac
 }
 
 // CheckUserAlreadyExists checks if a user with the given email or username already exists in an organization
+// NOTE: should be rate limited
 func (a *AuthService) CheckUserAlreadyExists(ctx context.Context, request *v1.CheckUserAlreadyExistsRequest) (*v1.CheckEmailAlreadyExistsResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {

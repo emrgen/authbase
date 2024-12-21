@@ -13,3 +13,12 @@ func GetUserID(ctx context.Context) (uuid.UUID, error) {
 
 	return userID, nil
 }
+
+func GetOrganizationID(ctx context.Context) (uuid.UUID, error) {
+	organizationID, ok := ctx.Value("organizationID").(uuid.UUID)
+	if !ok {
+		return uuid.UUID{}, ErrOrganizationNotFoundInContext
+	}
+
+	return organizationID, nil
+}

@@ -88,6 +88,8 @@ type PermissionStore interface {
 	GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error)
 	// ListPermissions retrieves a list of permissions.
 	ListPermissions(ctx context.Context, page, perPage int) ([]*model.Permission, error)
+	// ListPermissionsByUsers retrieves a list of permissions by organization.
+	ListPermissionsByUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.Permission, error)
 	// UpdatePermission updates a permission in the database.
 	UpdatePermission(ctx context.Context, permission *model.Permission) error
 	// DeletePermission deletes a permission from the database.

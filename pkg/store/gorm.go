@@ -14,6 +14,11 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) ListPermissionsByUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.Permission, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (g *GormStore) GetMasterOrganization(ctx context.Context) (*model.Organization, error) {
 	var org model.Organization
 	err := g.db.Where("master = ?", true).First(&org).Error

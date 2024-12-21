@@ -5,6 +5,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/google/uuid"
 )
@@ -12,6 +13,7 @@ import (
 var _ v1.PermissionServiceServer = new(PermissionService)
 
 type PermissionService struct {
+	perm  permission.AuthBasePermission
 	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedPermissionServiceServer
@@ -33,20 +35,35 @@ func (p *PermissionService) CreatePermission(ctx context.Context, request *v1.Cr
 		return nil, err
 	}
 
+	err = p.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
 	userID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
 	}
 
-	permission := uint32(0)
+	user, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	if err != nil {
+		return nil, err
+	}
+
+	userPermission := uint32(0)
 	for _, perm := range request.GetPermissions() {
-		permission |= uint32(perm)
+		userPermission |= uint32(perm)
 	}
 
 	permissionModel := model.Permission{
 		OrganizationID: orgID.String(),
 		UserID:         userID.String(),
-		Permission:     permission,
+		Permission:     userPermission,
 	}
 
 	err = as.CreatePermission(ctx, &permissionModel)
@@ -69,19 +86,24 @@ func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPe
 		return nil, err
 	}
 
+	err = p.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	if err != nil {
+		return nil, err
+	}
+
 	userID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
 	}
 
-	permission, err := as.GetPermissionByID(ctx, orgID, userID)
+	perm, err := as.GetPermissionByID(ctx, orgID, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	permissions := make([]v1.Permission, 0)
 	for value, _ := range v1.Permission_name {
-		if permission.Permission&uint32(value) > 0 {
+		if perm.Permission&uint32(value) > 0 {
 			permissions = append(permissions, v1.Permission(value))
 		}
 	}
@@ -103,14 +125,19 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 		return nil, err
 	}
 
+	err = p.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
 	userID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
 	}
 
-	permission := uint32(0)
+	userPermission := uint32(0)
 	for _, perm := range request.GetPermissions() {
-		permission |= uint32(perm)
+		userPermission |= uint32(perm)
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
@@ -119,8 +146,8 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 			return err
 		}
 
-		// Update the permission
-		perm.Permission = permission
+		// Update the userPermission
+		perm.Permission = userPermission
 		err = tx.UpdatePermission(ctx, perm)
 		if err != nil {
 			return err
@@ -143,6 +170,11 @@ func (p *PermissionService) DeletePermission(ctx context.Context, request *v1.De
 	}
 
 	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.perm.CheckOrganizationPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}

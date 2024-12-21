@@ -5,6 +5,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ import (
 var _ v1.MemberServiceServer = new(MemberService)
 
 type MemberService struct {
+	perm  permission.AuthBasePermission
 	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedMemberServiceServer
@@ -80,22 +82,48 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 		return nil, err
 	}
 
+	orgID, err := uuid.Parse(member.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the user has the read permission
+	err = m.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := as.GetPermissionByID(ctx, orgID, id)
+	permissions := make([]v1.Permission, 0)
+	for value, _ := range v1.Permission_name {
+		if perm.Permission&uint32(value) == 1 {
+			permissions = append(permissions, v1.Permission(value))
+		}
+	}
+
 	return &v1.GetMemberResponse{
 		Member: &v1.Member{
-			Id:       member.ID,
-			Username: member.Username,
+			Id:          member.ID,
+			Username:    member.Username,
+			Permissions: permissions,
 		},
 	}, nil
 }
 
 // ListMember lists members of an organization
 func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRequest) (*v1.ListMemberResponse, error) {
-	as, err := store.GetProjectStore(ctx, m.store)
+	var err error
+	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	err = m.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +134,39 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 		return nil, err
 	}
 
+	userIDs := make([]uuid.UUID, 0)
+	for _, member := range members {
+		id, err := uuid.Parse(member.ID)
+		if err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, id)
+	}
+
+	permissions, err := as.ListPermissionsByUsers(ctx, orgID, userIDs)
+	permissionMap := make(map[string]uint32)
+	for _, perm := range permissions {
+		permissionMap[perm.UserID] = perm.Permission
+	}
+
 	var memberList []*v1.Member
 	for _, member := range members {
+		perm := permissionMap[member.ID]
+		if perm == 0 {
+			continue
+		}
+
+		permissions := make([]v1.Permission, 0)
+		for value, _ := range v1.Permission_name {
+			if perm > uint32(value) {
+				permissions = append(permissions, v1.Permission(value))
+			}
+		}
+
 		memberList = append(memberList, &v1.Member{
-			Id:       member.ID,
-			Username: member.Username,
+			Id:          member.ID,
+			Username:    member.Username,
+			Permissions: permissions,
 		})
 	}
 
@@ -122,16 +178,22 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 
 // UpdateMember updates a member of an organization
 func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemberRequest) (*v1.UpdateMemberResponse, error) {
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
 		return nil, err
 	}
 
 	memberID, err := uuid.Parse(request.GetMemberId())
-	if err != nil {
-		return nil, err
-	}
-	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
 	}
@@ -151,12 +213,12 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 			member.Email = request.GetEmail()
 		}
 
-		permission, err := tx.GetPermissionByID(ctx, orgID, memberID)
+		perm, err := tx.GetPermissionByID(ctx, orgID, memberID)
 
 		if request.GetPermissions() != nil {
-			permission.Permission = 0
+			perm.Permission = 0
 			for _, p := range request.GetPermissions() {
-				permission.Permission |= uint32(p.Number())
+				perm.Permission |= uint32(p.Number())
 			}
 		}
 
@@ -165,7 +227,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 			return err
 		}
 
-		err = tx.UpdatePermission(ctx, permission)
+		err = tx.UpdatePermission(ctx, perm)
 		if err != nil {
 			return err
 		}
@@ -184,17 +246,22 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 
 // DeleteMember deletes a member of an organization
 func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemberRequest) (*v1.DeleteMemberResponse, error) {
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
 		return nil, err
 	}
 
 	memberID, err := uuid.Parse(request.GetMemberId())
-	if err != nil {
-		return nil, err
-	}
-
-	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
 	}
