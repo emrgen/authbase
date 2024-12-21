@@ -14,6 +14,16 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) GetMasterOrganization(ctx context.Context) (*model.Organization, error) {
+	var org model.Organization
+	err := g.db.Where("master = ?", true).First(&org).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrOrganizationNotFound
+	}
+
+	return &org, err
+}
+
 func (g *GormStore) DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error {
 	return g.db.Delete(&model.Session{UserID: userID.String()}).Error
 }

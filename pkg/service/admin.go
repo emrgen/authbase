@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
@@ -35,7 +36,12 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 	as := a.provider.Default()
 
 	// check if the master org already exists
-	if org, err := as.GetOrganizationByName(ctx, request.GetName()); err == nil && org != nil {
+	org, err := as.GetMasterOrganization(ctx)
+	if err != nil && !errors.Is(err, store.ErrOrganizationNotFound) {
+		return nil, err
+	}
+
+	if org != nil {
 		return nil, x.ErrOrganizationExists
 	}
 
@@ -46,7 +52,7 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 		SassAdmin: true,
 	}
 
-	org := model.Organization{
+	org = &model.Organization{
 		ID:      uuid.New().String(),
 		Name:    request.GetName(),
 		OwnerID: user.ID,
@@ -55,8 +61,8 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 	user.OrganizationID = org.ID
 
 	// Create organization and user in a transaction
-	err := as.Transaction(func(tx store.AuthBaseStore) error {
-		err := tx.CreateOrganization(ctx, &org)
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		err := tx.CreateOrganization(ctx, org)
 		if err != nil {
 			return err
 		}

@@ -24,7 +24,7 @@ var serveCmd = &cobra.Command{
 			logrus.Errorf("error getting http port: %v", err)
 		}
 
-		logrus.Infof("grpc port: %s, http port: %s", grpcPort, httpPort)
+		//logrus.Infof("grpc port: %s, http port: %s", grpcPort, httpPort)
 		svr := server.NewServerFromEnv()
 		err = svr.Start(grpcPort, httpPort)
 		if err != nil {

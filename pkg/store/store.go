@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrOrganizationExists = errors.New("organization already exists")
+	ErrOrganizationExists   = errors.New("organization already exists")
+	ErrOrganizationNotFound = errors.New("organization not found")
 )
 
 // AuthBaseStore is the interface for interacting with the database.
@@ -33,6 +34,8 @@ type OrganizationStore interface {
 	GetOrganizationByName(ctx context.Context, name string) (*model.Organization, error)
 	// GetOrganizationByID retrieves an organization by its ID.
 	GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error)
+	// GetMasterOrganization retrieves the master organization.
+	GetMasterOrganization(ctx context.Context) (*model.Organization, error)
 	// ListOrganizations retrieves a list of organizations.
 	ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, int, error)
 	// UpdateOrganization updates an organization in the database.

@@ -106,16 +106,16 @@ func (s *Server) init(grpcPort, httpPort string) error {
 		return err
 	}
 
-	grpcPort = ":" + grpcPort
-	httpPort = ":" + httpPort
+	s.grpcPort = ":" + grpcPort
+	s.httpPort = ":" + httpPort
 
-	gl, err := net.Listen("tcp", grpcPort)
+	gl, err := net.Listen("tcp", s.grpcPort)
 	if err != nil {
 		return err
 	}
 	s.gl = gl
 
-	rl, err := net.Listen("tcp", httpPort)
+	rl, err := net.Listen("tcp", s.httpPort)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (s *Server) registerServices() error {
 	)
 
 	// connect the rest gateway to the grpc server
-	mux := runtime.NewServeMux(
+	s.mux = runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.HTTPBodyMarshaler{
 			Marshaler: &runtime.JSONPb{
 				MarshalOptions: protojson.MarshalOptions{
@@ -144,17 +144,17 @@ func (s *Server) registerServices() error {
 				},
 			},
 		}),
-		runtime.WithMarshalerOption("application/json", &runtime.JSONPb{
-			MarshalOptions: protojson.MarshalOptions{
-				Indent:    "  ",
-				Multiline: true, // Optional, implied by presence of "Indent".
-			},
-			UnmarshalOptions: protojson.UnmarshalOptions{
-				DiscardUnknown: true,
-			},
-		}),
+		//runtime.WithMarshalerOption("application/json", &runtime.JSONPb{
+		//	MarshalOptions: protojson.MarshalOptions{
+		//		Indent:    "  ",
+		//		Multiline: true, // Optional, implied by presence of "Indent".
+		//	},
+		//	UnmarshalOptions: protojson.UnmarshalOptions{
+		//		DiscardUnknown: true,
+		//	},
+		//}),
 		gatewayfile.WithHTTPBodyMarshaler(),
-		runtime.WithForwardResponseOption(InjectCookie),
+		//runtime.WithForwardResponseOption(InjectCookie),
 	)
 
 	opts := []grpc.DialOption{
@@ -177,28 +177,28 @@ func (s *Server) registerServices() error {
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(s.provider, redis))
 
 	// Register the rest gateway
-	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterMemberServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterMemberServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterUserServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterUserServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterPermissionServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterPermissionServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterAuthServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterAuthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterOauthServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterOauthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
+	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 
@@ -210,8 +210,8 @@ func (s *Server) registerServices() error {
 // run the server and listen on grpc and http ports
 func (s *Server) run() error {
 	apiMux := http.NewServeMux()
-	openapiDocs := packr.NewBox("../../docs/v1")
 	docsPath := "/v1/docs/"
+	openapiDocs := packr.NewBox("../../docs/v1")
 	apiMux.Handle(docsPath, http.StripPrefix(docsPath, http.FileServer(openapiDocs)))
 	apiMux.Handle("/", s.mux)
 
