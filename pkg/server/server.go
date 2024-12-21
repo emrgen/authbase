@@ -53,7 +53,7 @@ func UnaryRequestTimeInterceptor() grpc.UnaryClientInterceptor {
 
 type Server struct {
 	config          *config.Config
-	db              store.AuthBaseStore
+	provider        store.Provider
 	redis           *cache.Redis
 	adminOrgService v1.AdminOrganizationServiceServer
 	gl              net.Listener
@@ -96,10 +96,12 @@ func (s *Server) Start(grpcPort, httpPort string) error {
 }
 
 func (s *Server) init(grpcPort, httpPort string) error {
-	s.db = config.GetDB()
+	db := config.GetDB()
+	s.provider = store.NewDefaultProvider(db)
 	s.redis = cache.NewRedisClient()
 
-	err := s.db.Migrate()
+	// migrate the database
+	err := db.Migrate()
 	if err != nil {
 		return err
 	}
@@ -161,20 +163,18 @@ func (s *Server) registerServices() error {
 	}
 	endpoint := "localhost" + s.grpcPort
 
-	rdb := s.db
 	redis := s.redis
 	mailProvider := mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
-	storeProvider := store.NewDefaultProvider(rdb)
 
 	// Register the grpc server
-	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(storeProvider, redis))
-	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(storeProvider, redis))
-	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(storeProvider, redis))
-	v1.RegisterUserServiceServer(grpcServer, permission.NewCheckedUserService(service.NewUserService(storeProvider, redis), nil))
-	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(storeProvider, redis))
-	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(storeProvider, mailProvider, redis))
-	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(rdb, redis))
-	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(storeProvider, redis))
+	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
+	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(s.provider, redis))
+	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(s.provider, redis))
+	v1.RegisterUserServiceServer(grpcServer, permission.NewCheckedUserService(service.NewUserService(s.provider, redis), nil))
+	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(s.provider, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, mailProvider, redis))
+	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(s.provider, redis))
+	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(s.provider, redis))
 
 	// Register the rest gateway
 	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
@@ -262,7 +262,7 @@ func (s *Server) run() error {
 	// if an admin organization is provided, create the org and the super admin user
 	if s.config.AdminOrg.Valid() {
 		logrus.Infof("creating admin organization: %v", s.config.AdminOrg)
-		adminOrgService := service.NewAdminOrganizationService(s.db, s.redis)
+		adminOrgService := service.NewAdminOrganizationService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminOrganization(context.TODO(), &v1.CreateAdminOrganizationRequest{
 			Name:     s.config.AdminOrg.Username,
 			Email:    s.config.AdminOrg.Email,

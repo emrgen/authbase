@@ -6,3 +6,7 @@ type Provider struct {
 	OrganizationID string `gorm:"primaryKey;not null"`
 	Config         string `gorm:"type:json"` // JSON string
 }
+
+func (_ Provider) TableName() string {
+	return tableName("providers")
+}

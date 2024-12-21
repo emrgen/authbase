@@ -15,3 +15,7 @@ type VerificationCode struct {
 	Medium         string
 	CallbackURL    string
 }
+
+func (_ VerificationCode) TableName() string {
+	return tableName("verification_codes")
+}

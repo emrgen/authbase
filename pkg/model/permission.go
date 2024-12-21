@@ -8,3 +8,7 @@ type Permission struct {
 	Organization *Organization `gorm:"foreignKey:OrganizationID"`
 	User         *User         `gorm:"foreignKey:UserID"`
 }
+
+func (_ Permission) TableName() string {
+	return tableName("permissions")
+}

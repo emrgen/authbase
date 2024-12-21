@@ -26,3 +26,7 @@ type User struct {
 	RecoveredAt    time.Time `gorm:"default:null"`
 	RecoveredBy    string    `gorm:"uuid;"`
 }
+
+func (u User) TableName() string {
+	return tableName("users")
+}

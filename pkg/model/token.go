@@ -15,3 +15,7 @@ type Token struct {
 	Hash           string // hashed token
 	ExpireAt       time.Time
 }
+
+func (_ Token) TableName() string {
+	return tableName("tokens")
+}

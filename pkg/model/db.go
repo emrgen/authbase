@@ -1,6 +1,9 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"github.com/emrgen/authbase/pkg/config"
+	"gorm.io/gorm"
+)
 
 func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(&User{}); err != nil {
@@ -36,4 +39,13 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	return nil
+}
+
+func tableName(name string) string {
+	cfg := config.GetConfig()
+	if cfg.DB.Type == "sqlite3" {
+		return name
+	} else {
+		return "authbase." + name
+	}
 }

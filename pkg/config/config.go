@@ -61,3 +61,19 @@ func FromEnv() (*Config, error) {
 
 	return config, nil
 }
+
+var config *Config
+
+// GetConfig returns the configuration
+func GetConfig() *Config {
+	return config
+}
+
+func init() {
+	cfg, err := FromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	config = cfg
+}

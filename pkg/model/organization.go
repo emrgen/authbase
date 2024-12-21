@@ -11,3 +11,7 @@ type Organization struct {
 	Config  string `gorm:"type:json"`
 	Master  bool   `gorm:"not null;default:false"`
 }
+
+func (_ Organization) TableName() string {
+	return tableName("organizations")
+}

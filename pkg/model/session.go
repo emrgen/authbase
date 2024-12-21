@@ -13,3 +13,7 @@ type Session struct {
 	OrganizationID string
 	ExpiredAt      time.Time `gorm:"default:null"`
 }
+
+func (_ Session) TableName() string {
+	return tableName("sessions")
+}

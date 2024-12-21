@@ -13,3 +13,7 @@ type RefreshToken struct {
 	ExpireAt       time.Time `gorm:"not null"`
 	IssuedAt       time.Time `gorm:"not null"`
 }
+
+func (_ RefreshToken) TableName() string {
+	return tableName("refresh_tokens")
+}
