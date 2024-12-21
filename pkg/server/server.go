@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	gatewayfile "github.com/black-06/grpc-gateway-file"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
 	"github.com/emrgen/authbase/pkg/service"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x/mail"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
 	"net"
 	"net/http"
 	"os"
@@ -16,19 +19,17 @@ import (
 	"sync"
 	"time"
 
-	gatewayfile "github.com/black-06/grpc-gateway-file"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/gobuffalo/packr"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcvalidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
+	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func UnaryRequestTimeInterceptor() grpc.UnaryClientInterceptor {
@@ -140,7 +141,17 @@ func (s *Server) registerServices() error {
 				},
 			},
 		}),
+		runtime.WithMarshalerOption("application/json", &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				Indent:    "  ",
+				Multiline: true, // Optional, implied by presence of "Indent".
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
 		gatewayfile.WithHTTPBodyMarshaler(),
+		runtime.WithForwardResponseOption(InjectCookie),
 	)
 
 	opts := []grpc.DialOption{
@@ -152,10 +163,7 @@ func (s *Server) registerServices() error {
 	rdb := s.db
 	redis := s.redis
 	mailProvider := mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
-
 	storeProvider := store.NewDefaultProvider(rdb)
-
-	//s.adminOrgService = service.NewAdminOrganizationService(rdb, redis)
 
 	// Register the grpc server
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(rdb, redis))
