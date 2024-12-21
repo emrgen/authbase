@@ -258,6 +258,7 @@ message CreateTokenResponse {
 
 message GetTokenRequest {
   string id = 1 [(validate.rules).string.uuid = true];
+  string organization_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message GetTokenResponse {
@@ -279,6 +280,7 @@ message ListTokensResponse {
 
 message DeleteTokenRequest {
   string id = 1 [(validate.rules).string.uuid = true];
+  string organization_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message DeleteTokenResponse {
@@ -326,6 +328,7 @@ message CreateUserResponse {
 
 message GetUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
+  string organization_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message GetUserResponse {
@@ -346,6 +349,7 @@ message UpdateUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
   string username = 2;
   string email = 3 [(validate.rules).string.email = true];
+  string organization_id = 4 [(validate.rules).string.uuid = true];
 }
 
 message UpdateUserResponse {
@@ -354,6 +358,7 @@ message UpdateUserResponse {
 
 message DeleteUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
+  string organization_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message DeleteUserResponse {
@@ -390,7 +395,7 @@ service UserService {
   }
 
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
-    option (google.api.http) = {get: "/v1/users/{id}"};
+    option (google.api.http) = {post: "/v1/users/{id}"};
   }
 
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {

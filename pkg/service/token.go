@@ -15,20 +15,20 @@ import (
 )
 
 const (
-	defaultExpireIn = time.Hour * 24 * 7
+	defaultRefreshTokenExpireIn = time.Hour * 24 * 7
 )
 
 var _ v1.TokenServiceServer = new(TokenService)
 
 // TokenService is a service for token
 type TokenService struct {
-	store store.AuthBaseStore
+	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedTokenServiceServer
 }
 
 // NewTokenService creates new an offline token service
-func NewTokenService(store store.AuthBaseStore, cache *cache.Redis) *TokenService {
+func NewTokenService(store store.Provider, cache *cache.Redis) *TokenService {
 	return &TokenService{
 		store: store,
 		cache: cache,
@@ -37,6 +37,11 @@ func NewTokenService(store store.AuthBaseStore, cache *cache.Redis) *TokenServic
 
 // CreateToken creates an offline new token
 func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenRequest) (*v1.CreateTokenResponse, error) {
+	as, err := store.GetProjectStore(ctx, t.store)
+	if err != nil {
+		return nil, err
+	}
+
 	// create a new token
 	token := &model.Token{
 		ID:             uuid.New().String(),
@@ -51,11 +56,11 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 		duration := time.Second * time.Duration(request.GetExpiresIn())
 		token.ExpireAt = time.Now().Add(duration)
 	} else {
-		token.ExpireAt = time.Now().Add(defaultExpireIn)
+		token.ExpireAt = time.Now().Add(defaultRefreshTokenExpireIn)
 	}
 
 	// save the token into the database
-	err := t.store.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		// check if the user exists on the database within the organization
 		user, err := tx.GetUserByEmail(ctx, request.GetEmail())
 		if err != nil {
@@ -67,7 +72,7 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 			return errors.New("invalid password")
 		}
 
-		err = t.cache.Set(token.Token, token.OrganizationID, defaultExpireIn)
+		err = t.cache.Set(token.Token, token.OrganizationID, defaultRefreshTokenExpireIn)
 		if err != nil {
 			return err
 		}
@@ -92,12 +97,16 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 
 // GetToken gets a token by id
 func (t *TokenService) GetToken(ctx context.Context, request *v1.GetTokenRequest) (*v1.GetTokenResponse, error) {
+	as, err := store.GetProjectStore(ctx, t.store)
+	if err != nil {
+		return nil, err
+	}
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := t.store.GetTokenByID(ctx, id)
+	token, err := as.GetTokenByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +125,11 @@ func (t *TokenService) GetToken(ctx context.Context, request *v1.GetTokenRequest
 
 // ListTokens lists offline tokens by organization id and user id
 func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensRequest) (*v1.ListTokensResponse, error) {
+	as, err := store.GetProjectStore(ctx, t.store)
+	if err != nil {
+		return nil, err
+	}
+
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
@@ -135,7 +149,7 @@ func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensReq
 	}
 	size := max(page.Size, 20)
 
-	tokens, total, err := t.store.ListUserTokens(ctx, orgID, userID, int(page.Page), int(size))
+	tokens, total, err := as.ListUserTokens(ctx, orgID, userID, int(page.Page), int(size))
 
 	if err != nil {
 		return nil, err
@@ -161,12 +175,17 @@ func (t *TokenService) ListTokens(ctx context.Context, request *v1.ListTokensReq
 
 // DeleteToken deletes a offline token by id
 func (t *TokenService) DeleteToken(ctx context.Context, request *v1.DeleteTokenRequest) (*v1.DeleteTokenResponse, error) {
+	as, err := store.GetProjectStore(ctx, t.store)
+	if err != nil {
+		return nil, err
+
+	}
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.store.DeleteToken(ctx, id)
+	err = as.DeleteToken(ctx, id)
 	if err != nil {
 		return nil, err
 	}

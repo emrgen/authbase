@@ -20,14 +20,14 @@ var _ v1.AuthServiceServer = new(AuthService)
 
 // AuthService is a service that implements the AuthServiceServer interface
 type AuthService struct {
-	store  store.AuthBaseStoreProvider
+	store  store.Provider
 	mailer mail.MailerProvider
 	cache  *cache.Redis
 	v1.UnimplementedAuthServiceServer
 }
 
 // NewAuthService creates a new AuthService
-func NewAuthService(store store.AuthBaseStoreProvider, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
+func NewAuthService(store store.Provider, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
 	return &AuthService{store: store, mailer: mailer, cache: cache}
 }
 

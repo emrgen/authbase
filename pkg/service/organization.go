@@ -17,17 +17,18 @@ import (
 var _ v1.OrganizationServiceServer = new(OrganizationService)
 
 type OrganizationService struct {
-	store store.AuthBaseStore
+	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedOrganizationServiceServer
 }
 
 // NewOrganizationService creates a new organization service
-func NewOrganizationService(store store.AuthBaseStore, cache *cache.Redis) *OrganizationService {
+func NewOrganizationService(store store.Provider, cache *cache.Redis) *OrganizationService {
 	return &OrganizationService{store: store, cache: cache}
 }
 
 func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v1.CreateOrganizationRequest) (*v1.CreateOrganizationResponse, error) {
+	as := o.store.Default()
 	password := request.GetPassword()
 	verifyEmail := request.GetVerifyEmail()
 
@@ -45,7 +46,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 	user.OrganizationID = org.ID
 
 	// if this is the first organization, make the organization is the master organization
-	err := o.store.Transaction(func(tx store.AuthBaseStore) error {
+	err := as.Transaction(func(tx store.AuthBaseStore) error {
 		_, total, _ := tx.ListOrganizations(ctx, 1, 1)
 		if total == 0 {
 			org.Master = true
@@ -104,7 +105,9 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 
 // GetOrganizationId gets the organization ID, given the name
 func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1.GetOrganizationIdRequest) (*v1.GetOrganizationIdResponse, error) {
-	org, err := o.store.GetOrganizationByName(ctx, request.GetName())
+	as := o.store.Default()
+
+	org, err := as.GetOrganizationByName(ctx, request.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -116,12 +119,14 @@ func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1
 }
 
 func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.GetOrganizationRequest) (*v1.GetOrganizationResponse, error) {
+	as := o.store.Default()
+
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	org, err := o.store.GetOrganizationByID(ctx, id)
+	org, err := as.GetOrganizationByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +143,10 @@ func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.G
 }
 
 func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1.ListOrganizationsRequest) (*v1.ListOrganizationsResponse, error) {
+	as := o.store.Default()
 	page := utils.GetPage(request)
 
-	orgs, total, err := o.store.ListOrganizations(ctx, int(page.Page), int(page.Size))
+	orgs, total, err := as.ListOrganizations(ctx, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}
@@ -169,12 +175,13 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 }
 
 func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v1.UpdateOrganizationRequest) (*v1.UpdateOrganizationResponse, error) {
+	as := o.store.Default()
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.store.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		org, err := tx.GetOrganizationByID(ctx, id)
 		if err != nil {
 			return err
@@ -197,12 +204,14 @@ func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v
 }
 
 func (o *OrganizationService) DeleteOrganization(ctx context.Context, request *v1.DeleteOrganizationRequest) (*v1.DeleteOrganizationResponse, error) {
+	as := o.store.Default()
+
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.store.DeleteOrganization(ctx, id)
+	err = as.DeleteOrganization(ctx, id)
 	if err != nil {
 		return nil, err
 	}

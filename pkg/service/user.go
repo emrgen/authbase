@@ -5,6 +5,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
@@ -14,18 +15,25 @@ import (
 var _ v1.UserServiceServer = new(UserService)
 
 type UserService struct {
-	store store.AuthBaseStore
+	store store.Provider
+	perm  permission.AuthBasePermission
 	cache *cache.Redis
 	v1.UnimplementedUserServiceServer
 }
 
 // NewUserService creates a new user service.
-func NewUserService(store store.AuthBaseStore, cache *cache.Redis) *UserService {
+func NewUserService(store store.Provider, cache *cache.Redis) v1.UserServiceServer {
 	return &UserService{store: store, cache: cache}
 }
 
 // CreateUser creates a new user.
 func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
+	// create a new user
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
 	user := model.User{
 		ID:             uuid.New().String(),
 		Username:       request.GetUsername(),
@@ -44,7 +52,7 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 		user.Salt = salt
 	}
 
-	if err := u.store.CreateUser(ctx, &user); err != nil {
+	if err := as.CreateUser(ctx, &user); err != nil {
 		return nil, err
 	}
 
@@ -55,12 +63,18 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 
 // GetUser gets a user by ID.
 func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (*v1.GetUserResponse, error) {
+	// get the user
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := u.store.GetUserByID(ctx, id)
+	user, err := as.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +89,18 @@ func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (
 
 // ListUsers lists users.
 func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
 	}
 
 	page := x.GetPageFromRequest(request)
-	users, total, err := u.store.ListUsersByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
+	users, total, err := as.ListUsersByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
 
 	var userProtos []*v1.User
 	for _, user := range users {
@@ -99,12 +118,17 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 
 // UpdateUser updates a user.
 func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequest) (*v1.UpdateUserResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.store.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		user, err := tx.GetUserByID(ctx, id)
 		if err != nil {
 			return err
@@ -138,12 +162,17 @@ func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequ
 
 // DeleteUser deletes a user.
 func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.store.DeleteUser(ctx, id)
+	err = as.DeleteUser(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -153,14 +182,20 @@ func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequ
 	}, nil
 }
 
+// ActiveUsers lists active users.
 func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRequest) (*v1.ActiveUsersResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
 	}
 	page := x.GetPageFromRequest(request)
 
-	sessions, err := u.store.ListSessions(ctx, orgID, int(page.Page), int(page.Size))
+	sessions, err := as.ListSessions(ctx, orgID, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}
@@ -183,13 +218,18 @@ func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRe
 	return &v1.ActiveUsersResponse{Users: userProtos}, nil
 }
 
+// DeactivateUser deactivates a user.
 func (u *UserService) DeactivateUser(ctx context.Context, request *v1.DeactivateUserRequest) (*v1.DeactivateUserResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
 	userID, err := uuid.Parse(request.GetUserId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.store.DeleteSession(ctx, userID)
+	err = as.DeleteSession(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

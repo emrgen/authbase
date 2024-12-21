@@ -7,6 +7,7 @@ import (
 	gatewayfile "github.com/black-06/grpc-gateway-file"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/service"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x/mail"
@@ -167,13 +168,13 @@ func (s *Server) registerServices() error {
 
 	// Register the grpc server
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(rdb, redis))
-	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(rdb, redis))
+	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(storeProvider, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(rdb, redis))
-	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(rdb, redis))
-	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(rdb, redis))
+	v1.RegisterUserServiceServer(grpcServer, permission.NewCheckedUserService(service.NewUserService(storeProvider, redis), nil))
+	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(storeProvider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(storeProvider, mailProvider, redis))
 	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(rdb, redis))
-	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(rdb, redis))
+	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(storeProvider, redis))
 
 	// Register the rest gateway
 	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), mux, endpoint, opts); err != nil {
