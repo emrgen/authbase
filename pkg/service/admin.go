@@ -9,6 +9,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"go.uber.org/ratelimit"
 	"os"
 	"time"
 )
@@ -18,12 +19,13 @@ var _ v1.AdminOrganizationServiceServer = (*AdminOrganizationService)(nil)
 type AdminOrganizationService struct {
 	provider store.Provider
 	cache    *cache.Redis
+	limited  ratelimit.Limiter
 	v1.UnimplementedAdminOrganizationServiceServer
 }
 
 // NewAdminOrganizationService creates a new admin organization service
 func NewAdminOrganizationService(store store.Provider, cache *cache.Redis) v1.AdminOrganizationServiceServer {
-	return &AdminOrganizationService{provider: store, cache: cache}
+	return &AdminOrganizationService{provider: store, cache: cache, limited: ratelimit.New(1)}
 }
 
 // CreateAdminOrganization creates a new organization
@@ -32,6 +34,9 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 	if os.Getenv("APP_MODE") == "masterless" {
 		return nil, x.ErrForbidden
 	}
+
+	// rate limit the request
+	a.limited.Take()
 
 	as := a.provider.Default()
 
