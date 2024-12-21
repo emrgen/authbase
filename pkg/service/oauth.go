@@ -11,12 +11,12 @@ var _ v1.OauthServiceServer = new(OauthService)
 
 // OauthService is a service for oauth
 type OauthService struct {
-	store store.AuthBaseStore
+	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedOauthServiceServer
 }
 
-func NewOauthService(store store.AuthBaseStore, cache *cache.Redis) *OauthService {
+func NewOauthService(store store.Provider, cache *cache.Redis) *OauthService {
 	return &OauthService{store: store, cache: cache}
 }
 

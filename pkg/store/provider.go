@@ -9,6 +9,10 @@ import (
 	"sync"
 )
 
+// provider.go contains the logic to provide the correct store based on the project ID.
+// It is used when the project has its own store. If the project does not have its own store,
+// The default store is used when the project ID is not provided in the context.
+
 func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error) {
 	// get project id from the context
 	md, ok := metadata.FromIncomingContext(ctx)

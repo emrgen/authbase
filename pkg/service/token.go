@@ -193,3 +193,17 @@ func (t *TokenService) DeleteToken(ctx context.Context, request *v1.DeleteTokenR
 	logrus.Errorf("delete token %v", request)
 	return &v1.DeleteTokenResponse{}, nil
 }
+
+// VerifyToken verifies a token and returns the organization id and user id
+func (t *TokenService) VerifyToken(ctx context.Context, request *v1.VerifyTokenRequest) (*v1.VerifyTokenResponse, error) {
+	token := request.GetToken()
+	jwt, err := x.VerifyJWTToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.VerifyTokenResponse{
+		OrganizationId: jwt.OrgID,
+		UserId:         jwt.UserID,
+	}, nil
+}

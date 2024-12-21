@@ -13,17 +13,22 @@ import (
 var _ v1.MemberServiceServer = new(MemberService)
 
 type MemberService struct {
-	store store.AuthBaseStore
+	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedMemberServiceServer
 }
 
-func NewMemberService(store store.AuthBaseStore, cache *cache.Redis) *MemberService {
+func NewMemberService(store store.Provider, cache *cache.Redis) *MemberService {
 	return &MemberService{store: store, cache: cache}
 }
 
 // CreateMember creates a member of an organization
 func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemberRequest) (*v1.CreateMemberResponse, error) {
+	as, err := store.GetProjectStore(ctx, m.store)
+	if err != nil {
+		return nil, err
+	}
+
 	member := model.User{
 		ID:             uuid.New().String(),
 		OrganizationID: request.GetOrganizationId(),
@@ -39,7 +44,7 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 	}
 
 	// if the user already exists, return an error
-	err := m.store.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		if err := tx.CreateUser(ctx, &member); err != nil {
 			return err
 		}
@@ -61,12 +66,16 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 
 // GetMember gets a member by ID of an organization
 func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequest) (*v1.GetMemberResponse, error) {
+	as, err := store.GetProjectStore(ctx, m.store)
+	if err != nil {
+		return nil, err
+	}
 	id, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
 	}
 
-	member, err := m.store.GetUserByID(ctx, id)
+	member, err := as.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +90,18 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 
 // ListMember lists members of an organization
 func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRequest) (*v1.ListMemberResponse, error) {
+	as, err := store.GetProjectStore(ctx, m.store)
+	if err != nil {
+		return nil, err
+	}
+
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
 	}
 
 	page := x.GetPageFromRequest(request)
-	members, total, err := m.store.ListUsersByOrg(ctx, true, orgID, int(page.Page), int(page.Size))
+	members, total, err := as.ListUsersByOrg(ctx, true, orgID, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +122,11 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 
 // UpdateMember updates a member of an organization
 func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemberRequest) (*v1.UpdateMemberResponse, error) {
+	as, err := store.GetProjectStore(ctx, m.store)
+	if err != nil {
+		return nil, err
+	}
+
 	memberID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
@@ -118,7 +137,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 	}
 
 	// update the member and the permission
-	err = m.store.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		member, err := tx.GetUserByID(ctx, memberID)
 		if err != nil {
 			return err
@@ -165,6 +184,11 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 
 // DeleteMember deletes a member of an organization
 func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemberRequest) (*v1.DeleteMemberResponse, error) {
+	as, err := store.GetProjectStore(ctx, m.store)
+	if err != nil {
+		return nil, err
+	}
+
 	memberID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
@@ -175,7 +199,7 @@ func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemb
 		return nil, err
 	}
 
-	err = m.store.Transaction(func(tx store.AuthBaseStore) error {
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		err := tx.DeleteUser(ctx, memberID)
 		if err != nil {
 			return err

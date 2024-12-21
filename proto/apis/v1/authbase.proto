@@ -287,6 +287,15 @@ message DeleteTokenResponse {
   string message = 1;
 }
 
+message VerifyTokenRequest {
+  string token = 1;
+}
+
+message VerifyTokenResponse {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+}
+
 // Token service
 
 service TokenService {
@@ -307,6 +316,10 @@ service TokenService {
 
   rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse) {
     option (google.api.http) = {delete: "/v1/tokens/{id}"};
+  }
+
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {
+    option (google.api.http) = {post: "/v1/tokens/-/verify"};
   }
 }
 
@@ -631,11 +644,27 @@ message CreateAdminOrganizationResponse {
   string name = 2;
 }
 
+message CreateMigrationRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message CreateMigrationResponse {
+  string message = 1;
+}
+
 service AdminOrganizationService {
   // create master organization
   rpc CreateAdminOrganization(CreateAdminOrganizationRequest) returns (CreateAdminOrganizationResponse) {
     option (google.api.http) = {
       post: "/v1/admin/organizations"
+      body: "*"
+    };
+  }
+
+  // create migration for a project
+  rpc CreateMigration(CreateMigrationRequest) returns (CreateMigrationResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/migrations"
       body: "*"
     };
   }

@@ -167,9 +167,9 @@ func (s *Server) registerServices() error {
 	storeProvider := store.NewDefaultProvider(rdb)
 
 	// Register the grpc server
-	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(rdb, redis))
+	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(storeProvider, redis))
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(storeProvider, redis))
-	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(rdb, redis))
+	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(storeProvider, redis))
 	v1.RegisterUserServiceServer(grpcServer, permission.NewCheckedUserService(service.NewUserService(storeProvider, redis), nil))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(storeProvider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(storeProvider, mailProvider, redis))

@@ -14,18 +14,20 @@ import (
 var _ v1.AdminOrganizationServiceServer = (*AdminOrganizationService)(nil)
 
 type AdminOrganizationService struct {
-	store store.AuthBaseStore
+	store store.Provider
 	cache *cache.Redis
 	v1.UnimplementedAdminOrganizationServiceServer
 }
 
 // NewAdminOrganizationService creates a new admin organization service
-func NewAdminOrganizationService(store store.AuthBaseStore, cache *cache.Redis) v1.AdminOrganizationServiceServer {
+func NewAdminOrganizationService(store store.Provider, cache *cache.Redis) v1.AdminOrganizationServiceServer {
 	return &AdminOrganizationService{store: store, cache: cache}
 }
 
 // CreateAdminOrganization creates a new organization
 func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, request *v1.CreateAdminOrganizationRequest) (*v1.CreateAdminOrganizationResponse, error) {
+	as := a.store.Default()
+
 	user := model.User{
 		ID:        uuid.New().String(),
 		Email:     request.GetEmail(),
@@ -42,7 +44,7 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 	user.OrganizationID = org.ID
 
 	// Create organization and user in a transaction
-	err := a.store.Transaction(func(tx store.AuthBaseStore) error {
+	err := as.Transaction(func(tx store.AuthBaseStore) error {
 		err := tx.CreateOrganization(ctx, &org)
 		if err != nil {
 			return err
@@ -89,5 +91,27 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 
 	return &v1.CreateAdminOrganizationResponse{
 		Id: org.ID,
+	}, nil
+}
+
+// CreateMigration creates a new migration for the project
+func (a *AdminOrganizationService) CreateMigration(ctx context.Context, request *v1.CreateMigrationRequest) (*v1.CreateMigrationResponse, error) {
+	projectID, err := uuid.Parse(request.GetProjectId())
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := a.store.Provide(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = as.Migrate()
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.CreateMigrationResponse{
+		Message: "Migration successful",
 	}, nil
 }
