@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/emrgen/authbase/pkg/config"
+	"github.com/emrgen/authbase/pkg/store"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ func Migrate() *cobra.Command {
 		Use:   "migrate",
 		Short: "Migrate the database",
 		Run: func(cmd *cobra.Command, args []string) {
-			db := config.GetDB()
+			db := store.GetDB()
 			err := db.Migrate()
 			if err != nil {
 				panic(err)

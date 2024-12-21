@@ -37,8 +37,8 @@ func FromEnv() (*Config, error) {
 
 	dbConfig := &DBConfig{}
 	dbConfig.Type = os.Getenv("DB_TYPE")
-	if dbConfig.Type == "" || dbConfig.Type == "sqlite" {
-		dbConfig.Type = "sqlite"
+	if dbConfig.Type == "" || dbConfig.Type == "sqlite3" {
+		dbConfig.Type = "sqlite3"
 		dbConfig.FilePath = "./.tmp/db/authbase.db"
 	} else {
 		dbConfig.ConnectionString = os.Getenv("DB_CONNECTION_STRING")

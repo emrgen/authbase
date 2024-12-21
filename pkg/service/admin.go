@@ -8,25 +8,36 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"os"
 	"time"
 )
 
 var _ v1.AdminOrganizationServiceServer = (*AdminOrganizationService)(nil)
 
 type AdminOrganizationService struct {
-	store store.Provider
-	cache *cache.Redis
+	provider store.Provider
+	cache    *cache.Redis
 	v1.UnimplementedAdminOrganizationServiceServer
 }
 
 // NewAdminOrganizationService creates a new admin organization service
 func NewAdminOrganizationService(store store.Provider, cache *cache.Redis) v1.AdminOrganizationServiceServer {
-	return &AdminOrganizationService{store: store, cache: cache}
+	return &AdminOrganizationService{provider: store, cache: cache}
 }
 
 // CreateAdminOrganization creates a new organization
 func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, request *v1.CreateAdminOrganizationRequest) (*v1.CreateAdminOrganizationResponse, error) {
-	as := a.store.Default()
+	// if the app is running in masterless mode, return an error as this operation is not allowed
+	if os.Getenv("APP_MODE") == "masterless" {
+		return nil, x.ErrForbidden
+	}
+
+	as := a.provider.Default()
+
+	// check if the master org already exists
+	if org, err := as.GetOrganizationByName(ctx, request.GetName()); err == nil && org != nil {
+		return nil, x.ErrOrganizationExists
+	}
 
 	user := model.User{
 		ID:        uuid.New().String(),
@@ -65,7 +76,7 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 			}()
 		}
 
-		// if password is provided, hash it and store it
+		// if password is provided, hash it and provider it
 		password := request.GetPassword()
 		if password != "" {
 			secret := x.Keygen()
@@ -101,7 +112,7 @@ func (a *AdminOrganizationService) CreateMigration(ctx context.Context, request 
 		return nil, err
 	}
 
-	as, err := a.store.Provide(projectID)
+	as, err := a.provider.Provide(projectID)
 	if err != nil {
 		return nil, err
 	}

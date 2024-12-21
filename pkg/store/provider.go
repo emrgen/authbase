@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"os"
 	"sync"
 )
 
@@ -32,7 +33,12 @@ func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error)
 
 	projectStore, err := store.Provide(projectIDUUID)
 	if err != nil {
-		return store.Default(), nil
+		// if the project store is not found, return the default store
+		if os.Getenv("APP_MODE") != "masterless" {
+			return store.Default(), nil
+		}
+
+		return nil, err
 	}
 
 	return projectStore, nil

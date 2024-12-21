@@ -96,7 +96,7 @@ func (s *Server) Start(grpcPort, httpPort string) error {
 }
 
 func (s *Server) init(grpcPort, httpPort string) error {
-	db := config.GetDB()
+	db := store.GetDB()
 	s.provider = store.NewDefaultProvider(db)
 	s.redis = cache.NewRedisClient()
 
@@ -261,7 +261,7 @@ func (s *Server) run() error {
 
 	// if an admin organization is provided, create the org and the super admin user
 	if s.config.AdminOrg.Valid() {
-		logrus.Infof("creating admin organization: %v", s.config.AdminOrg)
+		logrus.Infof("trying to create admin organization: %v", s.config.AdminOrg)
 		adminOrgService := service.NewAdminOrganizationService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminOrganization(context.TODO(), &v1.CreateAdminOrganizationRequest{
 			Name:     s.config.AdminOrg.Username,
