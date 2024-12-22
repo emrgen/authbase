@@ -97,13 +97,6 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		return err
 	}
 
-	if relation == "read" {
-		// being a member of master org the user has implicit read permission
-		if user.Organization.Master {
-			return nil
-		}
-	}
-
 	// if the user is a member of the master organization
 	if user.Organization.Master {
 		permission, err := s.store.GetPermissionByID(ctx, uuid.MustParse(user.OrganizationID), userID)
@@ -119,10 +112,9 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		}
 
 		// check if the user has the read permission
+		// being a member of master org the user has implicit read permission
 		if relation == "read" {
-			if permission.Permission&uint32(v1.Permission_READ) == 1 {
-				return nil
-			}
+			return nil
 		}
 
 		if relation == "delete" {
@@ -160,11 +152,10 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 				return nil
 			}
 		}
+
 		if err != nil {
 			return err
 		}
-
-		return x.ErrUnauthorized
 	}
 
 	if relation == "read" {
@@ -180,15 +171,15 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 				return err
 			}
 
-			// check if the user has the write permission
-			if permission.Permission&uint32(1) == 1 {
+			// check if the user has the read permission
+			if permission.Permission&uint32(v1.Permission_READ) > 0 {
 				return nil
 			}
-
-			return x.ErrUnauthorized
 		}
 
-		return err
+		if err != nil {
+			return nil
+		}
 	}
 
 	return x.ErrUnauthorized

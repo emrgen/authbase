@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	v1 "github.com/emrgen/authbase/apis/v1"
@@ -37,7 +38,11 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 
-	as := o.store.Default()
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
+
 	password := request.GetPassword()
 	verifyEmail := request.GetVerifyEmail()
 
@@ -114,7 +119,10 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 
 // GetOrganizationId gets the organization ID, given the name
 func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1.GetOrganizationIdRequest) (*v1.GetOrganizationIdResponse, error) {
-	as := o.store.Default()
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
 
 	org, err := as.GetOrganizationByName(ctx, request.GetName())
 	if err != nil {
@@ -135,7 +143,10 @@ func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.G
 		return nil, err
 	}
 
-	as := o.store.Default()
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
 
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
@@ -166,7 +177,10 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 		return nil, err
 	}
 
-	as := o.store.Default()
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
 	page := utils.GetPage(request)
 
 	orgs, total, err := as.ListOrganizations(ctx, int(page.Page), int(page.Size))
@@ -208,7 +222,10 @@ func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 
-	as := o.store.Default()
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		org, err := tx.GetOrganizationByID(ctx, id)
 		if err != nil {
@@ -242,7 +259,11 @@ func (o *OrganizationService) DeleteOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 
-	as := o.store.Default()
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
+
 	err = as.DeleteOrganization(ctx, id)
 	if err != nil {
 		return nil, err
@@ -252,8 +273,45 @@ func (o *OrganizationService) DeleteOrganization(ctx context.Context, request *v
 }
 
 func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.AddOauthProviderRequest) (*v1.AddOauthProviderResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = o.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(map[string]interface{})
+	m["provider"] = request.GetProvider()
+	m["client_id"] = request.GetClientId()
+	m["client_secret"] = request.GetClientSecret()
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+
+	provider := model.OauthProvider{
+		ID:             uuid.New().String(),
+		OrganizationID: orgID.String(),
+		Config:         string(data),
+	}
+
+	err = as.CreateOauthProvider(ctx, &provider)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.AddOauthProviderResponse{
+		Message: "Oauth provider added successfully",
+	}, nil
 }
 
 func (o *OrganizationService) GetOauthProvider(ctx context.Context, request *v1.GetOauthProviderRequest) (*v1.GetOauthProviderResponse, error) {

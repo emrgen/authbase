@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -232,28 +233,28 @@ func (g *GormStore) DeletePermission(ctx context.Context, orgID, userID uuid.UUI
 	return g.db.Delete(&permission).Error
 }
 
-func (g *GormStore) CreateProvider(ctx context.Context, provider *model.Provider) error {
+func (g *GormStore) CreateOauthProvider(ctx context.Context, provider *model.OauthProvider) error {
 	return g.db.Create(provider).Error
 }
 
-func (g *GormStore) GetProviderByID(ctx context.Context, id uuid.UUID) (*model.Provider, error) {
-	var provider model.Provider
+func (g *GormStore) GetOauthProviderByID(ctx context.Context, id uuid.UUID) (*model.OauthProvider, error) {
+	var provider model.OauthProvider
 	err := g.db.Where("id = ?", id).First(&provider).Error
 	return &provider, err
 }
 
-func (g *GormStore) ListProviders(ctx context.Context, page, perPage int) ([]*model.Provider, error) {
-	var providers []*model.Provider
+func (g *GormStore) ListOauthProviders(ctx context.Context, page, perPage int) ([]*model.OauthProvider, error) {
+	var providers []*model.OauthProvider
 	err := g.db.Limit(perPage).Offset(page * perPage).Find(&providers).Error
 	return providers, err
 }
 
-func (g *GormStore) UpdateProvider(ctx context.Context, provider *model.Provider) error {
+func (g *GormStore) UpdateOauthProvider(ctx context.Context, provider *model.OauthProvider) error {
 	return g.db.Save(provider).Error
 }
 
-func (g *GormStore) DeleteProvider(ctx context.Context, id uuid.UUID) error {
-	provider := model.Provider{ID: id.String()}
+func (g *GormStore) DeleteOauthProvider(ctx context.Context, id uuid.UUID) error {
+	provider := model.OauthProvider{ID: id.String()}
 	return g.db.Delete(&provider).Error
 }
 

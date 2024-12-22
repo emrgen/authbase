@@ -18,7 +18,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	if err := db.AutoMigrate(&Provider{}); err != nil {
+	if err := db.AutoMigrate(&OauthProvider{}); err != nil {
 		return err
 	}
 

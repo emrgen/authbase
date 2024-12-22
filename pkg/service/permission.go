@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
@@ -102,7 +103,7 @@ func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPe
 	}
 
 	permissions := make([]v1.Permission, 0)
-	for value, _ := range v1.Permission_name {
+	for value := range v1.Permission_name {
 		if perm.Permission&uint32(value) > 0 {
 			permissions = append(permissions, v1.Permission(value))
 		}
@@ -114,6 +115,8 @@ func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPe
 }
 
 // UpdatePermission updates the permission of a member in an organization
+// 1. check if the caller has organization write permission
+// 2.
 func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.UpdatePermissionRequest) (*v1.UpdatePermissionResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
 	if err != nil {
@@ -135,6 +138,11 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 		return nil, err
 	}
 
+	// new permissions overwrite all old permission
+	// example:
+	// before: permission: Read | Write
+	// update request: permission: Read
+	// after: permission: Read
 	userPermission := uint32(0)
 	for _, perm := range request.GetPermissions() {
 		userPermission |= uint32(perm)
@@ -162,7 +170,7 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 	return &v1.UpdatePermissionResponse{Message: "Permission updated successfully"}, nil
 }
 
-// DeletePermission deletes the permission of a member in an organization
+// DeletePermission deletes all permission of a member in an organization
 func (p *PermissionService) DeletePermission(ctx context.Context, request *v1.DeletePermissionRequest) (*v1.DeletePermissionResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
 	if err != nil {

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
 )
@@ -99,15 +100,15 @@ type PermissionStore interface {
 // ProviderStore is the interface for interacting with the provider database.
 type ProviderStore interface {
 	// CreateProvider creates a new provider in the database.
-	CreateProvider(ctx context.Context, provider *model.Provider) error
+	CreateOauthProvider(ctx context.Context, provider *model.OauthProvider) error
 	// GetProviderByID retrieves a provider by its ID.
-	GetProviderByID(ctx context.Context, id uuid.UUID) (*model.Provider, error)
+	GetOauthProviderByID(ctx context.Context, id uuid.UUID) (*model.OauthProvider, error)
 	// ListProviders retrieves a list of providers.
-	ListProviders(ctx context.Context, page, perPage int) ([]*model.Provider, error)
+	ListOauthProviders(ctx context.Context, page, perPage int) ([]*model.OauthProvider, error)
 	// UpdateProvider updates a provider in the database.
-	UpdateProvider(ctx context.Context, provider *model.Provider) error
+	UpdateOauthProvider(ctx context.Context, provider *model.OauthProvider) error
 	// DeleteProvider deletes a provider from the database.
-	DeleteProvider(ctx context.Context, id uuid.UUID) error
+	DeleteOauthProvider(ctx context.Context, id uuid.UUID) error
 }
 
 // RefreshTokenStore is the interface for interacting with the refresh token database.
