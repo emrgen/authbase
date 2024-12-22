@@ -14,10 +14,10 @@ import (
 // on success, it sets the userID and organizationID in the context.
 func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		// get url path from metadata
-
 		switch info.FullMethod {
-		case v1.AuthService_Register_FullMethodName:
+		case
+			v1.AuthService_Register_FullMethodName,
+			v1.TokenService_VerifyToken_FullMethodName:
 			break
 		case v1.AuthService_Login_FullMethodName:
 			request := req.(*v1.LoginRequest)
@@ -47,6 +47,9 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.GetOrganizationId()))
 
 		default:
+			// TODO: if http cookie is present use that
+
+			// user Bearer token for authentication
 			token, err := TokenFromHeader(ctx, "Bearer")
 			if err != nil {
 				return nil, err

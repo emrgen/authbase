@@ -9,6 +9,11 @@
 - [x] login as the new user
 - [x] make the user a reader of the fastype org
 - [x] list users of fastype org
+- [x] register a new user
+- [x] login as the new user
 - [ ] disable user account - disabled user can not access their account
 - [ ] enable user account
-- [ ] register a new user
+- [ ] delete user account - deleted user can not access their account
+- [ ] login via google oauth
+- [ ] login via github oauth
+- [ ] delete organization - all users and data will be deleted

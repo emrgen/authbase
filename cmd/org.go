@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/olekukonko/tablewriter"
@@ -113,13 +112,16 @@ func listOrgCommand() *cobra.Command {
 		Use:   "list",
 		Short: "list org",
 		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
 				return
 			}
 
-			organizations, err := client.ListOrganizations(context.Background(), &v1.ListOrganizationsRequest{})
+			ctx := tokenContext(Token)
+			organizations, err := client.ListOrganizations(ctx, &v1.ListOrganizationsRequest{})
 			if err != nil {
 				logrus.Errorf("error listing organizations: %v", err)
 				return
