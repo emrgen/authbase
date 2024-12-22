@@ -1,23 +1,19 @@
 # Stories
 
-## Create org at start up
-
-- [x] done
+## Create org at start up ✅
 
 - **Modes**
   - In singlestore mode the service should create the master org and the super admin on startup
   - In multistore mode the service should start but no master org exists
 
-## Create token for a org
-
-- [x] done
+## Create token for a org ✅
 
 - **Requirement**
   - To create the organization offline token the user must be a member of the master org or the target org.
 - **Result**
   - The token will have same permission as the creator.
 
-## Add a new user to a organization
+## Add a new user to a organization ✅
 
 - **Requirement**
   - To add a new user to the organization the caller must be a member of the master org or the target org.

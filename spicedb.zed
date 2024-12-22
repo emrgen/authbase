@@ -1,0 +1,47 @@
+// this schema is meant to be used when the authbase service is running in multistore mode
+
+definition user {
+}
+
+// tenant is a special entity that can have users i.e members as children
+// all the user relation are meant to represent the users that have a certain role in the organization
+// NOTE: the tenant entity is meant to represent an organization in authbase.
+// we cannot user organization as the entity name because it is used in authbac to represent the organization that can have projects
+definition tenant {
+  // parent is the organization that the tenant belongs to.
+  // we refer to as the master organization in authbase
+  relation parent: tenant;
+  relation admin: user;
+  relation reader: user;
+  relation writer: user;
+
+  // viewers of the master organization can view this tenant
+  permission view = admin + writer + reader + parent->view;
+  // editor of the master organization can edit this tenant
+  permission edit = admin + writer + parent->edit;
+}
+
+// organization is a special entity that can have projects as children
+// a authbac entity to organize the projects in an organization
+// NOTE: the organization entity is meant to represent an organization in authbac.
+definition organization {
+  relation admin: user;
+  relation reader: user;
+  relation writer: user;
+
+  permission view = admin + writer + reader;
+  permission edit = admin + writer;
+}
+
+// project is a special entity that can have users as children
+// a authbac entity to organize the projects in an organization
+// NOTE: the project entity is meant to represent a project in authbac.
+definition project {
+  relation parent: tenant | organization;
+  relation admin: user;
+  relation reader: user;
+  relation writer: user;
+
+  permission view = admin + reader + writer + parent->view;
+  permission edit = admin + writer + parent->edit;
+}
