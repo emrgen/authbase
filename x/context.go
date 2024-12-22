@@ -36,7 +36,7 @@ func VerifyUserInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 		logrus.Info("VerifyUserInterceptor")
 
 		switch info.FullMethod {
-		case v1.TokenService_CreateToken_FullMethodName:
+		case v1.TokenService_CreateToken_FullMethodName, v1.AuthService_Login_FullMethodName:
 			request := req.(*v1.CreateTokenRequest)
 			user, err := verifier.VerifyEmailPassword(ctx, request.Email, request.Password)
 			if err != nil {
@@ -45,6 +45,7 @@ func VerifyUserInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 
 			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
 			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.OrganizationId))
+
 		default:
 			token, err := TokenFromHeader(ctx, "Bearer")
 			if err != nil {

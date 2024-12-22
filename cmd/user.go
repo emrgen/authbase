@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
+	"strconv"
 )
 
 var userCommand = &cobra.Command{
@@ -99,7 +100,12 @@ func listUserCommand() *cobra.Command {
 		Use:   "list",
 		Short: "list user",
 		Run: func(cmd *cobra.Command, args []string) {
-			//verifyContext()
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
 
 			if OrganizationId == "" {
 				logrus.Errorf("missing required flag: --organization-id")
@@ -113,7 +119,8 @@ func listUserCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.ListUsers(context.Background(), &v1.ListUsersRequest{
+			ctx := tokenContext(Token)
+			res, err := client.ListUsers(ctx, &v1.ListUsersRequest{
 				OrganizationId: OrganizationId,
 			})
 			if err != nil {
@@ -126,7 +133,7 @@ func listUserCommand() *cobra.Command {
 			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt"})
 			for i, user := range res.Users {
 				table.Append([]string{
-					string(i),
+					strconv.Itoa(i + 1),
 					user.Id,
 					user.Email,
 					user.Username,
