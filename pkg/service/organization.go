@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"time"
+
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
@@ -12,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"time"
 )
 
 var _ v1.OrganizationServiceServer = new(OrganizationService)
@@ -265,11 +266,24 @@ func (o *OrganizationService) ListOauthProviders(ctx context.Context, request *v
 	panic("implement me")
 }
 
+// UpdateOauthProvider updates the oauth provider information.
+// The provider ID is required to update the provider information.
+// Example:
+//
+//	organization_id: "organization_id",
+//	provider: "Google",
+//	client_id: "client_id",
+//	client_secret: "client_secret",
 func (o *OrganizationService) UpdateOauthProvider(ctx context.Context, request *v1.UpdateOauthProviderRequest) (*v1.UpdateOauthProviderResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
+// DeleteOauthProvider deletes the oauth provider information.
+// The provider ID is required to delete the provider information.
+// Example:
+//
+//	id: "provider_id"
 func (o *OrganizationService) DeleteOauthProvider(ctx context.Context, request *v1.DeleteOauthProviderRequest) (*v1.DeleteOauthProviderResponse, error) {
 	//TODO implement me
 	panic("implement me")

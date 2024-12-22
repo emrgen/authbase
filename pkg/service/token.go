@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
+
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
@@ -12,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"time"
 )
 
 const (
@@ -38,6 +39,9 @@ func NewTokenService(store store.Provider, cache *cache.Redis) *TokenService {
 }
 
 // CreateToken creates an offline new token
+// 1. user authentication is already done by the middleware
+// 2. get project store
+// 3. check if the user has the permission to create a token in the organization
 func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenRequest) (*v1.CreateTokenResponse, error) {
 	as, err := store.GetProjectStore(ctx, t.store)
 	if err != nil {

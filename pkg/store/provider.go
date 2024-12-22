@@ -2,18 +2,20 @@ package store
 
 import (
 	"context"
+	"os"
+	"sync"
+
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"os"
-	"sync"
 )
 
 // provider.go contains the logic to provide the correct store based on the project ID.
 // It is used when the project has its own store. If the project does not have its own store,
 // The default store is used when the project ID is not provided in the context.
 
+// GetProjectStore returns the store for the given project ID. If the project ID is not provided, the default store is returned.
 func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error) {
 	// get project id from the context
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -26,29 +28,34 @@ func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error)
 		return nil, status.Errorf(codes.InvalidArgument, "missing project id")
 	}
 
-	projectIDUUID, err := uuid.Parse(projectID[0])
+	projectUUID, err := uuid.Parse(projectID[0])
 	if err != nil {
 		return nil, err
 	}
 
-	projectStore, err := store.Provide(projectIDUUID)
+	projectStore, err := store.Provide(projectUUID)
 	if err != nil {
 		// if the project store is not found, return the default store
-		if os.Getenv("APP_MODE") != "masterless" {
+		if os.Getenv("APP_MODE") != "multistore" {
 			return store.Default(), nil
 		}
 
+		// if the project store is not found and the APP_MODE is multistore, return the error
+		// because the project store is required in multistore mode
 		return nil, err
 	}
 
 	return projectStore, nil
 }
 
+// Provider is an interface to provide the store based on the project ID.
 type Provider interface {
 	Provide(projectID uuid.UUID) (AuthBaseStore, error)
 	Default() AuthBaseStore
 }
 
+// ProviderCache is a provider with a cache.
+// It caches the store for the given project ID.
 type ProviderCache struct {
 	Stores   map[uuid.UUID]AuthBaseStore
 	provider Provider
@@ -99,10 +106,12 @@ func NewDefaultProvider(store AuthBaseStore) *DefaultProvider {
 	}
 }
 
+// Provide returns the default store.
 func (d *DefaultProvider) Provide(projectID uuid.UUID) (AuthBaseStore, error) {
 	return d.Store, nil
 }
 
+// Default returns the default store.
 func (d *DefaultProvider) Default() AuthBaseStore {
 	return d.Store
 }

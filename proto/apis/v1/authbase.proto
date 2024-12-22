@@ -553,7 +553,6 @@ message UpdateOauthProviderResponse {
 
 message DeleteOauthProviderRequest {
   string id = 1 [(validate.rules).string.uuid = true];
-  string provider = 2;
 }
 
 message DeleteOauthProviderResponse {
@@ -616,7 +615,7 @@ service OrganizationService {
   }
 
   rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
-    option (google.api.http) = {delete: "/v1/organizations/{id}/oauth-providers/{provider}"};
+    option (google.api.http) = {delete: "/v1/organizations/{id}/oauth-providers"};
   }
 }
 
