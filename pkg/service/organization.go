@@ -50,6 +50,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		ID:       uuid.New().String(),
 		Email:    request.GetEmail(),
 		Username: request.GetUsername(),
+		Member:   true,
 	}
 
 	org := model.Organization{

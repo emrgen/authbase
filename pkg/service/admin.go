@@ -55,6 +55,7 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 		Email:     request.GetEmail(),
 		Username:  request.GetUsername(),
 		SassAdmin: true,
+		Member:    true,
 	}
 
 	org = &model.Organization{

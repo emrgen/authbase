@@ -262,7 +262,6 @@ func (s *Server) run() error {
 		logrus.Infof("grpc server stopped")
 	}()
 
-	time.Sleep(1 * time.Second)
 	logrus.Infof("Press Ctrl+C to stop the server")
 
 	// if an admin organization is provided, create the org and the super admin user

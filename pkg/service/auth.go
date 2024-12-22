@@ -142,7 +142,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		return nil, err
 	}
 
-	user, err := authStore.GetUserByEmail(ctx, email)
+	user, err := authStore.GetUserByEmail(ctx, orgID, email)
 	if err != nil {
 		return nil, err
 	}

@@ -36,15 +36,32 @@ func VerifyUserInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 		logrus.Info("VerifyUserInterceptor")
 
 		switch info.FullMethod {
-		case v1.TokenService_CreateToken_FullMethodName, v1.AuthService_Login_FullMethodName:
-			request := req.(*v1.CreateTokenRequest)
-			user, err := verifier.VerifyEmailPassword(ctx, request.Email, request.Password)
+		case v1.AuthService_Login_FullMethodName:
+			request := req.(*v1.LoginRequest)
+			orgID, err := uuid.Parse(request.GetOrganizationId())
+			if err != nil {
+				return nil, err
+			}
+			user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
 			if err != nil {
 				return nil, err
 			}
 
 			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.OrganizationId))
+			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.GetOrganizationId()))
+		case v1.TokenService_CreateToken_FullMethodName:
+			request := req.(*v1.CreateTokenRequest)
+			orgID, err := uuid.Parse(request.GetOrganizationId())
+			if err != nil {
+				return nil, err
+			}
+			user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
+			if err != nil {
+				return nil, err
+			}
+
+			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
+			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.GetOrganizationId()))
 
 		default:
 			token, err := TokenFromHeader(ctx, "Bearer")

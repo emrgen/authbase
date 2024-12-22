@@ -101,6 +101,10 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		return err
 	}
 
+	if !user.Member {
+		return x.ErrNotOrganizationMember
+	}
+
 	// if the user is a member of the master organization
 	if user.Organization.Master {
 		permission, err := s.store.GetPermissionByID(ctx, uuid.MustParse(user.OrganizationID), userID)
@@ -136,6 +140,15 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 	userID, err := x.GetUserID(ctx)
 	if err != nil {
 		return err
+	}
+
+	user, err := s.store.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if !user.Member {
+		return x.ErrNotOrganizationMember
 	}
 
 	if relation == "write" {

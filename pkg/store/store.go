@@ -51,7 +51,7 @@ type UserStore interface {
 	// CreateUser creates a new user in the database.
 	CreateUser(ctx context.Context, user *model.User) error
 	// GetUserByEmail retrieves a user by their email address.
-	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
+	GetUserByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.User, error)
 	// GetUserByID retrieves a user by their ID.
 	GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 	// UpdateUser updates a user in the database.

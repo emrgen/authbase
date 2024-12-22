@@ -9,4 +9,5 @@ var (
 	ErrCookieNotFoundInContext       = errors.New("cookie not found in context")
 	ErrOrganizationNotFoundInContext = errors.New("organization not found in context")
 	ErrOrganizationExists            = errors.New("organization already exists")
+	ErrNotOrganizationMember         = errors.New("not an organization member")
 )

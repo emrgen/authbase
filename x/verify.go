@@ -6,10 +6,11 @@ import (
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
+	"github.com/google/uuid"
 )
 
 type UserVerifier interface {
-	VerifyEmailPassword(ctx context.Context, email, password string) (*model.User, error)
+	VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.User, error)
 	VerifyToken(ctx context.Context, token string) (*Claims, error)
 }
 
@@ -25,13 +26,13 @@ func NewStoreBasedUserVerifier(store store.Provider, redis *cache.Redis) *StoreB
 	}
 }
 
-func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, email, password string) (*model.User, error) {
+func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.User, error) {
 	as, err := store.GetProjectStore(ctx, v.store)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := as.GetUserByEmail(ctx, email)
+	user, err := as.GetUserByEmail(ctx, orgID, email)
 	if err != nil {
 		return nil, err
 	}

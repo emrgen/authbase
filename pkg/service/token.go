@@ -89,7 +89,7 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		// check if the user exists on the database within the organization
-		user, err := tx.GetUserByEmail(ctx, request.GetEmail())
+		user, err := tx.GetUserByEmail(ctx, orgID, request.GetEmail())
 		if err != nil {
 			return err
 		}

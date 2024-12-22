@@ -55,6 +55,11 @@ func createUserCommand() *cobra.Command {
 				return
 			}
 
+			if password == "" {
+				logrus.Errorf("missing required flag: --password")
+				return
+			}
+
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
@@ -67,7 +72,7 @@ func createUserCommand() *cobra.Command {
 				OrganizationId: OrganizationId,
 				Email:          email,
 				Username:       username,
-				Password:       "password",
+				Password:       password,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create user: %v", err)
