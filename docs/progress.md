@@ -7,7 +7,8 @@
 - [x] create an offline token as the fastype org admin
 - [x] add a user to the fastype org
 - [x] login as the new user
-- [ ] make the user a reader of the fastype org
-- [ ] list users of fastype org
+- [x] make the user a reader of the fastype org
+- [x] list users of fastype org
 - [ ] disable user account - disabled user can not access their account
 - [ ] enable user account
+- [ ] register a new user

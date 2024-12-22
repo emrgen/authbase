@@ -70,12 +70,12 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	password := request.GetPassword()
 	orgID := uuid.MustParse(request.GetOrganizationId())
 
-	authStore, err := a.store.Provide(orgID)
+	as, err := a.store.Provide(orgID)
 	if err != nil {
 		return nil, err
 	}
 
-	users, err := authStore.UserExists(ctx, orgID, username, email)
+	users, err := as.UserExists(ctx, orgID, username, email)
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +94,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	hashedPassword, _ := x.HashPassword(password, salt)
 
 	user := &model.User{
+		ID:             uuid.New().String(),
 		OrganizationID: orgID.String(),
 		Username:       username,
 		Email:          email,
@@ -102,29 +103,40 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 		Verified:       false,
 	}
 
-	err = authStore.CreateUser(ctx, user)
-	if err != nil {
-		return nil, err
-	}
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		err = as.CreateUser(ctx, user)
+		if err != nil {
+			return err
+		}
 
-	// generate a verification code
-	code := x.GenerateCode()
-	expireAt := time.Now().Add(24 * time.Hour)
+		// generate a verification code
+		code := x.GenerateCode()
+		expireAt := time.Now().Add(24 * time.Hour)
 
-	err = authStore.CreateVerificationCode(ctx, &model.VerificationCode{
-		Code:      code,
-		UserID:    user.ID,
-		ExpiresAt: expireAt,
+		err = as.CreateVerificationCode(ctx, &model.VerificationCode{
+			ID:        uuid.New().String(),
+			Code:      code,
+			UserID:    user.ID,
+			ExpiresAt: expireAt,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	// send email verification code to the user
-	err = a.mailer.Provide(orgID).SendMail(email, email, "Verify your email", "verify-email")
-	if err != nil {
-		return nil, err
-	}
+	go func() {
+		logrus.Infof("sending email to %s", email)
+		err = a.mailer.Provide(orgID).SendMail(email, email, "Verify your email", "verify-email")
+		if err != nil {
+			logrus.Errorf("failed to send email: %v", err)
+		}
+	}()
 
 	return &v1.RegisterResponse{
 		Message: "user registered",
@@ -162,7 +174,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	if err != nil {
 		return nil, err
 	}
-	logrus.Info("token: ", token)
+
 	refreshExpireAt := time.Now().Add(5 * 24 * time.Hour)
 	// save refresh token to cache, it will be used to validate the refresh token request
 	err = a.cache.Set(jti, user.ID, 5*24*time.Hour)

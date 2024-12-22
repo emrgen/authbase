@@ -49,18 +49,18 @@ func (g *GormStore) DeleteSession(ctx context.Context, id uuid.UUID) error {
 }
 
 func (g *GormStore) CreateVerificationCode(ctx context.Context, code *model.VerificationCode) error {
-	//TODO implement me
-	panic("implement me")
+	return g.db.Create(code).Error
 }
 
 func (g *GormStore) GetVerificationCode(ctx context.Context, code string) (*model.VerificationCode, error) {
-	//TODO implement me
-	panic("implement me")
+	var vc model.VerificationCode
+	err := g.db.Where("code = ?", code).First(&vc).Error
+	return &vc, err
 }
 
 func (g *GormStore) DeleteVerificationCode(ctx context.Context, code string) error {
-	//TODO implement me
-	panic("implement me")
+	// hard delete the verification code
+	return g.db.Delete(&model.VerificationCode{Code: code}).Error
 }
 
 func (g *GormStore) CreateToken(ctx context.Context, token *model.Token) error {

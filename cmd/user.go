@@ -18,6 +18,7 @@ var userCommand = &cobra.Command{
 
 func init() {
 	userCommand.AddCommand(createUserCommand())
+	userCommand.AddCommand(registerUserCommand())
 	userCommand.AddCommand(loginUserCommand())
 	userCommand.AddCommand(listUserCommand())
 	userCommand.AddCommand(updateUserCommand())
@@ -224,7 +225,6 @@ func deleteUserCommand() *cobra.Command {
 }
 
 func registerUserCommand() *cobra.Command {
-	var organizationId string
 	var username string
 	var email string
 	var password string
@@ -233,7 +233,7 @@ func registerUserCommand() *cobra.Command {
 		Use:   "register",
 		Short: "register user",
 		Run: func(cmd *cobra.Command, args []string) {
-			if organizationId == "" {
+			if OrganizationId == "" {
 				logrus.Errorf("missing required flag: --organization-id")
 				return
 			}
@@ -260,7 +260,7 @@ func registerUserCommand() *cobra.Command {
 			}
 
 			res, err := client.Register(context.Background(), &v1.RegisterRequest{
-				OrganizationId: organizationId,
+				OrganizationId: OrganizationId,
 				Username:       username,
 				Email:          email,
 				Password:       password,
@@ -276,7 +276,6 @@ func registerUserCommand() *cobra.Command {
 
 	bindContextFlags(command)
 
-	command.Flags().StringVarP(&organizationId, "organization-id", "o", "", "organization id")
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")

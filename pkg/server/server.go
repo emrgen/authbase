@@ -133,7 +133,7 @@ func (s *Server) registerServices() error {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),
-			x.VerifyUserInterceptor(verifier),
+			x.AuthInterceptor(verifier),
 		)),
 	)
 
