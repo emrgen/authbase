@@ -1,10 +1,12 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
+// IssuedAt is same as gorm.Model.CreatedAt
 type Token struct {
 	gorm.Model
 	ID             string `gorm:"primaryKey;type:uuid"`
@@ -16,6 +18,7 @@ type Token struct {
 	ExpireAt       time.Time
 }
 
-func (_ Token) TableName() string {
+// TableName returns the table name of the model
+func (Token) TableName() string {
 	return tableName("tokens")
 }

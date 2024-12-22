@@ -9,6 +9,6 @@ type Permission struct {
 	User         *User         `gorm:"foreignKey:UserID;OnDelete:CASCADE"`         // delete permissions when user is deleted
 }
 
-func (_ Permission) TableName() string {
+func (Permission) TableName() string {
 	return tableName("permissions")
 }

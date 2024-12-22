@@ -12,6 +12,6 @@ type Organization struct {
 	Master  bool   `gorm:"not null;default:false"`
 }
 
-func (_ Organization) TableName() string {
+func (Organization) TableName() string {
 	return tableName("organizations")
 }

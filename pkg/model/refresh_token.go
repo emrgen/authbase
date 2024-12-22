@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type RefreshToken struct {
@@ -14,6 +15,6 @@ type RefreshToken struct {
 	IssuedAt       time.Time `gorm:"not null"`
 }
 
-func (_ RefreshToken) TableName() string {
+func (RefreshToken) TableName() string {
 	return tableName("refresh_tokens")
 }

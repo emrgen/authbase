@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Session struct {
@@ -14,6 +15,6 @@ type Session struct {
 	ExpiredAt      time.Time `gorm:"default:null"`
 }
 
-func (_ Session) TableName() string {
+func (Session) TableName() string {
 	return tableName("sessions")
 }

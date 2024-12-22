@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // User is the database model for users.
@@ -27,6 +28,6 @@ type User struct {
 	RecoveredBy    string    `gorm:"uuid;"`
 }
 
-func (u User) TableName() string {
+func (User) TableName() string {
 	return tableName("users")
 }

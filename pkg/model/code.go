@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type VerificationCode struct {
@@ -16,6 +17,6 @@ type VerificationCode struct {
 	CallbackURL    string
 }
 
-func (_ VerificationCode) TableName() string {
+func (VerificationCode) TableName() string {
 	return tableName("verification_codes")
 }

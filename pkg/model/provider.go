@@ -7,6 +7,6 @@ type Provider struct {
 	Config         string `gorm:"type:json"` // JSON string
 }
 
-func (_ Provider) TableName() string {
+func (Provider) TableName() string {
 	return tableName("providers")
 }
