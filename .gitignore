@@ -39,7 +39,7 @@ clients
 # ignore dist folder in ts projects
 dist/
 apis/*
-docs/*
+# docs/*
 clients/gen
 
 node_modules
