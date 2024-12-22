@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/google/uuid"
@@ -98,21 +99,20 @@ func listTokenCommand() *cobra.Command {
 		Use:   "list",
 		Short: "list token",
 		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+			if Token == "" {
+				logrus.Error("missing required flags: --token")
+				return
+			}
+
 			if organizationId == "" {
 				logrus.Error("missing required flags: --organizationId")
 				return
 			}
 
-			if Token == "" {
-				if userId == "" {
-					logrus.Error("missing required flags: --userId")
-					return
-				}
-
-				if password == "" {
-					logrus.Error("missing required flags: --password")
-					return
-				}
+			if userId == "" {
+				logrus.Error("missing required flags: --userId")
+				return
 			}
 
 			client, err := authbase.NewClient(":4000")
@@ -121,7 +121,8 @@ func listTokenCommand() *cobra.Command {
 				return
 			}
 
-			res, err := client.ListTokens(context.Background(), &v1.ListTokensRequest{
+			ctx := tokenContext(Token)
+			res, err := client.ListTokens(ctx, &v1.ListTokensRequest{
 				OrganizationId: organizationId,
 				UserId:         userId,
 			})
@@ -131,8 +132,11 @@ func listTokenCommand() *cobra.Command {
 			}
 
 			logrus.Infof("user token count: %v", res.Meta.Total)
+
 			for _, token := range res.Tokens {
-				logrus.Infof("token %v", token)
+				fmt.Printf("ID: %v\n", token.Id)
+				fmt.Printf("Token: %v\n", token.Token)
+				fmt.Printf("------\n")
 			}
 		},
 	}
