@@ -23,6 +23,8 @@ func init() {
 	userCommand.AddCommand(listUserCommand())
 	userCommand.AddCommand(updateUserCommand())
 	userCommand.AddCommand(deleteUserCommand())
+	userCommand.AddCommand(enableUserCommand())
+	userCommand.AddCommand(disableUserCommand())
 }
 
 func createUserCommand() *cobra.Command {
@@ -342,6 +344,90 @@ func loginUserCommand() *cobra.Command {
 
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
+
+	return command
+}
+
+func enableUserCommand() *cobra.Command {
+	var userID string
+
+	command := &cobra.Command{
+		Use:   "enable",
+		Short: "enable user",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+
+			ctx := tokenContext(Token)
+			_, err = client.EnableUser(ctx, &v1.EnableUserRequest{
+				UserId:         userID,
+				OrganizationId: OrganizationId,
+			})
+
+			logrus.Infof("user enabled successfully")
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+
+	return command
+}
+
+func disableUserCommand() *cobra.Command {
+	var userID string
+
+	command := &cobra.Command{
+		Use:   "disable",
+		Short: "disable user",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+
+			ctx := tokenContext(Token)
+			_, err = client.DisableUser(ctx, &v1.DisableUserRequest{
+				UserId:         userID,
+				OrganizationId: OrganizationId,
+			})
+
+			logrus.Infof("user disabled successfully")
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
 
 	return command
 }

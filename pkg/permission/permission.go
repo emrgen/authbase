@@ -101,6 +101,10 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		return err
 	}
 
+	if user.Disabled {
+		return errors.New("user account is disabled")
+	}
+	
 	if !user.Member {
 		return x.ErrNotOrganizationMember
 	}
@@ -145,6 +149,10 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 	user, err := s.store.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
+	}
+
+	if user.Disabled {
+		return errors.New("user account is disabled")
 	}
 
 	if !user.Member {
