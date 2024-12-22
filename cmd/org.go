@@ -7,7 +7,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc/metadata"
 	"os"
 	"strconv"
 )
@@ -35,10 +34,7 @@ func createOrgCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create org",
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg := readContext()
-			if cfg.Token != "" {
-				Token = cfg.Token
-			}
+			loadToken()
 
 			if Token == "" {
 				logrus.Errorf("missing required flags: --token")
@@ -71,8 +67,7 @@ func createOrgCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			md := metadata.New(map[string]string{"Authorization": "Bearer " + Token})
-			ctx := metadata.NewOutgoingContext(context.Background(), md)
+			ctx := tokenContext(Token)
 
 			// create the master organization
 			if master {

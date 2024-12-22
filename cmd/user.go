@@ -32,6 +32,13 @@ func createUserCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create user",
 		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
 			if OrganizationId == "" {
 				logrus.Errorf("missing required flag: --organization-id")
 				return
@@ -54,7 +61,8 @@ func createUserCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			user, err := client.CreateUser(context.Background(), &v1.CreateUserRequest{
+			ctx := tokenContext(Token)
+			user, err := client.CreateUser(ctx, &v1.CreateUserRequest{
 				OrganizationId: OrganizationId,
 				Email:          email,
 				Username:       username,
@@ -70,9 +78,9 @@ func createUserCommand() *cobra.Command {
 
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt"})
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt"})
 			table.Append([]string{
-				"1", user.Id, user.Email, user.Username,
+				"1", user.Id, user.Email, user.Username, user.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
 			})
 			table.Render()
 		},

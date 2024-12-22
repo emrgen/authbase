@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc/metadata"
 )
 
 var contextCommand = &cobra.Command{
@@ -24,6 +26,11 @@ type Context struct {
 	Username       string `json:"username"`
 	Password       string `json:"password"`
 	ExpireAt       int64  `json:"expire_at"`
+}
+
+func loadToken() {
+	context := readContext()
+	Token = context.Token
 }
 
 func readContext() Context {
@@ -123,5 +130,18 @@ func verifyContext() {
 func bindContextFlags(command *cobra.Command) {
 	command.Flags().StringVarP(&Token, "token", "t", "", "token")
 	command.Flags().StringVarP(&OrganizationId, "organization", "o", "", "organization")
+}
 
+func tokenContext(token string) context.Context {
+	cfg := readContext()
+	if token == "" {
+		Token = token
+	} else {
+		Token = cfg.Token
+	}
+
+	md := metadata.New(map[string]string{"Authorization": "Bearer " + Token})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	return ctx
 }

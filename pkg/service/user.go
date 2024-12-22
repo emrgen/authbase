@@ -22,8 +22,8 @@ type UserService struct {
 }
 
 // NewUserService creates a new user service.
-func NewUserService(store store.Provider, cache *cache.Redis) v1.UserServiceServer {
-	return &UserService{store: store, cache: cache}
+func NewUserService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) v1.UserServiceServer {
+	return &UserService{perm: perm, store: store, cache: cache}
 }
 
 // CreateUser creates a new user.
@@ -68,7 +68,10 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 	}
 
 	return &v1.CreateUserResponse{
-		Id: user.ID,
+		Id:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		CreatedAt: timestamppb.New(user.CreatedAt),
 	}, nil
 }
 

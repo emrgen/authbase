@@ -65,6 +65,12 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 	}
 	user.OrganizationID = org.ID
 
+	perm := model.Permission{
+		OrganizationID: org.ID,
+		UserID:         user.ID,
+		Permission:     uint32(v1.Permission_ADMIN),
+	}
+
 	// Create organization and user in a transaction
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		err := tx.CreateOrganization(ctx, org)
@@ -103,12 +109,6 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 		err = tx.CreateUser(ctx, &user)
 		if err != nil {
 			return err
-		}
-
-		perm := model.Permission{
-			OrganizationID: org.ID,
-			UserID:         user.ID,
-			Permission:     uint32(v1.Permission_ADMIN),
 		}
 
 		err = tx.CreatePermission(ctx, &perm)

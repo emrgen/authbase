@@ -59,6 +59,12 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 	}
 	user.OrganizationID = org.ID
 
+	perm := model.Permission{
+		OrganizationID: org.ID,
+		UserID:         user.ID,
+		Permission:     uint32(v1.Permission_ADMIN),
+	}
+
 	// if this is the first organization, make the organization is the master organization
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		_, total, _ := tx.ListOrganizations(ctx, 1, 1)
@@ -101,6 +107,11 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		}
 
 		err = tx.CreateUser(ctx, &user)
+		if err != nil {
+			return err
+		}
+
+		err = tx.CreatePermission(ctx, &perm)
 		if err != nil {
 			return err
 		}

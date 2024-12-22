@@ -335,6 +335,7 @@ message CreateUserResponse {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3;
+  google.protobuf.Timestamp created_at = 10;
 }
 
 message GetUserRequest {

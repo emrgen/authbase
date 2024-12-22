@@ -176,7 +176,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(perm, s.provider, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(s.provider, redis))
-	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(s.provider, redis))
+	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(perm, s.provider, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(s.provider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, mailProvider, redis))
 	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(s.provider, redis))
@@ -270,7 +270,8 @@ func (s *Server) run() error {
 		logrus.Infof("trying to create admin organization: %v", s.config.AdminOrg)
 		adminOrgService := service.NewAdminOrganizationService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminOrganization(context.TODO(), &v1.CreateAdminOrganizationRequest{
-			Name:     s.config.AdminOrg.Username,
+			Name:     s.config.AdminOrg.OrgName,
+			Username: s.config.AdminOrg.Username,
 			Email:    s.config.AdminOrg.Email,
 			Password: &s.config.AdminOrg.Password,
 		})
