@@ -110,7 +110,7 @@ func (g *GormStore) GetUserByEmail(ctx context.Context, email string) (*model.Us
 
 func (g *GormStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
-	err := g.db.Where("id = ?", id).First(&user).Error
+	err := g.db.Where("id = ?", id).Preload("Organization").First(&user).Error
 	return &user, err
 }
 
@@ -214,7 +214,7 @@ func (g *GormStore) CreatePermission(ctx context.Context, permission *model.Perm
 
 func (g *GormStore) GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error) {
 	var permission model.Permission
-	err := g.db.Where("organization_id = ? AND user_id = ?", orgID, userID).First(&permission).Error
+	err := g.db.Where("organization_id = ? AND user_id = ?", orgID.String(), userID.String()).First(&permission).Error
 	return &permission, err
 }
 

@@ -767,6 +767,7 @@ enum Permission {
   READ = 1;
   WRITE = 2;
   DELETE = 4;
+  ADMIN = 8;
 }
 
 message CreatePermissionRequest {

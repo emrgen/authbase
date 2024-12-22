@@ -17,13 +17,13 @@ func init() {
 }
 
 type Claims struct {
-	Username   string `json:"username"`
-	OrgID      string `json:"org_id"`
-	UserID     string `json:"user_id"`
-	Permission uint32 `json:"permission"`
-	Jti        string `json:"jti"`
-	ExpireAt   time.Time
-	IssuedAt   time.Time
+	Username       string `json:"username"`
+	OrganizationID string `json:"org_id"`
+	UserID         string `json:"user_id"`
+	Permission     uint32 `json:"permission"`
+	Jti            string `json:"jti"`
+	ExpireAt       time.Time
+	IssuedAt       time.Time
 }
 
 type JWTToken struct {
@@ -80,10 +80,10 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	}
 
 	return &Claims{
-		UserID:   claims["user_id"].(string),
-		OrgID:    claims["org"].(string),
-		Jti:      claims["jti"].(string),
-		ExpireAt: expireAt.Time,
-		IssuedAt: issuedAt.Time,
+		UserID:         claims["user_id"].(string),
+		OrganizationID: claims["org"].(string),
+		Jti:            claims["jti"].(string),
+		ExpireAt:       expireAt.Time,
+		IssuedAt:       issuedAt.Time,
 	}, nil
 }

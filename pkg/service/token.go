@@ -31,8 +31,9 @@ type TokenService struct {
 }
 
 // NewTokenService creates new an offline token service
-func NewTokenService(store store.Provider, cache *cache.Redis) *TokenService {
+func NewTokenService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) *TokenService {
 	return &TokenService{
+		perm:  perm,
 		store: store,
 		cache: cache,
 	}
@@ -86,11 +87,6 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 		user, err := tx.GetUserByEmail(ctx, request.GetEmail())
 		if err != nil {
 			return err
-		}
-
-		// check if the user is in the organization
-		if request.GetPassword() != user.Password {
-			return errors.New("invalid password")
 		}
 
 		err = t.cache.Set(token.Token, token.OrganizationID, defaultRefreshTokenExpireIn)
@@ -249,7 +245,7 @@ func (t *TokenService) VerifyToken(ctx context.Context, request *v1.VerifyTokenR
 	}
 
 	return &v1.VerifyTokenResponse{
-		OrganizationId: jwt.OrgID,
+		OrganizationId: jwt.OrganizationID,
 		UserId:         jwt.UserID,
 	}, nil
 }

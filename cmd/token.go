@@ -41,7 +41,7 @@ func createTokenCommand() *cobra.Command {
 			}
 
 			if email == "" {
-				logrus.Error("missing required flags: --user")
+				logrus.Error("missing required flags: --email")
 				return
 			}
 

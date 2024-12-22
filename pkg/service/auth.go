@@ -230,7 +230,7 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 	}
 
 	jti := uuid.MustParse(claims.Jti)
-	orgID := uuid.MustParse(claims.OrgID)
+	orgID := uuid.MustParse(claims.OrganizationID)
 	authStore, err := a.store.Provide(orgID)
 	if err != nil {
 		return nil, err

@@ -2,7 +2,7 @@ package store
 
 import (
 	"context"
-	"os"
+	"github.com/emrgen/authbase/pkg/config"
 	"sync"
 
 	"github.com/google/uuid"
@@ -17,6 +17,10 @@ import (
 
 // GetProjectStore returns the store for the given project ID. If the project ID is not provided, the default store is returned.
 func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error) {
+	if config.GetConfig().Mode == config.ModeSingleStore {
+		return store.Default(), nil
+	}
+
 	// get project id from the context
 	md, ok := metadata.FromIncomingContext(ctx)
 
@@ -25,7 +29,7 @@ func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error)
 	}
 	projectID := md.Get("project_id")
 	if len(projectID) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "missing project id")
+		return store.Default(), nil
 	}
 
 	projectUUID, err := uuid.Parse(projectID[0])
@@ -35,13 +39,6 @@ func GetProjectStore(ctx context.Context, store Provider) (AuthBaseStore, error)
 
 	projectStore, err := store.Provide(projectUUID)
 	if err != nil {
-		// if the project store is not found, return the default store
-		if os.Getenv("APP_MODE") != "multistore" {
-			return store.Default(), nil
-		}
-
-		// if the project store is not found and the APP_MODE is multistore, return the error
-		// because the project store is required in multistore mode
 		return nil, err
 	}
 

@@ -99,17 +99,17 @@ type PermissionStore interface {
 
 // ProviderStore is the interface for interacting with the provider database.
 type ProviderStore interface {
-	// CreateProvider creates a new provider in the database.
+	// CreateOauthProvider CreateProvider creates a new provider in the database.
 	CreateOauthProvider(ctx context.Context, provider *model.OauthProvider) error
-	// GetProviderByID retrieves a provider by its ID.
+	// GetOauthProviderByID retrieves a provider by its ID.
 	GetOauthProviderByID(ctx context.Context, id uuid.UUID) (*model.OauthProvider, error)
-	// GetProviderByName retrieves a provider by its name.
+	// GetOauthProviderByName retrieves a provider by its name.
 	GetOauthProviderByName(ctx context.Context, orgID uuid.UUID, provider string) (*model.OauthProvider, error)
-	// ListProviders retrieves a list of providers.
+	// ListOauthProviders retrieves a list of providers.
 	ListOauthProviders(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.OauthProvider, uint32, error)
-	// UpdateProvider updates a provider in the database.
+	// UpdateOauthProvider updates a provider in the database.
 	UpdateOauthProvider(ctx context.Context, provider *model.OauthProvider) error
-	// DeleteProvider deletes a provider from the database.
+	// DeleteOauthProvider deletes a provider from the database.
 	DeleteOauthProvider(ctx context.Context, id uuid.UUID) error
 }
 

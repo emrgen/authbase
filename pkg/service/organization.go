@@ -27,8 +27,8 @@ type OrganizationService struct {
 }
 
 // NewOrganizationService creates a new organization service
-func NewOrganizationService(store store.Provider, cache *cache.Redis) *OrganizationService {
-	return &OrganizationService{store: store, cache: cache}
+func NewOrganizationService(perm permission.MemberPermission, store store.Provider, cache *cache.Redis) *OrganizationService {
+	return &OrganizationService{perm: perm, store: store, cache: cache}
 }
 
 func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v1.CreateOrganizationRequest) (*v1.CreateOrganizationResponse, error) {

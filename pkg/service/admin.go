@@ -105,6 +105,17 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 			return err
 		}
 
+		perm := model.Permission{
+			OrganizationID: org.ID,
+			UserID:         user.ID,
+			Permission:     uint32(v1.Permission_ADMIN),
+		}
+
+		err = tx.CreatePermission(ctx, &perm)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {

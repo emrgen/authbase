@@ -79,11 +79,15 @@ func NewAuthZedPermission() *AuthZedPermission {
 	return &AuthZedPermission{}
 }
 
+var _ AuthBasePermission = new(StoreBasedPermission)
+
 type StoreBasedPermission struct {
 	store store.AuthBaseStore
 }
 
-var _ AuthBasePermission = new(StoreBasedPermission)
+func NewStoreBasedPermission(store store.AuthBaseStore) *StoreBasedPermission {
+	return &StoreBasedPermission{store: store}
+}
 
 // CheckMasterOrganizationPermission checks if the user has the permission to perform the action on the master organization
 func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Context, relation string) error {
@@ -106,7 +110,7 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 
 		// check if the user has the write permission
 		if relation == "write" {
-			if permission.Permission&uint32(v1.Permission_WRITE) == 1 {
+			if permission.Permission > uint32(v1.Permission_WRITE) {
 				return nil
 			}
 		}
@@ -118,7 +122,7 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		}
 
 		if relation == "delete" {
-			if permission.Permission&uint32(v1.Permission_DELETE) == 1 {
+			if permission.Permission > uint32(v1.Permission_DELETE) {
 				return nil
 			}
 		}
@@ -148,14 +152,12 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 			}
 
 			// check if the user has the write permission
-			if permission.Permission&uint32(v1.Permission_WRITE) == 1 {
+			if permission.Permission > uint32(v1.Permission_WRITE) {
 				return nil
 			}
 		}
 
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	if relation == "read" {
@@ -172,14 +174,12 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 			}
 
 			// check if the user has the read permission
-			if permission.Permission&uint32(v1.Permission_READ) > 0 {
+			if permission.Permission > uint32(v1.Permission_READ) {
 				return nil
 			}
 		}
 
-		if err != nil {
-			return nil
-		}
+		return err
 	}
 
 	return x.ErrUnauthorized

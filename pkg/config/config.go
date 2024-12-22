@@ -11,8 +11,8 @@ import (
 type AppMode string
 
 const (
-	MultiStore  AppMode = "multistore"
-	SingleStore AppMode = "singlestore"
+	ModeMultiStore  AppMode = "multistore"
+	ModeSingleStore AppMode = "singlestore"
 )
 
 type Environment string
@@ -63,8 +63,8 @@ func FromEnv() (*Config, error) {
 	adminOrgConfig.Password = os.Getenv("SUPER_ADMIN_PASSWORD")
 
 	mode := os.Getenv("APP_MODE")
-	if mode != "singlestore" && mode != "multistore" {
-		panic("invalid app mode, must be either singlestore or multistore")
+	if mode == "" {
+		mode = "singlestore"
 	}
 
 	config := &Config{

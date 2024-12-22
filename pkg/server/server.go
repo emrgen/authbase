@@ -7,8 +7,10 @@ import (
 	gatewayfile "github.com/black-06/grpc-gateway-file"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/service"
 	"github.com/emrgen/authbase/pkg/store"
+	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -127,9 +129,11 @@ func (s *Server) init(grpcPort, httpPort string) error {
 
 func (s *Server) registerServices() error {
 	var err error
+	verifier := x.NewStoreBasedUserVerifier(s.provider, s.redis)
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),
+			x.VerifyUserInterceptor(verifier),
 		)),
 	)
 
@@ -166,16 +170,17 @@ func (s *Server) registerServices() error {
 
 	redis := s.redis
 	mailProvider := mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
+	perm := permission.NewStoreBasedPermission(s.provider.Default())
 
 	// Register the grpc server
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
-	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(s.provider, redis))
+	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(perm, s.provider, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(s.provider, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(s.provider, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(s.provider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, mailProvider, redis))
 	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(s.provider, redis))
-	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(s.provider, redis))
+	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(perm, s.provider, redis))
 
 	// Register the rest gateway
 	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
