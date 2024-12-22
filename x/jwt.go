@@ -34,7 +34,7 @@ type JWTToken struct {
 }
 
 // GenerateJWTToken generates a JWT token for the user
-func GenerateJWTToken(userID, organizationID, jti string, exp time.Duration) (*JWTToken, error) {
+func GenerateJWTToken(organizationID, userID, jti string, exp time.Duration) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"org_id":  organizationID,
@@ -81,7 +81,7 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 
 	return &Claims{
 		UserID:         claims["user_id"].(string),
-		OrganizationID: claims["org"].(string),
+		OrganizationID: claims["org_id"].(string),
 		Jti:            claims["jti"].(string),
 		ExpireAt:       expireAt.Time,
 		IssuedAt:       issuedAt.Time,

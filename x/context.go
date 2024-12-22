@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"strings"
 )
 
 func GetUserID(ctx context.Context) (uuid.UUID, error) {
@@ -34,11 +35,6 @@ func VerifyUserInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 
 		logrus.Info("VerifyUserInterceptor")
 
-		md, ok := metadata.FromIncomingContext(ctx)
-		if !ok {
-			return nil, errors.New("metadata not found")
-		}
-
 		switch info.FullMethod {
 		case v1.TokenService_CreateToken_FullMethodName:
 			request := req.(*v1.CreateTokenRequest)
@@ -49,10 +45,47 @@ func VerifyUserInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 
 			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
 			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.OrganizationId))
-		}
+		default:
+			token, err := TokenFromHeader(ctx, "Bearer")
+			if err != nil {
+				return nil, err
+			}
+			claims, err := VerifyJWTToken(token)
+			if err != nil {
+				return nil, err
+			}
 
-		logrus.Info(md)
+			ctx = context.WithValue(ctx, "userID", uuid.MustParse(claims.UserID))
+			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(claims.OrganizationID))
+		}
 
 		return handler(ctx, req)
 	}
+}
+
+func TokenFromHeader(ctx context.Context, expectedScheme string) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("metadata not found")
+	}
+
+	val, ok := md["authorization"]
+	if !ok {
+		return "", errors.New("no authorization header found")
+	}
+
+	if len(val) == 0 {
+		return "", errors.New("no token found")
+	}
+
+	scheme, token, found := strings.Cut(val[0], " ")
+	if !found {
+		return "", errors.New("bad authorization string")
+	}
+
+	if !strings.EqualFold(scheme, expectedScheme) {
+		return "", errors.New("request unauthenticated with " + expectedScheme)
+	}
+
+	return token, nil
 }

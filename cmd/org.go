@@ -7,6 +7,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
 	"os"
 	"strconv"
 )
@@ -34,6 +35,16 @@ func createOrgCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create org",
 		Run: func(cmd *cobra.Command, args []string) {
+			cfg := readContext()
+			if cfg.Token != "" {
+				Token = cfg.Token
+			}
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
 			if organization == "" {
 				logrus.Errorf("missing required flags: --organization")
 				return
@@ -60,10 +71,13 @@ func createOrgCommand() *cobra.Command {
 			}
 			defer client.Close()
 
+			md := metadata.New(map[string]string{"Authorization": "Bearer " + Token})
+			ctx := metadata.NewOutgoingContext(context.Background(), md)
+
 			// create the master organization
 			if master {
 				logrus.Infof("creating master organization")
-				organization, err := client.CreateAdminOrganization(context.Background(), &v1.CreateAdminOrganizationRequest{
+				organization, err := client.CreateAdminOrganization(ctx, &v1.CreateAdminOrganizationRequest{
 					Name:     organization,
 					Username: username,
 					Email:    email,
@@ -75,7 +89,7 @@ func createOrgCommand() *cobra.Command {
 				}
 				logrus.Infof("master organization created: %v", organization)
 			} else {
-				organization, err := client.CreateOrganization(context.Background(), &v1.CreateOrganizationRequest{
+				organization, err := client.CreateOrganization(ctx, &v1.CreateOrganizationRequest{
 					Name:     organization,
 					Username: username,
 					Email:    email,

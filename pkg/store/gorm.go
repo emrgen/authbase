@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
@@ -110,7 +111,8 @@ func (g *GormStore) GetUserByEmail(ctx context.Context, email string) (*model.Us
 
 func (g *GormStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
-	err := g.db.Where("id = ?", id).Preload("Organization").First(&user).Error
+	logrus.Info("GetUserByID", id.String())
+	err := g.db.Where("id = ?", id.String()).Preload("Organization").First(&user).Error
 	return &user, err
 }
 

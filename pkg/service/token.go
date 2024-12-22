@@ -59,13 +59,18 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 		return nil, err
 	}
 
+	userID, err := x.GetUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	expireAfter := defaultRefreshTokenExpireIn
 	if request.GetExpiresIn() != 0 {
 		duration := time.Second * time.Duration(request.GetExpiresIn())
 		expireAfter = duration
 	}
 
-	jwtToken, err := x.GenerateJWTToken(orgID.String(), request.GetEmail(), uuid.New().String(), expireAfter)
+	jwtToken, err := x.GenerateJWTToken(orgID.String(), userID.String(), uuid.New().String(), expireAfter)
 	if err != nil {
 		return nil, err
 	}
