@@ -214,6 +214,10 @@ func (g *GormStore) CreatePermission(ctx context.Context, permission *model.Perm
 func (g *GormStore) GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error) {
 	var permission model.Permission
 	err := g.db.Where("organization_id = ? AND user_id = ?", orgID.String(), userID.String()).First(&permission).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrPermissionNotFound
+	}
+
 	return &permission, err
 }
 

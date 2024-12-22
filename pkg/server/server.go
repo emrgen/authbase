@@ -175,9 +175,9 @@ func (s *Server) registerServices() error {
 	// Register the grpc server
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(perm, s.provider, redis))
-	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(s.provider, redis))
+	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(perm, s.provider, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(perm, s.provider, redis))
-	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(s.provider, redis))
+	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(perm, s.provider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, mailProvider, redis))
 	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(s.provider, redis))
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(perm, s.provider, redis))

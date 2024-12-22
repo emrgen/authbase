@@ -20,8 +20,8 @@ type PermissionService struct {
 	v1.UnimplementedPermissionServiceServer
 }
 
-func NewPermissionService(store store.Provider, cache *cache.Redis) *PermissionService {
-	return &PermissionService{store: store, cache: cache}
+func NewPermissionService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) *PermissionService {
+	return &PermissionService{perm: perm, store: store, cache: cache}
 }
 
 // CreatePermission creates a new permission for a member in an organization

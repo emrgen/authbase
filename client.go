@@ -11,6 +11,7 @@ type Client interface {
 	v1.AdminOrganizationServiceClient
 	v1.OrganizationServiceClient
 	v1.UserServiceClient
+	v1.MemberServiceClient
 	v1.PermissionServiceClient
 	v1.AuthServiceClient
 	v1.OauthServiceClient
@@ -23,6 +24,7 @@ type client struct {
 	v1.AdminOrganizationServiceClient
 	v1.OrganizationServiceClient
 	v1.UserServiceClient
+	v1.MemberServiceClient
 	v1.PermissionServiceClient
 	v1.AuthServiceClient
 	v1.OauthServiceClient
@@ -38,6 +40,7 @@ func NewClient(port string) (Client, error) {
 		conn:                           conn,
 		OrganizationServiceClient:      v1.NewOrganizationServiceClient(conn),
 		UserServiceClient:              v1.NewUserServiceClient(conn),
+		MemberServiceClient:            v1.NewMemberServiceClient(conn),
 		PermissionServiceClient:        v1.NewPermissionServiceClient(conn),
 		AuthServiceClient:              v1.NewAuthServiceClient(conn),
 		OauthServiceClient:             v1.NewOauthServiceClient(conn),

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/emrgen/authbase"
+	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -12,6 +13,8 @@ var memberCommand = &cobra.Command{
 }
 
 func init() {
+	memberCommand.AddCommand(addMemberCommand())
+	memberCommand.AddCommand(removeMemberCommand())
 	memberCommand.AddCommand(createMemberCommand())
 	memberCommand.AddCommand(listMemberCommand())
 	memberCommand.AddCommand(updateMemberCommand())
@@ -136,6 +139,93 @@ func deleteMemberCommand() *cobra.Command {
 
 	bindContextFlags(command)
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
+
+	return command
+}
+
+func addMemberCommand() *cobra.Command {
+	var userID string
+	var permission uint32
+
+	command := &cobra.Command{
+		Use:   "add",
+		Short: "add member",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if OrganizationId == "" {
+				logrus.Errorf("missing required flag: --organization")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			ctx := tokenContext(Token)
+			res, err := client.AddMember(ctx, &v1.AddMemberRequest{MemberId: userID, OrganizationId: OrganizationId})
+			if err != nil {
+				logrus.Errorf("failed to add member: %v", err)
+				return
+			}
+
+			logrus.Infof("member added successfully %v", res)
+		},
+	}
+
+	bindContextFlags(command)
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+	command.Flags().Uint32VarP(&permission, "permission", "p", 0, "permission")
+
+	return command
+}
+
+func removeMemberCommand() *cobra.Command {
+	var userID string
+
+	command := &cobra.Command{
+		Use:   "remove",
+		Short: "remove member",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if OrganizationId == "" {
+				logrus.Errorf("missing required flag: --organization")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+
+			ctx := tokenContext(Token)
+			res, err := client.RemoveMember(ctx, &v1.RemoveMemberRequest{MemberId: userID, OrganizationId: OrganizationId})
+			if err != nil {
+				logrus.Errorf("failed to remove member: %v", err)
+				return
+			}
+
+			logrus.Infof("member removed successfully %v", res)
+		},
+	}
+
+	bindContextFlags(command)
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
 
 	return command
 }

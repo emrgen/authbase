@@ -724,12 +724,22 @@ message UpdateMemberResponse {
   string message = 2;
 }
 
-message DeleteMemberRequest {
+message AddMemberRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permissions = 3;
+}
+
+message AddMemberResponse {
+  string message = 1;
+}
+
+message RemoveMemberRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
-message DeleteMemberResponse {
+message RemoveMemberResponse {
   string message = 1;
 }
 
@@ -758,7 +768,14 @@ service MemberService {
     };
   }
 
-  rpc DeleteMember(DeleteMemberRequest) returns (DeleteMemberResponse) {
+  rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {
+    option (google.api.http) = {
+      post: "/v1/members/organizations/{organization_id}/members/{member_id}/"
+      body: "*"
+    };
+  }
+
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {
     option (google.api.http) = {delete: "/v1/members/organizations/{organization_id}/members/{member_id}"};
   }
 }

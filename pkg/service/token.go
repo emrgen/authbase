@@ -54,7 +54,7 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 		return nil, err
 	}
 
-	err = t.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = t.perm.CheckOrganizationPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}

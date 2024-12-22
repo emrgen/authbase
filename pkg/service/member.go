@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
@@ -9,6 +10,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 var _ v1.MemberServiceServer = new(MemberService)
@@ -20,8 +22,8 @@ type MemberService struct {
 	v1.UnimplementedMemberServiceServer
 }
 
-func NewMemberService(store store.Provider, cache *cache.Redis) *MemberService {
-	return &MemberService{store: store, cache: cache}
+func NewMemberService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) *MemberService {
+	return &MemberService{perm: perm, store: store, cache: cache}
 }
 
 // CreateMember creates a member of an organization
@@ -39,10 +41,14 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 		Member:         true,
 	}
 
-	// create a permission for the new member
-	permission := model.Permission{
+	// create a perm for the new member
+	perm := model.Permission{
 		OrganizationID: request.GetOrganizationId(),
 		UserID:         member.ID,
+	}
+	permissions := request.GetPermissions()
+	for _, p := range permissions {
+		perm.Permission |= uint32(p.Number())
 	}
 
 	// if the user already exists, return an error
@@ -51,7 +57,7 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 			return err
 		}
 
-		if err := tx.CreatePermission(ctx, &permission); err != nil {
+		if err := tx.CreatePermission(ctx, &perm); err != nil {
 			return err
 		}
 
@@ -158,7 +164,7 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 
 		permissions := make([]v1.Permission, 0)
 		for value, _ := range v1.Permission_name {
-			if perm > uint32(value) {
+			if perm >= uint32(value) {
 				permissions = append(permissions, v1.Permission(value))
 			}
 		}
@@ -244,8 +250,79 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 	}, nil
 }
 
-// DeleteMember deletes a member of an organization
-func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemberRequest) (*v1.DeleteMemberResponse, error) {
+// AddMember makes a user a member of an organization.
+func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequest) (*v1.AddMemberResponse, error) {
+	logrus.Info("AddMember")
+	as, err := store.GetProjectStore(ctx, m.store)
+	if err != nil {
+		return nil, err
+	}
+
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
+	userID, err := uuid.Parse(request.GetMemberId())
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	user.Member = true
+
+	err = m.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := as.GetPermissionByID(ctx, orgID, userID)
+	if errors.Is(err, store.ErrPermissionNotFound) {
+		perm = &model.Permission{
+			OrganizationID: orgID.String(),
+			UserID:         userID.String(),
+		}
+	} else if err != nil {
+		return nil, nil
+	}
+
+	permissions := request.GetPermissions()
+	for _, p := range permissions {
+		perm.Permission |= uint32(p.Number())
+	}
+
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		err = tx.UpdateUser(ctx, user)
+		if err != nil {
+			return err
+		}
+
+		err = tx.CreatePermission(ctx, perm)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.AddMemberResponse{
+		Message: "Member added successfully",
+	}, nil
+}
+
+// RemoveMember removes a member from an organization
+func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error) {
 	orgID, err := uuid.Parse(request.GetOrganizationId())
 	if err != nil {
 		return nil, err
@@ -266,12 +343,19 @@ func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemb
 		return nil, err
 	}
 
+	user, err := as.GetUserByID(ctx, memberID)
+	if err != nil {
+		return nil, err
+	}
+	user.Member = false
+
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err := tx.DeleteUser(ctx, memberID)
+		err := tx.UpdateUser(ctx, user)
 		if err != nil {
 			return err
 		}
 
+		// delete the permission of the user
 		err = tx.DeletePermission(ctx, orgID, memberID)
 		if err != nil {
 			return err
@@ -283,7 +367,7 @@ func (m *MemberService) DeleteMember(ctx context.Context, request *v1.DeleteMemb
 		return nil, err
 	}
 
-	return &v1.DeleteMemberResponse{
+	return &v1.RemoveMemberResponse{
 		Message: "Member deleted successfully.",
 	}, nil
 }

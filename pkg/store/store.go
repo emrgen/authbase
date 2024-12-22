@@ -9,8 +9,10 @@ import (
 )
 
 var (
-	ErrOrganizationExists   = errors.New("organization already exists")
-	ErrOrganizationNotFound = errors.New("organization not found")
+	ErrOrganizationExists      = errors.New("organization already exists")
+	ErrOrganizationNotFound    = errors.New("organization not found")
+	ErrPermissionNotFound      = errors.New("permission not found")
+	ErrPermissionAlreadyExists = errors.New("permission already exists")
 )
 
 // AuthBaseStore is the interface for interacting with the database.

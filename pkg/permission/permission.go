@@ -114,7 +114,7 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 
 		// check if the user has the write permission
 		if relation == "write" {
-			if permission.Permission > uint32(v1.Permission_WRITE) {
+			if permission.Permission >= uint32(v1.Permission_WRITE) {
 				return nil
 			}
 		}
@@ -126,7 +126,7 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		}
 
 		if relation == "delete" {
-			if permission.Permission > uint32(v1.Permission_DELETE) {
+			if permission.Permission >= uint32(v1.Permission_DELETE) {
 				return nil
 			}
 		}
@@ -165,7 +165,7 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 			}
 
 			// check if the user has the write permission
-			if permission.Permission > uint32(v1.Permission_WRITE) {
+			if permission.Permission >= uint32(v1.Permission_WRITE) {
 				return nil
 			}
 		}
@@ -187,7 +187,7 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 			}
 
 			// check if the user has the read permission
-			if permission.Permission > uint32(v1.Permission_READ) {
+			if permission.Permission >= uint32(v1.Permission_READ) {
 				return nil
 			}
 		}
