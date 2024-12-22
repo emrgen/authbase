@@ -771,7 +771,7 @@ service MemberService {
 
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {
     option (google.api.http) = {
-      post: "/v1/members/organizations/{organization_id}/members/{member_id}/"
+      post: "/v1/members/organizations/{organization_id}/members/{member_id}"
       body: "*"
     };
   }

@@ -17,13 +17,15 @@ func init() {
 }
 
 type Claims struct {
-	Username       string `json:"username"`
-	OrganizationID string `json:"org_id"`
-	UserID         string `json:"user_id"`
-	Permission     uint32 `json:"permission"`
-	Jti            string `json:"jti"`
-	ExpireAt       time.Time
-	IssuedAt       time.Time
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	OrganizationID string    `json:"org_id"`
+	UserID         string    `json:"user_id"`
+	Permission     uint32    `json:"permission"`
+	Audience       string    `json:"aud"`
+	Jti            string    `json:"jti"`
+	ExpireAt       time.Time `json:"exp"`
+	IssuedAt       time.Time `json:"iat"`
 }
 
 type JWTToken struct {
