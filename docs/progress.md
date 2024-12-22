@@ -11,9 +11,13 @@
 - [x] list users of fastype org
 - [x] register a new user
 - [x] login as the new user
-- [ ] disable user account - disabled user can not access their account
-- [ ] enable user account
+- [x] disable user account - disabled user can not access their account
+- [x] enable user account
 - [ ] delete user account - deleted user can not access their account
+- [ ] delete organization - all users and data will be deleted
+- [ ] list organizations
+- [ ] list users of master org
+- [x] list tokens for a user
+- [ ] list tokens for an organization
 - [ ] login via google oauth
 - [ ] login via github oauth
-- [ ] delete organization - all users and data will be deleted

@@ -387,12 +387,30 @@ message ActiveUsersResponse {
   Meta meta = 2;
 }
 
-message DeactivateUserRequest {
+message InactiveUserRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
 }
 
-message DeactivateUserResponse {
+message InactiveUserResponse {
+  string message = 1;
+}
+
+message DisableUserRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DisableUserResponse {
+  string message = 1;
+}
+
+message EnableUserRequest {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message EnableUserResponse {
   string message = 1;
 }
 
@@ -429,8 +447,16 @@ service UserService {
     option (google.api.http) = {get: "/v1/users/active"};
   }
 
-  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse) {
+  rpc InactiveUser(InactiveUserRequest) returns (InactiveUserResponse) {
     option (google.api.http) = {delete: "/v1/users/-/deactivate/{user_id}"};
+  }
+
+  rpc DisableUser(DisableUserRequest) returns (DisableUserResponse) {
+    option (google.api.http) = {delete: "/v1/users/-/disable/{user_id}"};
+  }
+
+  rpc EnableUser(EnableUserRequest) returns (EnableUserResponse) {
+    option (google.api.http) = {delete: "/v1/users/-/enable/{user_id}"};
   }
 }
 

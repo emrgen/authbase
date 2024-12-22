@@ -263,8 +263,8 @@ func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRe
 	return &v1.ActiveUsersResponse{Users: userProtos}, nil
 }
 
-// DeactivateUser deactivates a user.
-func (u *UserService) DeactivateUser(ctx context.Context, request *v1.DeactivateUserRequest) (*v1.DeactivateUserResponse, error) {
+// InactiveUser deactivates a user.
+func (u *UserService) InactiveUser(ctx context.Context, request *v1.InactiveUserRequest) (*v1.InactiveUserResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
@@ -289,7 +289,73 @@ func (u *UserService) DeactivateUser(ctx context.Context, request *v1.Deactivate
 		return nil, err
 	}
 
-	return &v1.DeactivateUserResponse{
+	return &v1.InactiveUserResponse{
 		Message: "User deactivated successfully.",
+	}, nil
+}
+
+// DisableUser activates a user.
+func (u *UserService) DisableUser(ctx context.Context, request *v1.DisableUserRequest) (*v1.DisableUserResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(request.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	if err != nil {
+		return nil, err
+	}
+
+	user.Disabled = true
+
+	err = as.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DisableUserResponse{
+		Message: "User disabled successfully.",
+	}, nil
+}
+
+// EnableUser activates a user.
+func (u *UserService) EnableUser(ctx context.Context, request *v1.EnableUserRequest) (*v1.EnableUserResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+	userID, err := uuid.Parse(request.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	if err != nil {
+		return nil, err
+	}
+
+	user.Disabled = false
+
+	err = as.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.EnableUserResponse{
+		Message: "User enabled successfully.",
 	}, nil
 }
