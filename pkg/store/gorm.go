@@ -243,10 +243,26 @@ func (g *GormStore) GetOauthProviderByID(ctx context.Context, id uuid.UUID) (*mo
 	return &provider, err
 }
 
-func (g *GormStore) ListOauthProviders(ctx context.Context, page, perPage int) ([]*model.OauthProvider, error) {
+// GetOauthProviderByName implements AuthBaseStore.
+func (g *GormStore) GetOauthProviderByName(ctx context.Context, orgID uuid.UUID, provider string) (*model.OauthProvider, error) {
+	var oauthProvider model.OauthProvider
+	err := g.db.Where("organization_id = ? AND provider = ?", orgID, provider).First(&oauthProvider).Error
+	return &oauthProvider, err
+}
+
+func (g *GormStore) ListOauthProviders(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.OauthProvider, uint32, error) {
 	var providers []*model.OauthProvider
-	err := g.db.Limit(perPage).Offset(page * perPage).Find(&providers).Error
-	return providers, err
+	err := g.db.Limit(perPage).Offset(page*perPage).Find(&providers, "organization_id = ?", orgID).Error
+	if err != nil {
+		return providers, 0, err
+	}
+
+	var total int64
+	if err := g.db.Model(&model.OauthProvider{}).Where("organization_id = ?", orgID).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return providers, uint32(total), nil
 }
 
 func (g *GormStore) UpdateOauthProvider(ctx context.Context, provider *model.OauthProvider) error {

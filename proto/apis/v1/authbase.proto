@@ -510,11 +510,16 @@ message DeleteOrganizationResponse {
   string message = 1;
 }
 
+message OAuthProvider {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string client_id = 3;
+  string client_secret = 4;
+}
+
 message AddOauthProviderRequest {
-  string provider = 1;
-  string client_id = 2;
-  string client_secret = 3;
-  string organization_id = 4 [(validate.rules).string.uuid = true];
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  OAuthProvider provider = 2;
 }
 
 message AddOauthProviderResponse {
@@ -527,8 +532,7 @@ message GetOauthProviderRequest {
 }
 
 message GetOauthProviderResponse {
-  string client_id = 1;
-  string client_secret = 2;
+  OAuthProvider provider = 1;
 }
 
 message ListOauthProvidersRequest {
@@ -537,14 +541,13 @@ message ListOauthProvidersRequest {
 }
 
 message ListOauthProvidersResponse {
-  repeated string providers = 1;
+  repeated OAuthProvider providers = 1;
+  Meta meta = 2;
 }
 
 message UpdateOauthProviderRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string provider = 2;
-  string client_id = 3;
-  string client_secret = 4;
 }
 
 message UpdateOauthProviderResponse {

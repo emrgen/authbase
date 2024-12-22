@@ -288,23 +288,25 @@ func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.
 		return nil, err
 	}
 
+	provider := request.GetProvider()
+
 	m := make(map[string]interface{})
-	m["provider"] = request.GetProvider()
-	m["client_id"] = request.GetClientId()
-	m["client_secret"] = request.GetClientSecret()
+	m["provider"] = provider.GetName()
+	m["client_id"] = provider.GetClientId()
+	m["client_secret"] = provider.GetClientSecret()
 
 	data, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
 
-	provider := model.OauthProvider{
+	providerModel := model.OauthProvider{
 		ID:             uuid.New().String(),
 		OrganizationID: orgID.String(),
 		Config:         string(data),
 	}
 
-	err = as.CreateOauthProvider(ctx, &provider)
+	err = as.CreateOauthProvider(ctx, &providerModel)
 	if err != nil {
 		return nil, err
 	}
@@ -315,13 +317,91 @@ func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.
 }
 
 func (o *OrganizationService) GetOauthProvider(ctx context.Context, request *v1.GetOauthProviderRequest) (*v1.GetOauthProviderResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = o.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := as.GetOauthProviderByName(ctx, orgID, request.GetProvider())
+	if err != nil {
+		return nil, err
+	}
+
+	providerConfig := make(map[string]interface{})
+	err = json.Unmarshal([]byte(provider.Config), &providerConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	clientID := providerConfig["client_id"].(string)
+	clientSecret := providerConfig["client_secret"].(string)
+
+	return &v1.GetOauthProviderResponse{
+		Provider: &v1.OAuthProvider{
+			Id:           provider.ID,
+			Name:         providerConfig["provider"].(string),
+			ClientId:     clientID,
+			ClientSecret: clientSecret,
+		},
+	}, nil
 }
 
 func (o *OrganizationService) ListOauthProviders(ctx context.Context, request *v1.ListOauthProvidersRequest) (*v1.ListOauthProvidersResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	orgID, err := uuid.Parse(request.GetOrganizationId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = o.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := store.GetProjectStore(ctx, o.store)
+	if err != nil {
+		return nil, err
+	}
+
+	page := utils.GetPage(request)
+
+	providers, total, err := as.ListOauthProviders(ctx, orgID, int(page.Page), int(page.Size))
+	if err != nil {
+		return nil, err
+	}
+
+	var oauthProviders []*v1.OAuthProvider
+	for _, provider := range providers {
+		providerConfig := make(map[string]interface{})
+		err = json.Unmarshal([]byte(provider.Config), &providerConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		oauthProviders = append(oauthProviders, &v1.OAuthProvider{
+			Id:       provider.ID,
+			Name:     providerConfig["provider"].(string),
+			ClientId: providerConfig["client_id"].(string),
+		})
+	}
+
+	return &v1.ListOauthProvidersResponse{
+		Providers: oauthProviders,
+		Meta: &v1.Meta{
+			Total: int32(total),
+			Page:  page.Page,
+			Size:  page.Size,
+		},
+	}, nil
 }
 
 // UpdateOauthProvider updates the oauth provider information.
