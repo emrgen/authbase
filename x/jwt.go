@@ -22,6 +22,8 @@ type Claims struct {
 	UserID     string `json:"user_id"`
 	Permission uint32 `json:"permission"`
 	Jti        string `json:"jti"`
+	ExpireAt   time.Time
+	IssuedAt   time.Time
 }
 
 type JWTToken struct {
@@ -32,11 +34,11 @@ type JWTToken struct {
 }
 
 // GenerateJWTToken generates a JWT token for the user
-func GenerateJWTToken(userID, organizationID, jti string) (*JWTToken, error) {
+func GenerateJWTToken(userID, organizationID, jti string, exp time.Duration) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"org_id":  organizationID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     time.Now().Add(exp).Unix(),
 		"iat":     time.Now().Unix(),
 		"jti":     jti,
 	})
@@ -47,6 +49,7 @@ func GenerateJWTToken(userID, organizationID, jti string) (*JWTToken, error) {
 
 	return &JWTToken{
 		AccessToken: tokenString,
+		ExpireAt:    time.Now().Add(exp),
 	}, nil
 }
 
@@ -66,9 +69,21 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 
 	claims := token.Claims.(jwt.MapClaims)
 
+	expireAt, err := claims.GetExpirationTime()
+	if err != nil {
+		return nil, err
+	}
+
+	issuedAt, err := claims.GetIssuedAt()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Claims{
-		UserID: claims["user_id"].(string),
-		OrgID:  claims["org"].(string),
-		Jti:    claims["jti"].(string),
+		UserID:   claims["user_id"].(string),
+		OrgID:    claims["org"].(string),
+		Jti:      claims["jti"].(string),
+		ExpireAt: expireAt.Time,
+		IssuedAt: issuedAt.Time,
 	}, nil
 }

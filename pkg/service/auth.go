@@ -158,7 +158,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 
 	// generate tokens
 	jti := uuid.New().String()
-	token, err := x.GenerateJWTToken(user.ID, user.OrganizationID, jti)
+	token, err := x.GenerateJWTToken(user.ID, user.OrganizationID, jti, time.Hour*5)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		organizationID = token.OrganizationID
 	}
 
-	jwtToken, err := x.GenerateJWTToken(userID, organizationID, claims.Jti)
+	jwtToken, err := x.GenerateJWTToken(userID, organizationID, claims.Jti, time.Hour*5)
 	if err != nil {
 		return nil, err
 	}

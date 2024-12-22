@@ -58,22 +58,27 @@ func (t *TokenService) CreateToken(ctx context.Context, request *v1.CreateTokenR
 		return nil, err
 	}
 
+	expireAfter := defaultRefreshTokenExpireIn
+	if request.GetExpiresIn() != 0 {
+		duration := time.Second * time.Duration(request.GetExpiresIn())
+		expireAfter = duration
+	}
+
+	jwtToken, err := x.GenerateJWTToken(orgID.String(), request.GetEmail(), uuid.New().String(), expireAfter)
+	if err != nil {
+		return nil, err
+	}
+
 	// create a new token
 	token := &model.Token{
 		ID:             uuid.New().String(),
 		OrganizationID: request.GetOrganizationId(),
-		Token:          x.GenerateToken(),
 		Name:           request.GetName(),
+		Token:          jwtToken.AccessToken,
+		ExpireAt:       jwtToken.ExpireAt,
 	}
 
 	logrus.Info("TokenService", token, request.GetOrganizationId())
-
-	if request.GetExpiresIn() != 0 {
-		duration := time.Second * time.Duration(request.GetExpiresIn())
-		token.ExpireAt = time.Now().Add(duration)
-	} else {
-		token.ExpireAt = time.Now().Add(defaultRefreshTokenExpireIn)
-	}
 
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
@@ -237,6 +242,10 @@ func (t *TokenService) VerifyToken(ctx context.Context, request *v1.VerifyTokenR
 	jwt, err := x.VerifyJWTToken(token)
 	if err != nil {
 		return nil, err
+	}
+
+	if jwt.ExpireAt.Before(time.Now()) {
+		return nil, errors.New("token expired")
 	}
 
 	return &v1.VerifyTokenResponse{

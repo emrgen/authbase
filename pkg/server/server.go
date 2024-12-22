@@ -79,6 +79,8 @@ func NewServer(config *config.Config) *Server {
 }
 
 func (s *Server) Start(grpcPort, httpPort string) error {
+	logrus.Infof("APP_MODE: %v", s.config.Mode)
+
 	if err := s.init(grpcPort, httpPort); err != nil {
 		return err
 	}

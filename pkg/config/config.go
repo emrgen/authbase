@@ -1,10 +1,19 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 // config package is used to load the configuration from the environment variables
 // the logic behind having separate config package is usability
 // we can use the same package in other services as well to load the configuration
+
+type AppMode string
+
+const (
+	MultiStore  AppMode = "multistore"
+	SingleStore AppMode = "singlestore"
+)
 
 type Environment string
 
@@ -18,8 +27,9 @@ const (
 type Config struct {
 	Environment Environment
 	DB          *DBConfig
-	AppKey      string
 	AdminOrg    *AdminOrgConfig
+	Mode        AppMode
+	AppKey      string
 }
 
 type DBConfig struct {
@@ -52,11 +62,17 @@ func FromEnv() (*Config, error) {
 	adminOrgConfig.Email = os.Getenv("SUPER_ADMIN_EMAIL")
 	adminOrgConfig.Password = os.Getenv("SUPER_ADMIN_PASSWORD")
 
+	mode := os.Getenv("APP_MODE")
+	if mode != "singlestore" && mode != "multistore" {
+		panic("invalid app mode, must be either singlestore or multistore")
+	}
+
 	config := &Config{
 		Environment: Environment(env),
 		DB:          dbConfig,
 		AppKey:      appKey,
 		AdminOrg:    adminOrgConfig,
+		Mode:        AppMode(mode),
 	}
 
 	return config, nil

@@ -30,8 +30,8 @@ func NewAdminOrganizationService(store store.Provider, cache *cache.Redis) v1.Ad
 
 // CreateAdminOrganization creates a new organization
 func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, request *v1.CreateAdminOrganizationRequest) (*v1.CreateAdminOrganizationResponse, error) {
-	// if the app is running in masterless mode, return an error as this operation is not allowed
-	if os.Getenv("APP_MODE") == "masterless" {
+	// if the app is running in master mode, return an error as this operation is not allowed
+	if os.Getenv("APP_MODE") == "multistore" {
 		return nil, x.ErrForbidden
 	}
 
