@@ -149,12 +149,12 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	password := request.GetPassword()
 
 	orgID := uuid.MustParse(request.GetOrganizationId())
-	authStore, err := a.store.Provide(orgID)
+	as, err := a.store.Provide(orgID)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := authStore.GetUserByEmail(ctx, orgID, email)
+	user, err := as.GetUserByEmail(ctx, orgID, email)
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +168,23 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		return nil, errors.New("incorrect password")
 	}
 
+	perm, err := as.GetPermissionByID(ctx, orgID, uuid.MustParse(user.ID))
+
 	// generate tokens
 	jti := uuid.New().String()
-	token, err := x.GenerateJWTToken(user.OrganizationID, user.ID, jti, time.Hour*5)
+	token, err := x.GenerateJWTToken(x.Claims{
+		Username:       user.Username,
+		Email:          user.Email,
+		OrganizationID: user.OrganizationID,
+		UserID:         user.ID,
+		Permission:     perm.Permission,
+		Audience:       "",
+		Jti:            jti,
+		ExpireAt:       time.Now().Add(5 * time.Hour),
+		IssuedAt:       time.Now(),
+		Provider:       "authbase",
+		Data:           nil,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -184,8 +198,8 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 
 	// save the token to the db
 	// TODO: save the token to the db in encrypted form
-	err = authStore.Transaction(func(tx store.AuthBaseStore) error {
-		err = authStore.CreateRefreshToken(ctx, &model.RefreshToken{
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		err = as.CreateRefreshToken(ctx, &model.RefreshToken{
 			Token:          token.RefreshToken,
 			OrganizationID: user.OrganizationID,
 			UserID:         user.ID,
@@ -199,7 +213,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		// create a new session
 		// user the jti as the session id
 		// this will allow multiple sessions for a user at the same time
-		err = authStore.CreateSession(ctx, &model.Session{
+		err = as.CreateSession(ctx, &model.Session{
 			ID:             jti,
 			UserID:         user.ID,
 			OrganizationID: user.OrganizationID,
@@ -277,7 +291,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	}
 
 	orgID := uuid.MustParse(request.GetOrganizationId())
-	authStore, err := a.store.Provide(orgID)
+	as, err := a.store.Provide(orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +309,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 
 	if !foundToken {
 		// check the db
-		token, err := authStore.GetRefreshTokenByID(ctx, refreshToken)
+		token, err := as.GetRefreshTokenByID(ctx, refreshToken)
 		if err != nil {
 			return nil, err
 		}
@@ -309,16 +323,39 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		organizationID = token.OrganizationID
 	}
 
-	jwtToken, err := x.GenerateJWTToken(organizationID, userID, claims.Jti, time.Hour*5)
+	user, err := as.GetUserByID(ctx, uuid.MustParse(userID))
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := as.GetPermissionByID(ctx, orgID, uuid.MustParse(userID))
+	if err != nil {
+		return nil, err
+	}
+
+	jti := uuid.New().String()
+	token, err := x.GenerateJWTToken(x.Claims{
+		Username:       user.Username,
+		Email:          user.Email,
+		OrganizationID: organizationID,
+		UserID:         userID,
+		Permission:     perm.Permission,
+		Audience:       "",
+		Jti:            jti,
+		ExpireAt:       time.Now().Add(5 * time.Hour),
+		IssuedAt:       time.Now(),
+		Provider:       "authbase",
+		Data:           nil,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &v1.RefreshResponse{
-		AccessToken:  jwtToken.AccessToken,
+		AccessToken:  token.AccessToken,
 		RefreshToken: refreshToken,
-		ExpiresAt:    timestamppb.New(jwtToken.ExpireAt),
-		IssuedAt:     timestamppb.New(jwtToken.IssuedAt),
+		ExpiresAt:    timestamppb.New(token.ExpireAt),
+		IssuedAt:     timestamppb.New(token.IssuedAt),
 	}, nil
 }
 

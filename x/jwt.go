@@ -17,16 +17,17 @@ func init() {
 }
 
 type Claims struct {
-	Username       string    `json:"username"`
-	Email          string    `json:"email"`
-	OrganizationID string    `json:"org_id"`
-	UserID         string    `json:"user_id"`
-	Permission     uint32    `json:"permission"`
-	Audience       string    `json:"aud"`
-	Jti            string    `json:"jti"`
-	ExpireAt       time.Time `json:"exp"`
-	IssuedAt       time.Time `json:"iat"`
-	Provider       string    `json:"provider"` // google, github, etc
+	Username       string                 `json:"username"`
+	Email          string                 `json:"email"`
+	OrganizationID string                 `json:"org_id"`
+	UserID         string                 `json:"user_id"`
+	Permission     uint32                 `json:"permission"`
+	Audience       string                 `json:"aud"`
+	Jti            string                 `json:"jti"`
+	ExpireAt       time.Time              `json:"exp"`
+	IssuedAt       time.Time              `json:"iat"`
+	Provider       string                 `json:"provider"` // google, github, etc
+	Data           map[string]interface{} `json:"data"`
 }
 
 type JWTToken struct {
@@ -37,14 +38,15 @@ type JWTToken struct {
 }
 
 // GenerateJWTToken generates a JWT token for the user
-func GenerateJWTToken(organizationID, userID, jti string, exp time.Duration) (*JWTToken, error) {
+func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  userID,
-		"org_id":   organizationID,
-		"exp":      time.Now().Add(exp).Unix(),
+		"user_id":  claims.UserID,
+		"org_id":   claims.OrganizationID,
+		"exp":      claims.ExpireAt.Unix(),
 		"iat":      time.Now().Unix(),
-		"jti":      jti,
+		"jti":      claims.Jti,
 		"provider": "authbase",
+		"data":     claims.Data,
 	})
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
@@ -53,7 +55,7 @@ func GenerateJWTToken(organizationID, userID, jti string, exp time.Duration) (*J
 
 	return &JWTToken{
 		AccessToken: tokenString,
-		ExpireAt:    time.Now().Add(exp),
+		ExpireAt:    claims.ExpireAt,
 	}, nil
 }
 
@@ -88,6 +90,7 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		OrganizationID: claims["org_id"].(string),
 		Jti:            claims["jti"].(string),
 		Provider:       claims["provider"].(string),
+		Data:           claims["data"].(map[string]interface{}),
 		ExpireAt:       expireAt.Time,
 		IssuedAt:       issuedAt.Time,
 	}, nil

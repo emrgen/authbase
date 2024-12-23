@@ -70,37 +70,54 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		expireAfter = duration
 	}
 
-	jwtToken, err := x.GenerateJWTToken(orgID.String(), userID.String(), uuid.New().String(), expireAfter)
+	user, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := as.GetPermissionByID(ctx, orgID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	jti := uuid.New().String()
+	token, err := x.GenerateJWTToken(x.Claims{
+		Username:       user.Username,
+		Email:          user.Email,
+		OrganizationID: orgID.String(),
+		UserID:         userID.String(),
+		Permission:     perm.Permission,
+		Audience:       "",
+		Jti:            jti,
+		ExpireAt:       time.Now().Add(expireAfter),
+		IssuedAt:       time.Now(),
+		Provider:       "authbase",
+		Data:           nil,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	// create a new token
-	token := &model.Token{
+	tokenModel := &model.Token{
 		ID:             uuid.New().String(),
 		OrganizationID: request.GetOrganizationId(),
 		Name:           request.GetName(),
-		Token:          jwtToken.AccessToken,
-		ExpireAt:       jwtToken.ExpireAt,
+		Token:          token.AccessToken,
+		ExpireAt:       token.ExpireAt,
 	}
 
 	logrus.Info("OfflineTokenService", token, request.GetOrganizationId())
 
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		// check if the user exists on the database within the organization
-		user, err := tx.GetUserByEmail(ctx, orgID, request.GetEmail())
+		err = t.cache.Set(jti, tokenModel.OrganizationID, defaultRefreshTokenExpireIn)
 		if err != nil {
 			return err
 		}
 
-		err = t.cache.Set(token.Token, token.OrganizationID, defaultRefreshTokenExpireIn)
-		if err != nil {
-			return err
-		}
-
-		token.UserID = user.ID
-		err = tx.CreateToken(ctx, token)
+		tokenModel.UserID = user.ID
+		err = tx.CreateToken(ctx, tokenModel)
 		if err != nil {
 			return err
 		}
@@ -112,8 +129,8 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 	}
 
 	return &v1.CreateTokenResponse{
-		Id:    token.ID,
-		Token: token.Token,
+		Id:    tokenModel.ID,
+		Token: tokenModel.Token,
 	}, nil
 }
 

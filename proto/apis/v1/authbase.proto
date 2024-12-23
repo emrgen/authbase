@@ -266,6 +266,7 @@ message CreateTokenRequest {
   ];
   optional int64 expires_in = 4; // in seconds
   optional string name = 5;
+  map<string, string> data = 6;
 }
 
 message CreateTokenResponse {
