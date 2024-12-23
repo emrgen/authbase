@@ -105,7 +105,7 @@ message VerifyEmailResponse {
   string message = 1;
 }
 
-message CheckUserAlreadyExistsRequest {
+message UserEmailExistsRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3 [
@@ -114,7 +114,7 @@ message CheckUserAlreadyExistsRequest {
   ];
 }
 
-message CheckEmailAlreadyExistsResponse {
+message UserEmailExistsResponse {
   bool email_exists = 1;
   bool username_exists = 2;
 }
@@ -122,8 +122,8 @@ message CheckEmailAlreadyExistsResponse {
 // Auth service
 
 service AuthService {
-  // CheckUserAlreadyExists
-  rpc CheckUserAlreadyExists(CheckUserAlreadyExistsRequest) returns (CheckEmailAlreadyExistsResponse) {
+  // UserEmailExists
+  rpc UserEmailExists(UserEmailExistsRequest) returns (UserEmailExistsResponse) {
     option (google.api.http) = {
       post: "/v1/auth/check-user"
       body: "*"
@@ -138,6 +138,7 @@ service AuthService {
     };
   }
 
+  // Login
   rpc Login(LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
       post: "/v1/auth/login"
@@ -145,6 +146,7 @@ service AuthService {
     };
   }
 
+  // Logout
   rpc Logout(LogoutRequest) returns (LogoutResponse) {
     option (google.api.http) = {
       post: "/v1/auth/logout"
@@ -152,6 +154,7 @@ service AuthService {
     };
   }
 
+  // Refresh
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {
     option (google.api.http) = {
       post: "/v1/auth/refresh"
@@ -159,6 +162,7 @@ service AuthService {
     };
   }
 
+  // VerifyEmail
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
     option (google.api.http) = {
       post: "/v1/auth/verify-email"
@@ -206,6 +210,7 @@ message OauthLogoutResponse {
 }
 
 service OauthService {
+  // Authorize
   rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/authorize"
@@ -213,6 +218,7 @@ service OauthService {
     };
   }
 
+  // Callback
   rpc Callback(CallbackRequest) returns (CallbackResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/callback"
@@ -220,6 +226,7 @@ service OauthService {
     };
   }
 
+  // Token
   rpc Token(TokenRequest) returns (TokenResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/token"
@@ -300,6 +307,7 @@ message VerifyTokenResponse {
 // Token service
 
 service TokenService {
+  // CreateToken
   rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
     option (google.api.http) = {
       post: "/v1/tokens/organizations/{organization_id}"
@@ -307,18 +315,22 @@ service TokenService {
     };
   }
 
+  // GetToken
   rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {
     option (google.api.http) = {get: "/v1/tokens/{id}"};
   }
 
+  // ListTokens
   rpc ListTokens(ListTokensRequest) returns (ListTokensResponse) {
     option (google.api.http) = {get: "/v1/tokens/-/organizations/{organization_id}/users/{user_id}"};
   }
 
+  // DeleteToken
   rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse) {
     option (google.api.http) = {delete: "/v1/tokens/{id}"};
   }
 
+  // VerifyToken
   rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {
     option (google.api.http) = {post: "/v1/tokens/-/verify"};
   }
@@ -419,6 +431,7 @@ message EnableUserResponse {
 // User service
 
 service UserService {
+  // CreateUser
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
     option (google.api.http) = {
       post: "/v1/users"
@@ -426,14 +439,17 @@ service UserService {
     };
   }
 
+  // GetUser
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {post: "/v1/users/{id}"};
   }
 
+  // ListUsers
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {get: "/v1/users/-/organizations/{organization_id}"};
   }
 
+  // UpdateUser
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
       put: "/v1/users/{id}"
@@ -441,22 +457,27 @@ service UserService {
     };
   }
 
+  // DeleteUser
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
     option (google.api.http) = {delete: "/v1/users/{id}"};
   }
 
+  // ActiveUsers
   rpc ActiveUsers(ActiveUsersRequest) returns (ActiveUsersResponse) {
     option (google.api.http) = {get: "/v1/users/active"};
   }
 
+  // InactiveUser
   rpc InactiveUser(InactiveUserRequest) returns (InactiveUserResponse) {
     option (google.api.http) = {delete: "/v1/users/-/deactivate/{user_id}"};
   }
 
+  // DisableUser
   rpc DisableUser(DisableUserRequest) returns (DisableUserResponse) {
     option (google.api.http) = {delete: "/v1/users/-/disable/{user_id}"};
   }
 
+  // EnableUser
   rpc EnableUser(EnableUserRequest) returns (EnableUserResponse) {
     option (google.api.http) = {delete: "/v1/users/-/enable/{user_id}"};
   }
@@ -595,6 +616,7 @@ message DeleteOauthProviderResponse {
 // Organization service
 
 service OrganizationService {
+  // CreateOrganization
   rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse) {
     option (google.api.http) = {
       post: "/v1/organizations"
@@ -602,18 +624,22 @@ service OrganizationService {
     };
   }
 
+  // GetOrganization
   rpc GetOrganizationId(GetOrganizationIdRequest) returns (GetOrganizationIdResponse) {
     option (google.api.http) = {get: "/v1/organizations/-/name/{name}"};
   }
 
+  // GetOrganization
   rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse) {
     option (google.api.http) = {get: "/v1/organizations/{id}"};
   }
 
+  // ListOrganizations
   rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse) {
     option (google.api.http) = {get: "/v1/organizations"};
   }
 
+  // UpdateOrganization
   rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationResponse) {
     option (google.api.http) = {
       put: "/v1/organizations/{id}"
@@ -621,10 +647,12 @@ service OrganizationService {
     };
   }
 
+  // DeleteOrganization
   rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse) {
     option (google.api.http) = {delete: "/v1/organizations/{id}"};
   }
 
+  // AddOauthProvider
   rpc AddOauthProvider(AddOauthProviderRequest) returns (AddOauthProviderResponse) {
     option (google.api.http) = {
       post: "/v1/organizations/{organization_id}/oauth-providers"
@@ -632,14 +660,17 @@ service OrganizationService {
     };
   }
 
+  // GetOauthProvider
   rpc GetOauthProvider(GetOauthProviderRequest) returns (GetOauthProviderResponse) {
     option (google.api.http) = {get: "/v1/organizations/{organization_id}/oauth-providers/{provider}"};
   }
 
+  // ListOauthProviders
   rpc ListOauthProviders(ListOauthProvidersRequest) returns (ListOauthProvidersResponse) {
     option (google.api.http) = {get: "/v1/organizations/{organization_id}/oauth-providers"};
   }
 
+  // UpdateOauthProvider
   rpc UpdateOauthProvider(UpdateOauthProviderRequest) returns (UpdateOauthProviderResponse) {
     option (google.api.http) = {
       put: "/v1/organizations/{organization_id}/oauth-providers/{provider}"
@@ -647,6 +678,7 @@ service OrganizationService {
     };
   }
 
+  // DeleteOauthProvider
   rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
     option (google.api.http) = {delete: "/v1/organizations/{id}/oauth-providers"};
   }
@@ -683,6 +715,7 @@ message CreateMigrationResponse {
 }
 
 service AdminOrganizationService {
+  // CreateAdminOrganization
   rpc CreateAdminOrganization(CreateAdminOrganizationRequest) returns (CreateAdminOrganizationResponse) {
     option (google.api.http) = {
       post: "/v1/admin/organizations"
@@ -690,6 +723,7 @@ service AdminOrganizationService {
     };
   }
 
+  // CreateMigration
   rpc CreateMigration(CreateMigrationRequest) returns (CreateMigrationResponse) {
     option (google.api.http) = {
       post: "/v1/admin/migrations"
@@ -773,6 +807,7 @@ message RemoveMemberResponse {
 // Member service
 
 service MemberService {
+  // CreateMember
   rpc CreateMember(CreateMemberRequest) returns (CreateMemberResponse) {
     option (google.api.http) = {
       post: "/v1/organizations/{organization_id}/members"
@@ -780,14 +815,17 @@ service MemberService {
     };
   }
 
+  // GetMember
   rpc GetMember(GetMemberRequest) returns (GetMemberResponse) {
     option (google.api.http) = {get: "/v1/organizations/{organization_id}/members/{member_id}"};
   }
 
+  // ListMember
   rpc ListMember(ListMemberRequest) returns (ListMemberResponse) {
     option (google.api.http) = {get: "/v1/organizations/{organization_id}/members"};
   }
 
+  // UpdateMember
   rpc UpdateMember(UpdateMemberRequest) returns (UpdateMemberResponse) {
     option (google.api.http) = {
       put: "/v1/organizations/{organization_id}/members/{member_id}"
@@ -795,6 +833,7 @@ service MemberService {
     };
   }
 
+  // AddMember
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {
     option (google.api.http) = {
       post: "/v1/members/organizations/{organization_id}/members/{member_id}"
@@ -802,6 +841,7 @@ service MemberService {
     };
   }
 
+   // RemoveMember
   rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {
     option (google.api.http) = {delete: "/v1/members/organizations/{organization_id}/members/{member_id}"};
   }
