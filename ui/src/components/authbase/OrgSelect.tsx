@@ -11,13 +11,13 @@ import {
 
 export const OrgSelect = () => {
   return (
-    <SelectRoot collection={frameworks} size="sm" width="full">
+    <SelectRoot collection={frameworks} size="sm" width="full" border={'1px solid #aaa'} borderRadius={6}>
       <SelectTrigger>
         <SelectValueText placeholder="Select Organization" />
       </SelectTrigger>
       <SelectContent>
         {frameworks.items.map((movie) => (
-          <SelectItem item={movie} key={movie.value}>
+          <SelectItem item={movie} key={movie.value} p={2}>
             {movie.label}
           </SelectItem>
         ))}

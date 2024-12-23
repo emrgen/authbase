@@ -104,7 +104,7 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 	if user.Disabled {
 		return errors.New("user account is disabled")
 	}
-	
+
 	if !user.Member {
 		return x.ErrNotOrganizationMember
 	}

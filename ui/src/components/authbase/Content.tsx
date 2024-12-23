@@ -7,6 +7,6 @@ interface ContentProps {
 
 export default function Content(props: ContentProps) {
   return (
-    <HStack flex={1} h={'full'} bg='red'>{props.children}</HStack>
+    <HStack flex={1} h={'full'}>{props.children}</HStack>
   )
 }
