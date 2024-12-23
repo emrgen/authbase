@@ -2,6 +2,7 @@ package authbase
 
 import (
 	v1 "github.com/emrgen/authbase/apis/v1"
+	gopackv1 "github.com/emrgen/gopack/apis/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
@@ -15,7 +16,8 @@ type Client interface {
 	v1.PermissionServiceClient
 	v1.AuthServiceClient
 	v1.OauthServiceClient
-	v1.TokenServiceClient
+	gopackv1.TokenServiceClient
+	v1.OfflineTokenServiceClient
 	io.Closer
 }
 
@@ -28,7 +30,8 @@ type client struct {
 	v1.PermissionServiceClient
 	v1.AuthServiceClient
 	v1.OauthServiceClient
-	v1.TokenServiceClient
+	gopackv1.TokenServiceClient
+	v1.OfflineTokenServiceClient
 }
 
 func NewClient(port string) (Client, error) {
@@ -44,8 +47,9 @@ func NewClient(port string) (Client, error) {
 		PermissionServiceClient:        v1.NewPermissionServiceClient(conn),
 		AuthServiceClient:              v1.NewAuthServiceClient(conn),
 		OauthServiceClient:             v1.NewOauthServiceClient(conn),
-		TokenServiceClient:             v1.NewTokenServiceClient(conn),
+		TokenServiceClient:             gopackv1.NewTokenServiceClient(conn),
 		AdminOrganizationServiceClient: v1.NewAdminOrganizationServiceClient(conn),
+		OfflineTokenServiceClient:      v1.NewOfflineTokenServiceClient(conn),
 	}, nil
 }
 

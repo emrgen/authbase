@@ -209,6 +209,16 @@ message OauthLogoutResponse {
   string message = 1;
 }
 
+message VerifyOAuthTokenRequest {
+  string token = 1;
+}
+
+message VerifyOAuthTokenResponse {
+  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permission = 3;
+}
+
 service OauthService {
   // OAuthLogin
   rpc OAuthLogin(OAuthLoginRequest) returns (OAuthLoginResponse) {
@@ -222,6 +232,13 @@ service OauthService {
   rpc OAuthCallback(OAuthCallbackRequest) returns (OAuthCallbackResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/callback"
+      body: "*"
+    };
+  }
+
+  rpc OAuthVerifyToken(VerifyOAuthTokenRequest) returns (VerifyOAuthTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/oauth/verify"
       body: "*"
     };
   }
@@ -286,11 +303,11 @@ message DeleteTokenResponse {
   string message = 1;
 }
 
-message VerifyTokenRequest {
+message OfflineTokenVerifyRequest {
   string token = 1;
 }
 
-message VerifyTokenResponse {
+message OfflineTokenVerifyResponse {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permission = 3;
@@ -298,7 +315,7 @@ message VerifyTokenResponse {
 
 // Token service
 
-service TokenService {
+service OfflineTokenService {
   // CreateToken
   rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
     option (google.api.http) = {
@@ -323,7 +340,7 @@ service TokenService {
   }
 
   // VerifyToken
-  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {
+  rpc VerifyOfflineToken(OfflineTokenVerifyRequest) returns (OfflineTokenVerifyResponse) {
     option (google.api.http) = {post: "/v1/tokens/-/verify"};
   }
 }

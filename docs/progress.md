@@ -21,3 +21,4 @@
 - [ ] list tokens for an organization
 - [ ] login via google oauth
 - [ ] login via github oauth
+- [x] unified token verification

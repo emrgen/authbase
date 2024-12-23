@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	gopackv1 "github.com/emrgen/gopack/apis/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -17,7 +18,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 		switch info.FullMethod {
 		case
 			v1.AuthService_Register_FullMethodName,
-			v1.TokenService_VerifyToken_FullMethodName:
+			gopackv1.TokenService_VerifyToken_FullMethodName:
 			break
 		case v1.AuthService_Login_FullMethodName:
 			request := req.(*v1.LoginRequest)
@@ -32,7 +33,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 
 			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
 			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.GetOrganizationId()))
-		case v1.TokenService_CreateToken_FullMethodName:
+		case v1.OfflineTokenService_CreateToken_FullMethodName:
 			request := req.(*v1.CreateTokenRequest)
 			orgID, err := uuid.Parse(request.GetOrganizationId())
 			if err != nil {

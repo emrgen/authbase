@@ -51,24 +51,24 @@ type Provider interface {
 	Default() AuthBaseStore
 }
 
-// ProviderCache is a provider with a cache.
+// MultiStoreProvider is a provider with a cache.
 // It caches the store for the given project ID.
-type ProviderCache struct {
+type MultiStoreProvider struct {
 	Stores   map[uuid.UUID]AuthBaseStore
 	provider Provider
 	mu       sync.RWMutex // mu guards the stores map
 }
 
 // NewProvider creates a new provider instance.
-func NewProvider(provider Provider) *ProviderCache {
-	return &ProviderCache{
+func NewProvider(provider Provider) *MultiStoreProvider {
+	return &MultiStoreProvider{
 		Stores:   make(map[uuid.UUID]AuthBaseStore),
 		provider: provider,
 	}
 }
 
 // Provide returns a store for the given organization ID.
-func (s *ProviderCache) Provide(projectID uuid.UUID) (AuthBaseStore, error) {
+func (s *MultiStoreProvider) Provide(projectID uuid.UUID) (AuthBaseStore, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	store, ok := s.Stores[projectID]
@@ -87,7 +87,7 @@ func (s *ProviderCache) Provide(projectID uuid.UUID) (AuthBaseStore, error) {
 }
 
 // Default returns the default store.
-func (s *ProviderCache) Default() AuthBaseStore {
+func (s *MultiStoreProvider) Default() AuthBaseStore {
 	return s.provider.Default()
 }
 

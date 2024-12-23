@@ -82,10 +82,10 @@ func NewAuthZedPermission() *AuthZedPermission {
 var _ AuthBasePermission = new(StoreBasedPermission)
 
 type StoreBasedPermission struct {
-	store store.AuthBaseStore
+	store store.Provider
 }
 
-func NewStoreBasedPermission(store store.AuthBaseStore) *StoreBasedPermission {
+func NewStoreBasedPermission(store store.Provider) *StoreBasedPermission {
 	return &StoreBasedPermission{store: store}
 }
 
@@ -96,7 +96,11 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 		return err
 	}
 
-	user, err := s.store.GetUserByID(ctx, userID)
+	as, err := store.GetProjectStore(ctx, s.store)
+	if err != nil {
+		return err
+	}
+	user, err := as.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -111,32 +115,25 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 
 	// if the user is a member of the master organization
 	if user.Organization.Master {
-		permission, err := s.store.GetPermissionByID(ctx, uuid.MustParse(user.OrganizationID), userID)
+		permission, err := as.GetPermissionByID(ctx, uuid.MustParse(user.OrganizationID), userID)
 		if err != nil {
 			return err
 		}
 
-		// check if the user has the write permission
-		if relation == "write" {
-			if permission.Permission >= uint32(v1.Permission_WRITE) {
-				return nil
-			}
-		}
-
-		// check if the user has the read permission
-		// being a member of master org the user has implicit read permission
-		if relation == "read" {
+		perm := permissionMap[relation]
+		if permission.Permission >= perm {
 			return nil
-		}
-
-		if relation == "delete" {
-			if permission.Permission >= uint32(v1.Permission_DELETE) {
-				return nil
-			}
 		}
 	}
 
 	return x.ErrUnauthorized
+}
+
+var permissionMap = map[string]uint32{
+	"read":   uint32(v1.Permission_READ),
+	"write":  uint32(v1.Permission_WRITE),
+	"delete": uint32(v1.Permission_DELETE),
+	"admin":  uint32(v1.Permission_ADMIN),
 }
 
 // CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
@@ -146,7 +143,12 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 		return err
 	}
 
-	user, err := s.store.GetUserByID(ctx, userID)
+	as, err := store.GetProjectStore(ctx, s.store)
+	if err != nil {
+		return err
+	}
+
+	user, err := as.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -159,51 +161,31 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 		return x.ErrNotOrganizationMember
 	}
 
-	if relation == "write" {
-		err := s.CheckMasterOrganizationPermission(ctx, "write")
-		if errors.Is(err, x.ErrUnauthorized) {
-			_, err := x.GetUserID(ctx)
-			if err != nil {
-				return err
-			}
-
-			permission, err := s.store.GetPermissionByID(ctx, orgID, userID)
-			if err != nil {
-				return err
-			}
-
-			// check if the user has the write permission
-			if permission.Permission >= uint32(v1.Permission_WRITE) {
-				return nil
-			}
+	err = s.CheckMasterOrganizationPermission(ctx, relation)
+	if errors.Is(err, x.ErrUnauthorized) {
+		_, err := x.GetUserID(ctx)
+		if err != nil {
+			return err
 		}
 
-		return err
-	}
-
-	if relation == "read" {
-		err := s.CheckMasterOrganizationPermission(ctx, "read")
-		if errors.Is(err, x.ErrUnauthorized) {
-			_, err := x.GetUserID(ctx)
-			if err != nil {
-				return err
-			}
-
-			permission, err := s.store.GetPermissionByID(ctx, orgID, userID)
-			if err != nil {
-				return err
-			}
-
-			// check if the user has the read permission
-			if permission.Permission >= uint32(v1.Permission_READ) {
-				return nil
-			}
+		permission, err := as.GetPermissionByID(ctx, orgID, userID)
+		if err != nil {
+			return err
 		}
 
-		return err
+		perm := permissionMap[relation]
+
+		// check if the user has the write permission
+		if permission.Permission >= perm {
+			return nil
+		}
+
+		// as the user does not have the permission on the master org and target org
+		// return unauthorized
+		return x.ErrUnauthorized
 	}
 
-	return x.ErrUnauthorized
+	return err
 }
 
 // NullAuthbasePermission is a struct that implements the AuthBasePermission interface

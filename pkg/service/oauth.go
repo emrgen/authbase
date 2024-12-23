@@ -66,3 +66,9 @@ func (o *OauthService) Logout(ctx context.Context, request *v1.OauthLogoutReques
 	//TODO implement me
 	panic("implement me")
 }
+
+// OAuthVerifyToken verifies the token for a user
+func (o *OauthService) OAuthVerifyToken(ctx context.Context, request *v1.VerifyOAuthTokenRequest) (*v1.VerifyOAuthTokenResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}

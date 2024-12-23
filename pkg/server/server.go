@@ -12,6 +12,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
+	gopackv1 "github.com/emrgen/gopack/apis/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 	"net"
@@ -56,6 +57,8 @@ type Server struct {
 	config          *config.Config
 	provider        store.Provider
 	redis           *cache.Redis
+	permission      permission.AuthBasePermission
+	mailer          mail.MailerProvider
 	adminOrgService v1.AdminOrganizationServiceServer
 	gl              net.Listener
 	rl              net.Listener
@@ -100,8 +103,11 @@ func (s *Server) Start(grpcPort, httpPort string) error {
 
 func (s *Server) init(grpcPort, httpPort string) error {
 	db := store.GetDB()
+	// if multistore mode use multistoreprovider
 	s.provider = store.NewDefaultProvider(db)
 	s.redis = cache.NewRedisClient()
+	s.permission = permission.NewStoreBasedPermission(s.provider)
+	s.mailer = mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
 
 	// migrate the database
 	err := db.Migrate()
@@ -163,18 +169,22 @@ func (s *Server) registerServices() error {
 	endpoint := "localhost" + s.grpcPort
 
 	redis := s.redis
-	mailProvider := mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
-	perm := permission.NewStoreBasedPermission(s.provider.Default())
+	perm := s.permission
 
-	// Register the grpc server
+	// Register the grpc services
+
+	oauthService := service.NewOauthService(s.provider, redis)
+	offlineTokenService := service.NewOfflineTokenService(perm, s.provider, redis)
+
 	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
 	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(perm, s.provider, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(perm, s.provider, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(perm, s.provider, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(perm, s.provider, redis))
-	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, mailProvider, redis))
-	v1.RegisterOauthServiceServer(grpcServer, service.NewOauthService(s.provider, redis))
-	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(perm, s.provider, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, s.mailer, redis))
+	v1.RegisterOauthServiceServer(grpcServer, oauthService)
+	v1.RegisterOfflineTokenServiceServer(grpcServer, offlineTokenService)
+	gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
 
 	// Register the rest gateway
 	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -198,7 +208,10 @@ func (s *Server) registerServices() error {
 	if err = v1.RegisterOauthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+	if err = v1.RegisterOfflineTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = gopackv1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 

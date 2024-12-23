@@ -26,6 +26,7 @@ type Claims struct {
 	Jti            string    `json:"jti"`
 	ExpireAt       time.Time `json:"exp"`
 	IssuedAt       time.Time `json:"iat"`
+	Provider       string    `json:"provider"` // google, github, etc
 }
 
 type JWTToken struct {
@@ -38,11 +39,12 @@ type JWTToken struct {
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(organizationID, userID, jti string, exp time.Duration) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,
-		"org_id":  organizationID,
-		"exp":     time.Now().Add(exp).Unix(),
-		"iat":     time.Now().Unix(),
-		"jti":     jti,
+		"user_id":  userID,
+		"org_id":   organizationID,
+		"exp":      time.Now().Add(exp).Unix(),
+		"iat":      time.Now().Unix(),
+		"jti":      jti,
+		"provider": "authbase",
 	})
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
@@ -85,6 +87,7 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		UserID:         claims["user_id"].(string),
 		OrganizationID: claims["org_id"].(string),
 		Jti:            claims["jti"].(string),
+		Provider:       claims["provider"].(string),
 		ExpireAt:       expireAt.Time,
 		IssuedAt:       issuedAt.Time,
 	}, nil
