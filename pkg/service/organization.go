@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"google.golang.org/grpc/peer"
 	"time"
 
 	v1 "github.com/emrgen/authbase/apis/v1"
@@ -131,6 +133,16 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 
 // GetOrganizationId gets the organization ID, given the name
 func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1.GetOrganizationIdRequest) (*v1.GetOrganizationIdResponse, error) {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("failed to get peer")
+	}
+
+	// FIXME: rate limit the number of requests from the same IP
+	// use exponential backoff for retries to prevent abuse
+
+	logrus.Infof("peer: %v", p.Addr.String())
+
 	as, err := store.GetProjectStore(ctx, o.store)
 	if err != nil {
 		return nil, err
@@ -436,5 +448,5 @@ func (o *OrganizationService) UpdateOauthProvider(ctx context.Context, request *
 //	id: "provider_id"
 func (o *OrganizationService) DeleteOauthProvider(ctx context.Context, request *v1.DeleteOauthProviderRequest) (*v1.DeleteOauthProviderResponse, error) {
 	//TODO implement me
-	panic("implement me")
+	panic("implement")
 }

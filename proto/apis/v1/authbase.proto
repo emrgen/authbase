@@ -171,22 +171,22 @@ service AuthService {
   }
 }
 
-message AuthorizeRequest {
-  string provider = 1;
-  string organization = 2;
-  optional string access_token = 3;
+message OAuthLoginRequest {
+  string organization_id = 1;
+  string provider = 2;
 }
 
-message AuthorizeResponse {
-  optional Tokens tokens = 1;
+message OAuthLoginResponse {
+  OAuthProvider provider = 1;
+  string callback_url = 2;
 }
 
-message CallbackRequest {
+message OAuthCallbackRequest {
   string code = 1;
   string state = 3;
 }
 
-message CallbackResponse {
+message OAuthCallbackResponse {
   optional Tokens tokens = 1;
 }
 
@@ -210,26 +210,18 @@ message OauthLogoutResponse {
 }
 
 service OauthService {
-  // Authorize
-  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {
+  // OAuthLogin
+  rpc OAuthLogin(OAuthLoginRequest) returns (OAuthLoginResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/authorize"
       body: "*"
     };
   }
 
-  // Callback
-  rpc Callback(CallbackRequest) returns (CallbackResponse) {
+  // OAuthCallback
+  rpc OAuthCallback(OAuthCallbackRequest) returns (OAuthCallbackResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/callback"
-      body: "*"
-    };
-  }
-
-  // Token
-  rpc Token(TokenRequest) returns (TokenResponse) {
-    option (google.api.http) = {
-      post: "/v1/oauth/token"
       body: "*"
     };
   }
@@ -566,6 +558,7 @@ message OAuthProvider {
   string name = 2;
   string client_id = 3;
   string client_secret = 4;
+  repeated string redirect_uris = 5;
 }
 
 message AddOauthProviderRequest {
@@ -599,6 +592,9 @@ message ListOauthProvidersResponse {
 message UpdateOauthProviderRequest {
   string organization_id = 1 [(validate.rules).string.uuid = true];
   string provider = 2;
+  string client_id = 3;
+  string client_secret = 4;
+  repeated string redirect_uris = 5;
 }
 
 message UpdateOauthProviderResponse {

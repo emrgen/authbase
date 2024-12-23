@@ -31,6 +31,15 @@ func (r *Redis) Del(key string) error {
 	return r.client.Del(r.client.Context(), key).Err()
 }
 
+func (r *Redis) SExists(key string, member string) (bool, error) {
+	cmd := r.client.SIsMember(r.client.Context(), key, member)
+	return cmd.Val(), cmd.Err()
+}
+
+func (r *Redis) SAdd(key string, members ...string) error {
+	return r.client.SAdd(r.client.Context(), key, members).Err()
+}
+
 func (r *Redis) Close() error {
 	return r.client.Close()
 }

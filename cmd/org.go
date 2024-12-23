@@ -20,6 +20,7 @@ func init() {
 	orgCommand.AddCommand(listOrgCommand())
 	orgCommand.AddCommand(updateOrgCommand())
 	orgCommand.AddCommand(deleteOrgCommand())
+	orgCommand.AddCommand(getOrgByNameCommand())
 }
 
 func createOrgCommand() *cobra.Command {
@@ -103,6 +104,49 @@ func createOrgCommand() *cobra.Command {
 	command.Flags().StringVarP(&email, "email", "e", "", "email of the organization")
 	command.Flags().StringVarP(&password, "password", "p", "", "password of the organization")
 	command.Flags().BoolVarP(&master, "master", "m", false, "master organization")
+
+	return command
+}
+
+func getOrgByNameCommand() *cobra.Command {
+	var orgName string
+
+	command := &cobra.Command{
+		Use:   "exists",
+		Short: "get org by name",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if orgName == "" {
+				logrus.Errorf("missing required flags: --orgName")
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("error creating client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			ctx := tokenContext(Token)
+			organization, err := client.GetOrganizationId(ctx, &v1.GetOrganizationIdRequest{
+				Name: orgName,
+			})
+			if err != nil {
+				logrus.Errorf("error getting organization: %v", err)
+				return
+			}
+
+			logrus.Infof("organization: %v", organization)
+		},
+	}
+
+	command.Flags().StringVarP(&orgName, "orgName", "o", "", "name of the organization")
 
 	return command
 }

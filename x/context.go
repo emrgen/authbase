@@ -22,3 +22,12 @@ func GetOrganizationID(ctx context.Context) (uuid.UUID, error) {
 
 	return organizationID, nil
 }
+
+func GetOAuthState(ctx context.Context) (string, error) {
+	state, ok := ctx.Value("oauthstate").(string)
+	if !ok {
+		return "", ErrOAuthStateNotFoundInContext
+	}
+
+	return state, nil
+}

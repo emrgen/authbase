@@ -137,6 +137,8 @@ func (s *Server) registerServices() error {
 		)),
 	)
 
+	cookieStore := NewCookieStore(s.redis)
+
 	// connect the rest gateway to the grpc server
 	s.mux = runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.HTTPBodyMarshaler{
@@ -149,17 +151,9 @@ func (s *Server) registerServices() error {
 				},
 			},
 		}),
-		//runtime.WithMarshalerOption("application/json", &runtime.JSONPb{
-		//	MarshalOptions: protojson.MarshalOptions{
-		//		Indent:    "  ",
-		//		Multiline: true, // Optional, implied by presence of "Indent".
-		//	},
-		//	UnmarshalOptions: protojson.UnmarshalOptions{
-		//		DiscardUnknown: true,
-		//	},
-		//}),
 		gatewayfile.WithHTTPBodyMarshaler(),
-		//runtime.WithForwardResponseOption(InjectCookie),
+		runtime.WithForwardResponseOption(InjectCookie(cookieStore)),
+		runtime.WithMetadata(ExtractCookie(cookieStore)),
 	)
 
 	opts := []grpc.DialOption{
