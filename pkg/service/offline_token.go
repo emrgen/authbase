@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	gox "github.com/emrgen/gopack/x"
 	"time"
 
 	v1 "github.com/emrgen/authbase/apis/v1"
@@ -17,6 +18,7 @@ import (
 )
 
 const (
+	// defaultRefreshTokenExpireIn is the default expire time for a refresh token
 	defaultRefreshTokenExpireIn = time.Hour * 24 * 7
 )
 
@@ -59,7 +61,7 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		return nil, err
 	}
 
-	userID, err := x.GetUserID(ctx)
+	userID, err := gox.GetUserID(ctx)
 	if err != nil {
 		return nil, err
 	}

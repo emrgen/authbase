@@ -7,6 +7,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
+	gox "github.com/emrgen/gopack/x"
 	"github.com/google/uuid"
 )
 
@@ -91,7 +92,7 @@ func NewStoreBasedPermission(store store.Provider) *StoreBasedPermission {
 
 // CheckMasterOrganizationPermission checks if the user has the permission to perform the action on the master organization
 func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Context, relation string) error {
-	userID, err := x.GetUserID(ctx)
+	userID, err := gox.GetUserID(ctx)
 	if err != nil {
 		return err
 	}
@@ -138,7 +139,7 @@ var permissionMap = map[string]uint32{
 
 // CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
 func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
-	userID, err := x.GetUserID(ctx)
+	userID, err := gox.GetUserID(ctx)
 	if err != nil {
 		return err
 	}
@@ -163,7 +164,7 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 
 	err = s.CheckMasterOrganizationPermission(ctx, relation)
 	if errors.Is(err, x.ErrUnauthorized) {
-		_, err := x.GetUserID(ctx)
+		_, err := gox.GetUserID(ctx)
 		if err != nil {
 			return err
 		}

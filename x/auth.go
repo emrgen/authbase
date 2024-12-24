@@ -31,8 +31,8 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 				return nil, err
 			}
 
-			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.GetOrganizationId()))
+			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
+			ctx = context.WithValue(ctx, "organization_id", uuid.MustParse(request.GetOrganizationId()))
 		case v1.OfflineTokenService_CreateToken_FullMethodName:
 			request := req.(*v1.CreateTokenRequest)
 			orgID, err := uuid.Parse(request.GetOrganizationId())
@@ -60,8 +60,8 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 				return nil, err
 			}
 
-			ctx = context.WithValue(ctx, "userID", uuid.MustParse(claims.UserID))
-			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(claims.OrganizationID))
+			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(claims.UserID))
+			ctx = context.WithValue(ctx, "organization_id", uuid.MustParse(claims.OrganizationID))
 		}
 
 		return handler(ctx, req)

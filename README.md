@@ -1,13 +1,56 @@
 # authbase is a simple authentication service.
 
+## API Usage
+
+```go
+package main
+
+import (
+    "context"
+    "log"
+
+    "github.com/emrgen/authbase"
+    "github.com/emrgen/authbase/apis/v1"
+)
+
+func main() {
+    // Create a new client.
+    client, err := authbase.NewClient("localhost:4000")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Create a new organization. need token to create an organization.
+    org, err := client.CreateOrganization(context.Background(), &protos.Organization{
+        Name: "org",
+        Username: "admin",
+        Email:    "admin@gmail.com",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Create a new user. (the user is crated within the organization)
+    user, err := client.CreateUser(context.Background(), &protos.CreateUserRequest{
+        Username: "user",
+        Email:    "user@mail.com",
+        Passowrd: "password",
+        OrganizationId: "org-id",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
 ## Goal
 
 1. The goal of this library is to provide a simple way to authenticate users in a web application.
 2. Support multitenancy.
 3. Support multiple authentication methods.
 4. Support multiple storage backends.
-5. Minimal permission system.
-6. Support for user registration, password reset, and email verification.
+5. Minimal permission system. Users within an org can have different permissions once they are members of the org.
+6. Support for user registration, password reset, and email verification etc.
 
 ## Installation
 
@@ -163,50 +206,3 @@ authbase user password reset email --username=user
 # Reset a user password
 authbase user password reset --username=user --password=123456
 ```
-
-## API Usage
-
-```go
-package main
-
-import (
-    "context"
-    "log"
-
-    "github.com/emrgen/authbase"
-    "github.com/emrgen/authbase/apis/v1"
-)
-
-func main() {
-    // Create a new client.
-    client, err := authbase.NewClient("localhost:8080")
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    // Create a new organization. 
-    org, err := client.CreateOrganization(context.Background(), &protos.Organization{
-        Name: "master",
-        Username: "admin",
-        Email:    "example@mail.com",
-    })
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    // Create a new user.
-    user, err := client.CreateUser(context.Background(), &protos.User{
-        Username: "admin",
-        Email:    "example@mail.com",
-    })
-    if err != nil {
-        log.Fatal(err)
-    }
-}
-```
-
-## Progress
-
-- [x] Create organization
-- [x] Get organization
-- [x] list organization

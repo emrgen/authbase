@@ -128,10 +128,17 @@ func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.User{}).Where("organization_id = ? AND member = ?", orgID, member).Count(&total).Error; err != nil {
-			return err
+		if member {
+			if err := tx.Model(&model.User{}).Where("organization_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
+				return err
+			}
+			return g.db.Where("organization_id = ? AND member = ?", orgID, member).Limit(perPage).Offset(page * perPage).Find(&users).Error
+		} else {
+			if err := tx.Model(&model.User{}).Where("organization_id = ?", orgID.String()).Count(&total).Error; err != nil {
+				return err
+			}
+			return g.db.Where("organization_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
 		}
-		return g.db.Where("organization_id = ? AND member = ?", orgID, member).Limit(perPage).Offset(page * perPage).Find(&users).Error
 	})
 
 	return users, int(total), err
