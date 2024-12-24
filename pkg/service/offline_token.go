@@ -199,7 +199,6 @@ func (t *OfflineTokenService) ListTokens(ctx context.Context, request *v1.ListTo
 	size := max(page.Size, 20)
 
 	tokens, total, err := as.ListUserTokens(ctx, orgID, userID, int(page.Page), int(size))
-
 	if err != nil {
 		return nil, err
 	}

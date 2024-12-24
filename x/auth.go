@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// AuthInterceptor returns a new unary server interceptor that authenticates the request using the provided verifier.
+// AuthInterceptor authenticates the request using the provided verifier.
 // on success, it sets the userID and organizationID in the context.
 func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

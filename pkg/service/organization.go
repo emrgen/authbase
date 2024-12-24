@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"google.golang.org/grpc/peer"
 	"time"
@@ -318,16 +317,17 @@ func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.
 	m["provider"] = provider.GetName()
 	m["client_id"] = provider.GetClientId()
 	m["client_secret"] = provider.GetClientSecret()
-
-	data, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
+	oauthConfig := model.OAuthConfig{
+		Provider:     provider.GetName(),
+		ClientID:     provider.GetClientId(),
+		ClientSecret: provider.GetClientSecret(),
+		Scopes:       "openid profile email",
 	}
 
 	providerModel := model.OauthProvider{
 		ID:             uuid.New().String(),
 		OrganizationID: orgID.String(),
-		Config:         string(data),
+		Config:         oauthConfig,
 	}
 
 	err = as.CreateOauthProvider(ctx, &providerModel)
@@ -361,21 +361,12 @@ func (o *OrganizationService) GetOauthProvider(ctx context.Context, request *v1.
 		return nil, err
 	}
 
-	providerConfig := make(map[string]interface{})
-	err = json.Unmarshal([]byte(provider.Config), &providerConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	clientID := providerConfig["client_id"].(string)
-	clientSecret := providerConfig["client_secret"].(string)
-
 	return &v1.GetOauthProviderResponse{
 		Provider: &v1.OAuthProvider{
 			Id:           provider.ID,
-			Name:         providerConfig["provider"].(string),
-			ClientId:     clientID,
-			ClientSecret: clientSecret,
+			Name:         provider.Config.Provider,
+			ClientId:     provider.Config.ClientID,
+			ClientSecret: provider.Config.ClientSecret,
 		},
 	}, nil
 }
@@ -405,16 +396,10 @@ func (o *OrganizationService) ListOauthProviders(ctx context.Context, request *v
 
 	var oauthProviders []*v1.OAuthProvider
 	for _, provider := range providers {
-		providerConfig := make(map[string]interface{})
-		err = json.Unmarshal([]byte(provider.Config), &providerConfig)
-		if err != nil {
-			return nil, err
-		}
-
 		oauthProviders = append(oauthProviders, &v1.OAuthProvider{
 			Id:       provider.ID,
-			Name:     providerConfig["provider"].(string),
-			ClientId: providerConfig["client_id"].(string),
+			Name:     provider.Config.Provider,
+			ClientId: provider.Config.ClientID,
 		})
 	}
 

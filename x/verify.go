@@ -57,3 +57,6 @@ func (v *StoreBasedUserVerifier) VerifyToken(ctx context.Context, token string) 
 
 	return claims, nil
 }
+
+type NoOpUserVerifier struct {
+}

@@ -334,12 +334,12 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		Username:       user.Username,
-		Email:          user.Email,
 		OrganizationID: organizationID,
-		UserID:         userID,
+		UserID:         user.ID,
+		Username:       claims.Username,
+		Email:          claims.Email,
 		Permission:     perm.Permission,
-		Audience:       "",
+		Audience:       claims.Audience,
 		Jti:            jti,
 		ExpireAt:       time.Now().Add(5 * time.Hour),
 		IssuedAt:       time.Now(),

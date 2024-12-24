@@ -43,13 +43,13 @@ func (t TokenService) VerifyToken(ctx context.Context, request *gopackv1.VerifyT
 			return nil, err
 		}
 
-		return &gopackv1.VerifyTokenResponse{UserId: res.GetUserId(), OrganizationId: res.GetOrganizationId()}, nil
+		return &gopackv1.VerifyTokenResponse{Valid: true, UserId: res.GetUserId(), OrganizationId: res.GetOrganizationId()}, nil
 	case "google":
 		res, err := t.oauthService.OAuthVerifyToken(ctx, &v1.VerifyOAuthTokenRequest{Token: bearerToken})
 		if err != nil {
 			return nil, err
 		}
-		return &gopackv1.VerifyTokenResponse{UserId: res.GetUserId(), OrganizationId: res.GetOrganizationId()}, nil
+		return &gopackv1.VerifyTokenResponse{Valid: true, UserId: res.GetUserId(), OrganizationId: res.GetOrganizationId()}, nil
 	}
 
 	return &gopackv1.VerifyTokenResponse{Valid: false}, nil

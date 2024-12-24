@@ -3,17 +3,19 @@ package x
 import (
 	"fmt"
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/sirupsen/logrus"
 	"os"
 	"time"
 )
 
-var secretKey = ""
-
-func init() {
-	secretKey = os.Getenv("JWT_SECRET")
+func jwtSecret() string {
+	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
+		logrus.Error("jwt is not set")
 		panic("JWT_SECRET is not set")
 	}
+
+	return secretKey
 }
 
 type Claims struct {
@@ -48,7 +50,7 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 		"provider": "authbase",
 		"data":     claims.Data,
 	})
-	tokenString, err := token.SignedString([]byte(secretKey))
+	tokenString, err := token.SignedString([]byte(jwtSecret()))
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 // VerifyJWTToken verifies the JWT token
 func VerifyJWTToken(tokenString string) (*Claims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil
+		return []byte(jwtSecret()), nil
 	})
 
 	if err != nil {
@@ -80,17 +82,46 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
+	if time.Now().After(expireAt.Time) {
+		return nil, fmt.Errorf("token expired")
+	}
+
 	issuedAt, err := claims.GetIssuedAt()
 	if err != nil {
 		return nil, err
 	}
 
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("user_id not found")
+	}
+
+	orgID, ok := claims["org_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("org_id not found")
+	}
+
+	jti, ok := claims["jti"].(string)
+	if !ok {
+		return nil, fmt.Errorf("jti not found")
+	}
+
+	provider, ok := claims["provider"].(string)
+	if !ok {
+		return nil, fmt.Errorf("provider not found")
+	}
+
+	data, ok := claims["data"].(map[string]interface{})
+	if !ok {
+		data = make(map[string]interface{})
+	}
+
 	return &Claims{
-		UserID:         claims["user_id"].(string),
-		OrganizationID: claims["org_id"].(string),
-		Jti:            claims["jti"].(string),
-		Provider:       claims["provider"].(string),
-		Data:           claims["data"].(map[string]interface{}),
+		UserID:         userID,
+		OrganizationID: orgID,
+		Jti:            jti,
+		Provider:       provider,
+		Data:           data,
 		ExpireAt:       expireAt.Time,
 		IssuedAt:       issuedAt.Time,
 	}, nil

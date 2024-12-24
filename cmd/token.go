@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -69,7 +70,9 @@ func createTokenCommand() *cobra.Command {
 				return
 			}
 
-			logrus.Infof("token created successfully %v", token)
+			logrus.Infof("token created successfully")
+			fmt.Printf("Token: %v\n", token.Token)
+
 			if save {
 				logrus.Infof("context updated with token")
 				writeContext(Context{
@@ -111,6 +114,15 @@ func listTokenCommand() *cobra.Command {
 			}
 
 			if userId == "" {
+				token, _, err := jwt.NewParser().ParseUnverified(Token, jwt.MapClaims{})
+				if err != nil {
+					logrus.Errorf("failed to parse token: %v", err)
+					return
+				}
+				userId = token.Claims.(jwt.MapClaims)["user_id"].(string)
+			}
+
+			if userId == "" {
 				logrus.Error("missing required flags: --userId")
 				return
 			}
@@ -130,8 +142,6 @@ func listTokenCommand() *cobra.Command {
 				logrus.Errorf("failed to list tokens %v", err)
 				return
 			}
-
-			logrus.Infof("user token count: %v", res.Meta.Total)
 
 			for _, token := range res.Tokens {
 				fmt.Printf("ID: %v\n", token.Id)

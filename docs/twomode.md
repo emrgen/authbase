@@ -39,7 +39,7 @@ But what if different projects wants to use different database but the same auth
 The solution is to use project specific database. It works as follows
 
 1. On start no master or is created.
-2. A external user send request to create a new org in a project.
+2. An external user sends request to create a new org in a project.
 3. The user token is verified by an external service. (most probably another authbase service running in singlestore mode)
 4. Once authenticated the external users write access in the project is ensured by another permission check api call. (calls external permission management system with <projectID#write@userID>)
 5. If the user has permission. a new org is created.

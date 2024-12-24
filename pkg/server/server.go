@@ -106,6 +106,7 @@ func (s *Server) init(grpcPort, httpPort string) error {
 	// if multistore mode use multistoreprovider
 	s.provider = store.NewDefaultProvider(db)
 	s.redis = cache.NewRedisClient()
+	//s.permission = permission.NewStoreBasedPermission(s.provider)
 	s.permission = permission.NewStoreBasedPermission(s.provider)
 	s.mailer = mail.NewMailerProvider("smtp.gmail.com", 587, "", "")
 
