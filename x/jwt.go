@@ -42,6 +42,8 @@ type JWTToken struct {
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": claims.Username,
+		"email":    claims.Email,
 		"user_id":  claims.UserID,
 		"org_id":   claims.OrganizationID,
 		"exp":      claims.ExpireAt.Unix(),

@@ -44,12 +44,10 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 				return nil, err
 			}
 
-			ctx = context.WithValue(ctx, "userID", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "organizationID", uuid.MustParse(request.GetOrganizationId()))
-
+			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
+			ctx = context.WithValue(ctx, "organization_id", uuid.MustParse(request.GetOrganizationId()))
 		default:
 			// TODO: if http cookie is present use that
-
 			// user Bearer token for authentication
 			token, err := tokenFromHeader(ctx, "Bearer")
 			if err != nil {
