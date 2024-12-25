@@ -32,7 +32,9 @@ func createMemberCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create member",
 		Run: func(cmd *cobra.Command, args []string) {
-			verifyContext()
+			loadToken()
+			verifyToken()
+
 			if username == "" {
 				logrus.Errorf("missing required flag: --username")
 				return
@@ -49,7 +51,7 @@ func createMemberCommand() *cobra.Command {
 				return
 			}
 
-			logrus.Infof("user created successfully %v", "")
+			logrus.Infof("org member created successfully %v", "")
 		},
 	}
 
@@ -61,12 +63,71 @@ func createMemberCommand() *cobra.Command {
 	return command
 }
 
+func addMemberCommand() *cobra.Command {
+	var userID string
+	var permission uint32
+
+	command := &cobra.Command{
+		Use:   "add",
+		Short: "add member",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if OrganizationId == "" {
+				logrus.Errorf("missing required flag: --organization")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			_, ok := v1.Permission_name[int32(permission)]
+			if !ok {
+				logrus.Errorf("invalid permission: %v", permission)
+				return
+			}
+			if permission == 0 {
+				permission = uint32(v1.Permission_NONE)
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			ctx := tokenContext()
+			res, err := client.AddMember(ctx, &v1.AddMemberRequest{
+				MemberId:       userID,
+				OrganizationId: OrganizationId,
+				Permission:     v1.Permission(permission),
+			})
+			if err != nil {
+				logrus.Errorf("failed to add member: %v", err)
+				return
+			}
+
+			logrus.Infof("member added successfully %v", res)
+		},
+	}
+
+	bindContextFlags(command)
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+	command.Flags().Uint32VarP(&permission, "permission", "p", 0, "permission")
+
+	return command
+}
+
 func listMemberCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "list user",
 		Run: func(cmd *cobra.Command, args []string) {
-			verifyContext()
+			loadToken()
+			verifyToken()
 
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
@@ -83,7 +144,7 @@ func listMemberCommand() *cobra.Command {
 				return
 			}
 
-			logrus.Infof("member list for organization %v", OrganizationId)
+			logrus.Infof("member list for organization: %v", OrganizationId)
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Username", "Email", "Permission"})
 			for i, member := range res.Members {
@@ -167,60 +228,18 @@ func updateMemberCommand() *cobra.Command {
 }
 
 func deleteMemberCommand() *cobra.Command {
-	var username string
+	var userID string
+
 	command := &cobra.Command{
 		Use:   "delete",
 		Short: "delete user",
 		Run: func(cmd *cobra.Command, args []string) {
-			verifyContext()
-			if username == "" {
-				logrus.Errorf("missing required flag: --username")
-				return
-			}
-
-			_, err := authbase.NewClient(":4000")
-			if err != nil {
-				logrus.Errorf("failed to create client: %v", err)
-				return
-			}
-
-			logrus.Infof("user deleted successfully %v", "")
-		},
-	}
-
-	bindContextFlags(command)
-	command.Flags().StringVarP(&username, "username", "u", "", "username")
-
-	return command
-}
-
-func addMemberCommand() *cobra.Command {
-	var userID string
-	var permission uint32
-
-	command := &cobra.Command{
-		Use:   "add",
-		Short: "add member",
-		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization")
-				return
-			}
+			verifyToken()
 
 			if userID == "" {
-				logrus.Errorf("missing required flag: --user-id")
+				logrus.Errorf("missing required flag: --username")
 				return
-			}
-
-			_, ok := v1.Permission_name[int32(permission)]
-			if !ok {
-				logrus.Errorf("invalid permission: %v", permission)
-				return
-			}
-			if permission == 0 {
-				permission = uint32(v1.Permission_NONE)
 			}
 
 			client, err := authbase.NewClient(":4000")
@@ -230,24 +249,17 @@ func addMemberCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext()
-			res, err := client.AddMember(ctx, &v1.AddMemberRequest{
-				MemberId:       userID,
+			_, err = client.RemoveMember(tokenContext(), &v1.RemoveMemberRequest{
 				OrganizationId: OrganizationId,
-				Permission:     v1.Permission(permission),
+				MemberId:       userID,
 			})
-			if err != nil {
-				logrus.Errorf("failed to add member: %v", err)
-				return
-			}
 
-			logrus.Infof("member added successfully %v", res)
+			logrus.Infof("org member removed successfully")
 		},
 	}
 
 	bindContextFlags(command)
 	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
-	command.Flags().Uint32VarP(&permission, "permission", "p", 0, "permission")
 
 	return command
 }

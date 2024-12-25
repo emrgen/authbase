@@ -108,11 +108,7 @@ func listUserCommand() *cobra.Command {
 		Short: "list user",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-
-			if Token == "" {
-				logrus.Errorf("missing required flags: --token")
-				return
-			}
+			verifyToken()
 
 			if OrganizationId == "" {
 				logrus.Errorf("missing required flag: --organization-id")
@@ -137,7 +133,7 @@ func listUserCommand() *cobra.Command {
 
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "Verified", "Active"})
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "Verified", "Active", "Member"})
 			for i, user := range res.Users {
 				verified := user.VerifiedAt.AsTime().Format("2006-01-02 15:04:05") != "1970-01-01 00:00:00"
 				table.Append([]string{
@@ -148,6 +144,7 @@ func listUserCommand() *cobra.Command {
 					user.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
 					strconv.FormatBool(verified),
 					strconv.FormatBool(!user.Disabled),
+					strconv.FormatBool(user.Member),
 				})
 			}
 

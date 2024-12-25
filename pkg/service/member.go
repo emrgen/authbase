@@ -342,6 +342,6 @@ func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemb
 	}
 
 	return &v1.RemoveMemberResponse{
-		Message: "Member deleted successfully.",
+		Message: "user member removed successfully",
 	}, nil
 }

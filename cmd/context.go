@@ -127,6 +127,13 @@ func verifyContext() {
 	}
 }
 
+func verifyToken() {
+	if Token == "" {
+		logrus.Error("missing required flags: --token")
+		return
+	}
+}
+
 func bindContextFlags(command *cobra.Command) {
 	command.Flags().StringVarP(&Token, "token", "t", "", "token")
 	command.Flags().StringVarP(&OrganizationId, "organization", "o", "", "organization")
