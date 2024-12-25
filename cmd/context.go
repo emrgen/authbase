@@ -132,13 +132,9 @@ func bindContextFlags(command *cobra.Command) {
 	command.Flags().StringVarP(&OrganizationId, "organization", "o", "", "organization")
 }
 
-func tokenContext(token string) context.Context {
+func tokenContext() context.Context {
 	cfg := readContext()
-	if token == "" {
-		Token = token
-	} else {
-		Token = cfg.Token
-	}
+	Token = cfg.Token
 
 	md := metadata.New(map[string]string{"Authorization": "Bearer " + Token})
 	ctx := metadata.NewOutgoingContext(context.Background(), md)

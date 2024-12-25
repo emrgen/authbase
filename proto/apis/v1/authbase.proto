@@ -13,6 +13,7 @@ message User {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3;
+  bool disabled = 4;
 
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
@@ -750,7 +751,7 @@ message Member {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3;
-  repeated Permission permissions = 4;
+  Permission permission = 4;
 }
 
 message CreateMemberRequest {
@@ -865,8 +866,7 @@ enum Permission {
   NONE = 0;
   READ = 1;
   WRITE = 2;
-  DELETE = 4;
-  ADMIN = 8;
+  ADMIN = 4;
 }
 
 message CreatePermissionRequest {

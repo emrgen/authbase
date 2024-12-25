@@ -133,7 +133,7 @@ func listTokenCommand() *cobra.Command {
 				return
 			}
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			res, err := client.ListTokens(ctx, &v1.ListTokensRequest{
 				OrganizationId: organizationId,
 				UserId:         userId,

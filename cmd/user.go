@@ -70,7 +70,7 @@ func createUserCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			user, err := client.CreateUser(ctx, &v1.CreateUserRequest{
 				OrganizationId: OrganizationId,
 				Email:          email,
@@ -82,8 +82,7 @@ func createUserCommand() *cobra.Command {
 				return
 			}
 
-			logrus.Errorf("OrganizationId: %v", OrganizationId)
-			logrus.Infof("user created successfully %v", "")
+			logrus.Info("user created successfully")
 
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
@@ -127,7 +126,7 @@ func listUserCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			res, err := client.ListUsers(ctx, &v1.ListUsersRequest{
 				OrganizationId: OrganizationId,
 			})
@@ -138,15 +137,17 @@ func listUserCommand() *cobra.Command {
 
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt"})
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "Verified", "Active"})
 			for i, user := range res.Users {
+				verified := user.VerifiedAt.AsTime().Format("2006-01-02 15:04:05") != "1970-01-01 00:00:00"
 				table.Append([]string{
 					strconv.Itoa(i + 1),
 					user.Id,
 					user.Email,
 					user.Username,
 					user.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
-					user.UpdatedAt.AsTime().Format("2006-01-02 15:04:05"),
+					strconv.FormatBool(verified),
+					strconv.FormatBool(!user.Disabled),
 				})
 			}
 
@@ -373,7 +374,7 @@ func enableUserCommand() *cobra.Command {
 				return
 			}
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			_, err = client.EnableUser(ctx, &v1.EnableUserRequest{
 				UserId:         userID,
 				OrganizationId: OrganizationId,
@@ -415,7 +416,7 @@ func disableUserCommand() *cobra.Command {
 				return
 			}
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			_, err = client.DisableUser(ctx, &v1.DisableUserRequest{
 				UserId:         userID,
 				OrganizationId: OrganizationId,

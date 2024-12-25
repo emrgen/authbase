@@ -134,6 +134,7 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 			Email:     user.Email,
 			CreatedAt: timestamppb.New(user.CreatedAt),
 			UpdatedAt: timestamppb.New(user.UpdatedAt),
+			Disabled:  user.Disabled,
 		})
 	}
 

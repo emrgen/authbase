@@ -100,18 +100,11 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 	}
 
 	perm, err := as.GetPermissionByID(ctx, orgID, id)
-	permissions := make([]v1.Permission, 0)
-	for value, _ := range v1.Permission_name {
-		if perm.Permission&uint32(value) == 1 {
-			permissions = append(permissions, v1.Permission(value))
-		}
-	}
-
 	return &v1.GetMemberResponse{
 		Member: &v1.Member{
-			Id:          member.ID,
-			Username:    member.Username,
-			Permissions: permissions,
+			Id:         member.ID,
+			Username:   member.Username,
+			Permission: v1.Permission(perm.Permission),
 		},
 	}, nil
 }
@@ -162,17 +155,11 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 			continue
 		}
 
-		permissions := make([]v1.Permission, 0)
-		for value, _ := range v1.Permission_name {
-			if perm >= uint32(value) {
-				permissions = append(permissions, v1.Permission(value))
-			}
-		}
-
 		memberList = append(memberList, &v1.Member{
-			Id:          member.ID,
-			Username:    member.Username,
-			Permissions: permissions,
+			Id:         member.ID,
+			Username:   member.Username,
+			Email:      member.Email,
+			Permission: v1.Permission(perm),
 		})
 	}
 

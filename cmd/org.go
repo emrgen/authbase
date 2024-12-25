@@ -67,7 +67,7 @@ func createOrgCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 
 			// create the master organization
 			if master {
@@ -133,7 +133,7 @@ func getOrgByNameCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			organization, err := client.GetOrganizationId(ctx, &v1.GetOrganizationIdRequest{
 				Name: orgName,
 			})
@@ -164,7 +164,7 @@ func listOrgCommand() *cobra.Command {
 				return
 			}
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			organizations, err := client.ListOrganizations(ctx, &v1.ListOrganizationsRequest{})
 			if err != nil {
 				logrus.Errorf("error listing organizations: %v", err)

@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Migrate creates the tables in the database
 func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(&User{}); err != nil {
 		return err
@@ -41,6 +42,7 @@ func Migrate(db *gorm.DB) error {
 	return nil
 }
 
+// tableName returns the table name for the given model depending on the database type
 func tableName(name string) string {
 	cfg := config.GetConfig()
 	if cfg.DB.Type == "sqlite3" {

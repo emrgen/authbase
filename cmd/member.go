@@ -3,8 +3,11 @@ package cmd
 import (
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"os"
+	"strconv"
 )
 
 var memberCommand = &cobra.Command{
@@ -64,13 +67,39 @@ func listMemberCommand() *cobra.Command {
 		Short: "list user",
 		Run: func(cmd *cobra.Command, args []string) {
 			verifyContext()
-			_, err := authbase.NewClient(":4000")
+
+			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
+			defer client.Close()
 
-			logrus.Infof("user list called")
+			res, err := client.ListMember(tokenContext(), &v1.ListMemberRequest{
+				OrganizationId: OrganizationId,
+			})
+			if err != nil {
+				logrus.Errorf("failed to list member: %v", err)
+				return
+			}
+
+			logrus.Infof("member list for organization %v", OrganizationId)
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "ID", "Username", "Email", "Permission"})
+			for i, member := range res.Members {
+				perm, ok := v1.Permission_name[int32(member.Permission)]
+				if !ok {
+					logrus.Errorf("failed to get permission name: %v", member.Permission)
+					perm = "ERROR"
+				}
+
+				v1.Permission_NONE.String()
+				table.Append([]string{
+					strconv.Itoa(i + 1),
+					member.Id, member.Username, member.Email, perm,
+				})
+			}
+			table.Render()
 		},
 	}
 
@@ -170,7 +199,7 @@ func addMemberCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			res, err := client.AddMember(ctx, &v1.AddMemberRequest{MemberId: userID, OrganizationId: OrganizationId})
 			if err != nil {
 				logrus.Errorf("failed to add member: %v", err)
@@ -213,7 +242,7 @@ func removeMemberCommand() *cobra.Command {
 				return
 			}
 
-			ctx := tokenContext(Token)
+			ctx := tokenContext()
 			res, err := client.RemoveMember(ctx, &v1.RemoveMemberRequest{MemberId: userID, OrganizationId: OrganizationId})
 			if err != nil {
 				logrus.Errorf("failed to remove member: %v", err)

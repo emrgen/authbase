@@ -131,10 +131,9 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 }
 
 var permissionMap = map[string]uint32{
-	"read":   uint32(v1.Permission_READ),
-	"write":  uint32(v1.Permission_WRITE),
-	"delete": uint32(v1.Permission_DELETE),
-	"admin":  uint32(v1.Permission_ADMIN),
+	"read":  uint32(v1.Permission_READ),
+	"write": uint32(v1.Permission_WRITE),
+	"admin": uint32(v1.Permission_ADMIN),
 }
 
 // CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
