@@ -108,8 +108,10 @@ func listMemberCommand() *cobra.Command {
 }
 
 func updateMemberCommand() *cobra.Command {
+	var userID string
 	var username string
 	var email string
+	var permission uint32
 
 	command := &cobra.Command{
 		Use:   "update",
@@ -117,28 +119,33 @@ func updateMemberCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			verifyContext()
 
-			if username == "" {
-				logrus.Errorf("missing required flag: --username")
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
 				return
 			}
 
-			if email == "" {
-				logrus.Errorf("missing required flag: --email")
-				return
-			}
-
-			_, err := authbase.NewClient(":4000")
+			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
+			defer client.Close()
+
+			_, err = client.UpdateMember(tokenContext(), &v1.UpdateMemberRequest{
+				OrganizationId: OrganizationId,
+				MemberId:       userID,
+				Username:       username,
+				Email:          email,
+				Permission:     v1.Permission(permission),
+			})
 
 			logrus.Infof("user updated successfully %v", "")
 		},
 	}
 
 	bindContextFlags(command)
-	command.Flags().StringVarP(&username, "username", "u", "", "username")
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+	command.Flags().StringVarP(&username, "username", "n", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 
 	return command

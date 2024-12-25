@@ -45,10 +45,7 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 	perm := model.Permission{
 		OrganizationID: request.GetOrganizationId(),
 		UserID:         member.ID,
-	}
-	permissions := request.GetPermissions()
-	for _, p := range permissions {
-		perm.Permission |= uint32(p.Number())
+		Permission:     uint32(request.GetPermission()),
 	}
 
 	// if the user already exists, return an error
@@ -208,11 +205,8 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 
 		perm, err := tx.GetPermissionByID(ctx, orgID, memberID)
 
-		if request.GetPermissions() != nil {
-			perm.Permission = 0
-			for _, p := range request.GetPermissions() {
-				perm.Permission |= uint32(p.Number())
-			}
+		if request.GetPermission() != v1.Permission_UNKNOWN {
+			perm.Permission = uint32(request.GetPermission())
 		}
 
 		err = tx.UpdateUser(ctx, member)

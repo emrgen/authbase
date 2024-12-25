@@ -761,7 +761,7 @@ message CreateMemberRequest {
     (validate.rules).string.max_len = 64
   ];
   string email = 3 [(validate.rules).string.email = true];
-  repeated Permission permissions = 4;
+  Permission permission = 4;
 }
 
 message CreateMemberResponse {
@@ -792,7 +792,7 @@ message UpdateMemberRequest {
   string member_id = 2 [(validate.rules).string.uuid = true];
   string username = 3;
   string email = 4 [(validate.rules).string.email = true];
-  repeated Permission permissions = 5;
+ Permission permission = 5;
 }
 
 message UpdateMemberResponse {
@@ -863,10 +863,11 @@ service MemberService {
 }
 
 enum Permission {
-  NONE = 0;
-  READ = 1;
-  WRITE = 2;
-  ADMIN = 4;
+  UNKNOWN = 0;
+  NONE = 1;
+  READ = 2;
+  WRITE = 4;
+  ADMIN = 8;
 }
 
 message CreatePermissionRequest {

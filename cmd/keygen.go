@@ -8,7 +8,7 @@ import (
 
 var keygenCommand = &cobra.Command{
 	Use:   "keygen",
-	Short: "generate a new key",
+	Short: "generate a random key",
 	Run: func(cmd *cobra.Command, args []string) {
 		key := x.Keygen()
 

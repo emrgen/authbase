@@ -37,7 +37,7 @@ func RefreshToken() string {
 }
 
 func Keygen() string {
-	b := make([]byte, 16)
+	b := make([]byte, 20)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		panic(err.Error()) // rand should never fail
 	}
