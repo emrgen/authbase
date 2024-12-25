@@ -29,12 +29,12 @@ type Context struct {
 }
 
 func loadToken() {
-	context := readContext()
-	Token = context.Token
+	ctx := readContext()
+	Token = ctx.Token
 }
 
 func readContext() Context {
-	var context Context
+	var ctx Context
 	viper.SetConfigName("authbase")
 	viper.AddConfigPath("./.tmp")
 	viper.SetConfigType("yml")
@@ -43,11 +43,11 @@ func readContext() Context {
 		fmt.Println("error reading config file: ", err)
 	}
 
-	if err := viper.UnmarshalKey("context", &context); err != nil {
+	if err := viper.UnmarshalKey("context", &ctx); err != nil {
 		fmt.Println("error unmarshalling config file: ", err)
 	}
 
-	return context
+	return ctx
 }
 
 func writeContext(context Context) {

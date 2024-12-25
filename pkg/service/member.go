@@ -168,12 +168,8 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 
 // UpdateMember updates a member of an organization
 func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemberRequest) (*v1.UpdateMemberResponse, error) {
-	orgID, err := uuid.Parse(request.GetOrganizationId())
-	if err != nil {
-		return nil, err
-	}
-
-	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	var err error
+	userID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
 		return nil, err
 	}
@@ -183,27 +179,24 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 		return nil, err
 	}
 
-	memberID, err := uuid.Parse(request.GetMemberId())
+	member, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	orgID, err := uuid.Parse(member.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
 
 	// update the member and the permission
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		member, err := tx.GetUserByID(ctx, memberID)
-		if err != nil {
-			return err
-		}
-
-		if request.GetUsername() != "" {
-			member.Username = request.GetUsername()
-		}
-
-		if request.GetEmail() != "" {
-			member.Email = request.GetEmail()
-		}
-
-		perm, err := tx.GetPermissionByID(ctx, orgID, memberID)
+		perm, err := tx.GetPermissionByID(ctx, orgID, userID)
 
 		if request.GetPermission() != v1.Permission_UNKNOWN {
 			perm.Permission = uint32(request.GetPermission())
@@ -226,7 +219,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 	}
 
 	return &v1.UpdateMemberResponse{
-		Id:      memberID.String(),
+		Id:      member.ID,
 		Message: "Member updated successfully.",
 	}, nil
 }
@@ -275,9 +268,9 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 		return nil, nil
 	}
 
-	permissions := request.GetPermissions()
-	for _, p := range permissions {
-		perm.Permission |= uint32(p.Number())
+	permValue := request.GetPermission()
+	if permValue != v1.Permission_UNKNOWN {
+		perm.Permission = uint32(permValue)
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
