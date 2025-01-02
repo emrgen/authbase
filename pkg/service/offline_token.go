@@ -19,7 +19,7 @@ import (
 
 const (
 	// defaultRefreshTokenExpireIn is the default expire time for a refresh token
-	defaultRefreshTokenExpireIn = time.Hour * 24 * 7
+	defaultRefreshTokenExpireIn = time.Hour * 24 * 60
 )
 
 var _ v1.OfflineTokenServiceServer = new(OfflineTokenService)
@@ -82,6 +82,11 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		return nil, err
 	}
 
+	data := make(map[string]string)
+	if request.Data != nil {
+		data = request.GetData()
+	}
+
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
 		Username:       user.Username,
@@ -94,7 +99,7 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		ExpireAt:       time.Now().Add(expireAfter),
 		IssuedAt:       time.Now(),
 		Provider:       "authbase",
-		Data:           nil,
+		Data:           data,
 	})
 	if err != nil {
 		return nil, err
@@ -108,8 +113,6 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		Token:          token.AccessToken,
 		ExpireAt:       token.ExpireAt,
 	}
-
-	logrus.Info("OfflineTokenService", token, request.GetOrganizationId())
 
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {

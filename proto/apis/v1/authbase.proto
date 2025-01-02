@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package apis.v1;
+package authbase.apis.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
@@ -268,7 +268,7 @@ message CreateTokenRequest {
   ];
   optional int64 expires_in = 4; // in seconds
   optional string name = 5;
-  map<string, string> data = 6;
+  map<string, string> data = 6; // additional data
 }
 
 message CreateTokenResponse {
