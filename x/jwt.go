@@ -29,6 +29,7 @@ type Claims struct {
 	ExpireAt       time.Time         `json:"exp"`
 	IssuedAt       time.Time         `json:"iat"`
 	Provider       string            `json:"provider"` // google, github, etc
+	Scopes         []string          `json:"scopes"`
 	Data           map[string]string `json:"data"`
 }
 
@@ -51,6 +52,7 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 		"jti":      claims.Jti,
 		"provider": "authbase",
 		"data":     claims.Data,
+		"scopes":   claims.Scopes,
 	})
 	tokenString, err := token.SignedString([]byte(jwtSecret()))
 	if err != nil {
@@ -118,13 +120,19 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		data = make(map[string]string)
 	}
 
+	scopes, ok := claims["scopes"].([]string)
+	if !ok {
+		scopes = []string{}
+	}
+
 	return &Claims{
 		UserID:         userID,
 		OrganizationID: orgID,
 		Jti:            jti,
 		Provider:       provider,
-		Data:           data,
 		ExpireAt:       expireAt.Time,
 		IssuedAt:       issuedAt.Time,
+		Scopes:         scopes,
+		Data:           data,
 	}, nil
 }

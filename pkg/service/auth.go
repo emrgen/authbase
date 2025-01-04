@@ -7,6 +7,7 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
@@ -23,12 +24,13 @@ type AuthService struct {
 	store  store.Provider
 	mailer mail.MailerProvider
 	cache  *cache.Redis
+	perm   permission.AuthBasePermission
 	v1.UnimplementedAuthServiceServer
 }
 
 // NewAuthService creates a new AuthService
-func NewAuthService(store store.Provider, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
-	return &AuthService{store: store, mailer: mailer, cache: cache}
+func NewAuthService(store store.Provider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
+	return &AuthService{store: store, perm: perm, mailer: mailer, cache: cache}
 }
 
 // UserEmailExists checks if a user with the given email or username already exists in an organization
@@ -261,13 +263,54 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 		return nil, err
 	}
 
+	// delete the token from the cache
+	err = a.cache.Del(claims.Jti)
+	if err != nil {
+		return nil, err
+	}
+
+	// delete the session from the db
 	err = as.DeleteSession(ctx, jti)
 	if err != nil {
 		return nil, err
 	}
 
 	return &v1.LogoutResponse{Message: "logged out"}, nil
+}
 
+// RevokeAllSessions logs out all sessions of a user
+func (a *AuthService) RevokeAllSessions(ctx context.Context, request *v1.RevokeAllSessionsRequest) (*v1.RevokeAllSessionsResponse, error) {
+	var err error
+
+	userID := uuid.MustParse(request.GetUserId())
+	as, err := store.GetProjectStore(ctx, a.store)
+	if err != nil {
+		return nil, err
+	}
+
+	// user organization id
+	user, err := as.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	orgID := uuid.MustParse(user.OrganizationID)
+
+	err = a.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	if err != nil {
+		return nil, err
+	}
+
+	sessions, err := as.ListActiveSessions(ctx, userID)
+	err = as.DeleteSessionByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.RevokeAllSessionsResponse{
+		SessionCount: uint64(len(sessions)),
+		Message:      "logged out of all sessions",
+	}, nil
 }
 
 // Refresh generates a new access token using the refresh token
@@ -283,6 +326,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		return nil, err
 	}
 
+	// check if the token is in the cache
 	tokenStr, err := a.cache.Get(claims.Jti)
 	if err != nil {
 		// if no value in cache check the db

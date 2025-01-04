@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// IssuedAt is same as gorm.Model.CreatedAt
+// Token IssuedAt is same as gorm.Model.CreatedAt
 type Token struct {
 	gorm.Model
 	ID             string `gorm:"primaryKey;type:uuid"`

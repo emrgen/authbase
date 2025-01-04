@@ -103,7 +103,7 @@ func (s *Server) Start(grpcPort, httpPort string) error {
 
 func (s *Server) init(grpcPort, httpPort string) error {
 	db := store.GetDB()
-	// if multistore mode use multistoreprovider
+	// if multistore mode use multistore provider
 	s.provider = store.NewDefaultProvider(db)
 	s.redis = cache.NewRedisClient()
 	//s.permission = permission.NewStoreBasedPermission(s.provider)
@@ -182,7 +182,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(perm, s.provider, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(perm, s.provider, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(perm, s.provider, redis))
-	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, s.mailer, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, perm, s.mailer, redis))
 	v1.RegisterOauthServiceServer(grpcServer, oauthService)
 	v1.RegisterOfflineTokenServiceServer(grpcServer, offlineTokenService)
 	gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))

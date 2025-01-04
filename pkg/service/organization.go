@@ -32,8 +32,12 @@ func NewOrganizationService(perm permission.MemberPermission, store store.Provid
 	return &OrganizationService{perm: perm, store: store, cache: cache}
 }
 
+// CreateOrganization creates a new organization and the owner user
 func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v1.CreateOrganizationRequest) (*v1.CreateOrganizationResponse, error) {
 	var err error
+
+	// TODO: use token with create organization permission to reduce the token scope
+	// check if the user has permission to create an organization
 	err = o.perm.CheckMasterOrganizationPermission(ctx, "write")
 	if err != nil {
 		return nil, err

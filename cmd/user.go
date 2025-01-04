@@ -18,8 +18,11 @@ var userCommand = &cobra.Command{
 
 func init() {
 	userCommand.AddCommand(createUserCommand())
+	userCommand.AddCommand(checkEmailUsedCommand())
 	userCommand.AddCommand(registerUserCommand())
 	userCommand.AddCommand(loginUserCommand())
+	userCommand.AddCommand(logoutUserCommand())
+	userCommand.AddCommand(revokeUserSessionsCommand())
 	userCommand.AddCommand(listUserCommand())
 	userCommand.AddCommand(updateUserCommand())
 	userCommand.AddCommand(deleteUserCommand())
@@ -100,6 +103,63 @@ func createUserCommand() *cobra.Command {
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
 
 	return command
+}
+
+func checkEmailUsedCommand() *cobra.Command {
+	var email string
+	var username string
+	command := &cobra.Command{
+		Use:   "check",
+		Short: "check email and username availability",
+		Run: func(cmd *cobra.Command, args []string) {
+
+			if email == "" {
+				logrus.Errorf("missing required flag: --email")
+				return
+			}
+
+			if username == "" {
+				logrus.Errorf("missing required flag: --username")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.UserEmailExists(tokenContext(), &v1.UserEmailExistsRequest{
+				OrganizationId: OrganizationId,
+				Email:          email,
+				Username:       username,
+			})
+			if err != nil {
+				logrus.Errorf("failed to check email: %v", err)
+				return
+			}
+
+			if res.UsernameExists {
+				logrus.Warn("username already exists within the organization")
+			} else {
+				logrus.Infof("username is available")
+			}
+
+			if res.EmailExists {
+				logrus.Warn("email already exists within the organization")
+			} else {
+				logrus.Infof("email is available")
+			}
+		},
+	}
+
+	bindContextFlags(command)
+	command.Flags().StringVarP(&email, "email", "e", "", "email")
+	command.Flags().StringVarP(&username, "username", "u", "", "username")
+
+	return command
+
 }
 
 func listUserCommand() *cobra.Command {
@@ -342,6 +402,84 @@ func loginUserCommand() *cobra.Command {
 
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
+
+	return command
+}
+
+func logoutUserCommand() *cobra.Command {
+	command := &cobra.Command{
+		Use:   "logout",
+		Short: "logout user",
+		Run: func(cmd *cobra.Command, args []string) {
+			if Token == "" {
+				logrus.Errorf("missing required flag: --token")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.Logout(tokenContext(), &v1.LogoutRequest{})
+			if err != nil {
+				logrus.Errorf("failed to logout user: %v", err)
+				return
+			}
+
+			logrus.Infof("user logged out successfully")
+		},
+	}
+
+	bindContextFlags(command)
+
+	return command
+
+}
+
+func revokeUserSessionsCommand() *cobra.Command {
+	var userID string
+
+	command := &cobra.Command{
+		Use:   "revoke",
+		Short: "revoke user sessions",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.RevokeAllSessions(tokenContext(), &v1.RevokeAllSessionsRequest{
+				UserId: userID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to revoke user sessions: %v", err)
+				return
+			}
+
+			logrus.Infof("user sessions revoked successfully")
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
 
 	return command
 }

@@ -85,6 +85,15 @@ message LogoutResponse {
   string message = 1;
 }
 
+message RevokeAllSessionsRequest {
+  string user_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message RevokeAllSessionsResponse {
+  uint64 session_count = 1;
+  string message = 2;
+}
+
 message RefreshRequest {
   string refresh_token = 1;
   optional string organization_id = 2 [(validate.rules).string.uuid = true];
@@ -152,6 +161,14 @@ service AuthService {
   rpc Logout(LogoutRequest) returns (LogoutResponse) {
     option (google.api.http) = {
       post: "/v1/auth/logout"
+      body: "*"
+    };
+  }
+
+  // LogoutAll
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/logout-all"
       body: "*"
     };
   }
@@ -854,7 +871,7 @@ service MemberService {
     };
   }
 
-   // RemoveMember
+  // RemoveMember
   rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {
     option (google.api.http) = {delete: "/v1/members/organizations/{organization_id}/members/{member_id}"};
   }
@@ -923,9 +940,7 @@ service PermissionService {
       description: "Create permission for a member"
       responses: {
         key: "200"
-        value: {
-          description: "Permission created"
-        }
+        value: {description: "Permission created"}
       }
     };
   }

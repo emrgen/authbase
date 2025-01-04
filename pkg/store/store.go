@@ -77,6 +77,8 @@ type SessionStore interface {
 	CreateSession(ctx context.Context, session *model.Session) error
 	// ListSessions retrieves a list of sessions.
 	ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error)
+	// ListActiveSessions retrieves a list of active sessions.
+	ListActiveSessions(ctx context.Context, userID uuid.UUID) ([]*model.Session, error)
 	// DeleteSession deletes a session from the database.
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	// DeleteSessionByUserID deletes a session from the database by user ID.

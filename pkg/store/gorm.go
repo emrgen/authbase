@@ -6,6 +6,7 @@ import (
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"time"
 )
 
 var _ AuthBaseStore = new(GormStore)
@@ -30,13 +31,23 @@ func (g *GormStore) GetMasterOrganization(ctx context.Context) (*model.Organizat
 	return &org, err
 }
 
+// DeleteSessionByUserID expire and delete all sessions for a user which not deleted or expired already
 func (g *GormStore) DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error {
-	return g.db.Delete(&model.Session{UserID: userID.String()}).Error
+	return g.db.Model(&model.Session{}).
+		Where("user_id = ? AND expired_at > ?", userID, time.Now()).
+		Update("expired_at", time.Now()).
+		Error
 }
 
 func (g *GormStore) ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error) {
 	var sessions []*model.Session
 	err := g.db.Limit(perPage).Offset(page*perPage).Preload("User").Find(&sessions, "organization_id = ?", orgID).Error
+	return sessions, err
+}
+
+func (g *GormStore) ListActiveSessions(ctx context.Context, userID uuid.UUID) ([]*model.Session, error) {
+	var sessions []*model.Session
+	err := g.db.Find(&sessions, "user_id = ? AND expired_at > ?)", userID, time.Now()).Error
 	return sessions, err
 }
 

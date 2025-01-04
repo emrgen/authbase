@@ -29,7 +29,7 @@
 - **Result**
   - A new user is created within the organization
 
-### User login
+### User login ✅
 
 - **Requirement**
   - User need to login using username/password
@@ -37,7 +37,7 @@
   - Users logs in with valid credentials
   - A auth+refresh token pair is returned
 
-### User logout
+### User logout ✅
 
 - **Requirement**
 - **Result**

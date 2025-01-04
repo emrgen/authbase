@@ -44,7 +44,11 @@ func Migrate(db *gorm.DB) error {
 
 // tableName returns the table name for the given model depending on the database type
 func tableName(name string) string {
-	cfg := config.GetConfig()
+	cfg, err := config.FromEnv()
+	if err != nil {
+		panic(err)
+	}
+
 	if cfg.DB.Type == "sqlite3" {
 		return name
 	} else {
