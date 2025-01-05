@@ -294,6 +294,7 @@ service OauthService {
     };
   }
 
+  // OAuthVerifyToken
   rpc OAuthVerifyToken(VerifyOAuthTokenRequest) returns (VerifyOAuthTokenResponse) {
     option (google.api.http) = {
       post: "/v1/oauth/verify"
@@ -424,6 +425,7 @@ message CreateUserResponse {
   google.protobuf.Timestamp created_at = 10;
 }
 
+// User service
 message GetUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
 }
@@ -537,7 +539,6 @@ service UserService {
   rpc ListActiveUsers(ListActiveUsersRequest) returns (ListActiveUsersResponse) {
     option (google.api.http) = {get: "/v1/projects/{project_id}/users/active"};
   }
-
 
   // InactiveUsers
   rpc ListInactiveUsers(ListInactiveUsersRequest) returns (ListInactiveUserResponse) {
