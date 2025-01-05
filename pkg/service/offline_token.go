@@ -87,6 +87,11 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		data = request.GetData()
 	}
 
+	scopes := make([]string, 0)
+	if request.Scopes != nil {
+		scopes = request.GetScopes()
+	}
+
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
 		Username:       user.Username,
@@ -100,6 +105,7 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		IssuedAt:       time.Now(),
 		Provider:       "authbase",
 		Data:           data,
+		Scopes:         scopes,
 	})
 	if err != nil {
 		return nil, err
