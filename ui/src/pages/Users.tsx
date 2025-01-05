@@ -28,7 +28,7 @@ export const Users = () => {
                       </Table.Header>
 
                       <Table.Body>
-                          {Array.from({length: 100}).map((_, index) => (
+                          {Array.from({length: 100}).map(() => (
                               <Table.Row>
                                   <Table.Cell>
                                       admin
