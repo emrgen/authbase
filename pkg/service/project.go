@@ -65,10 +65,11 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	}
 	user.ProjectID = org.ID
 
+	// create owner member permission
 	perm := model.ProjectMember{
 		ProjectID:  org.ID,
 		UserID:     user.ID,
-		Permission: uint32(v1.Permission_ADMIN),
+		Permission: uint32(v1.Permission_OWNER),
 	}
 
 	// if this is the first project, make the project is the master project

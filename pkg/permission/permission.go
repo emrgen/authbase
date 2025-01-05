@@ -125,8 +125,8 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 
 var permissionMap = map[string]uint32{
 	"read":  uint32(v1.Permission_READ),
-	"write": uint32(v1.Permission_WRITE),
-	"admin": uint32(v1.Permission_ADMIN),
+	"admin": uint32(v1.Permission_OWNER),
+	"owner": uint32(v1.Permission_OWNER),
 }
 
 // CheckProjectPermission checks if the user has the permission to perform the action on the project

@@ -884,8 +884,8 @@ enum Permission {
   UNKNOWN = 0;
   NONE = 1;
   READ = 2;
-  WRITE = 4;
-  ADMIN = 8;
+  ADMIN = 4;
+  OWNER = 8;
 }
 
 message CreatePermissionRequest {

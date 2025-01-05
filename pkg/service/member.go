@@ -197,6 +197,9 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 	// update the member and the permission
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		perm, err := tx.GetProjectMemberByID(ctx, orgID, userID)
+		if err != nil {
+			return err
+		}
 
 		if request.GetPermission() != v1.Permission_UNKNOWN {
 			perm.Permission = uint32(request.GetPermission())

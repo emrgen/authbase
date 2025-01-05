@@ -99,10 +99,10 @@ func createProjectCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&project, "project", "p", "", "project of the project")
+	command.Flags().StringVarP(&project, "project", "r", "", "project of the project")
 	command.Flags().StringVarP(&username, "username", "u", "", "username of the project")
 	command.Flags().StringVarP(&email, "email", "e", "", "email of the project")
-	command.Flags().StringVarP(&password, "password", "w", "", "password of the project")
+	command.Flags().StringVarP(&password, "password", "p", "", "password of the project")
 	command.Flags().BoolVarP(&master, "master", "m", false, "master project")
 
 	return command

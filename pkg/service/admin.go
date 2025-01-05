@@ -69,7 +69,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 	perm := model.ProjectMember{
 		ProjectID:  org.ID,
 		UserID:     user.ID,
-		Permission: uint32(v1.Permission_ADMIN),
+		Permission: uint32(v1.Permission_OWNER),
 	}
 
 	// Create project and user in a transaction
