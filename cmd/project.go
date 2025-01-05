@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/olekukonko/tablewriter"
@@ -140,8 +141,12 @@ func getProjectCommand() *cobra.Command {
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"ID", "Name", "Owner ID", "Master"})
-			table.Append([]string{res.Project.Id, res.Project.Name, res.Project.OwnerId, strconv.FormatBool(res.Project.Master)})
+			table.SetHeader([]string{"ID", "Name", "Owner ID", "Master", "Members", "Users"})
+			table.Append([]string{res.Project.Id, res.Project.Name, res.Project.OwnerId,
+				strconv.FormatBool(res.Project.Master),
+				strconv.FormatInt(int64(res.Members), 10),
+				strconv.FormatInt(int64(res.Users), 10),
+			})
 			table.Render()
 
 		},
@@ -166,20 +171,20 @@ func listProjectCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			projects, err := client.ListProjects(ctx, &v1.ListProjectsRequest{})
+			res, err := client.ListProjects(ctx, &v1.ListProjectsRequest{})
 			if err != nil {
-				logrus.Errorf("error listing projects: %v", err)
+				logrus.Errorf("error listing res: %v", err)
 				return
 			}
 
-			// print the projects in a table
+			// print the res in a table
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Name", "Owner ID", "Master"})
-			for i, project := range projects.Projects {
+			for i, project := range res.Projects {
 				table.Append([]string{strconv.FormatInt(int64(i+1), 10), project.Id, project.Name, project.OwnerId, strconv.FormatBool(project.Master)})
 			}
-
 			table.Render()
+			fmt.Printf("showing %v res, page: %v\n, total: %v\n", len(res.Projects), res.Meta.Page, res.Meta.Total)
 		},
 	}
 

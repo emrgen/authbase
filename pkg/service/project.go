@@ -158,6 +158,16 @@ func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectR
 		return nil, err
 	}
 
+	userCount, err := as.GetUserCount(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	memberCount, err := as.GetMemberCount(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
 	return &v1.GetProjectResponse{
 		Project: &v1.Project{
 			Id:        org.ID,
@@ -166,6 +176,8 @@ func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectR
 			CreatedAt: timestamppb.New(org.CreatedAt),
 			UpdatedAt: timestamppb.New(org.UpdatedAt),
 		},
+		Users:   uint64(userCount),
+		Members: uint64(memberCount),
 	}, nil
 }
 

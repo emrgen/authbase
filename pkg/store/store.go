@@ -64,7 +64,7 @@ type UserStore interface {
 	// DeleteUser deletes a user from the database.
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	// ListUsersByOrg retrieves a list of users by project.
-	ListUsersByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error)
+	ListUsersByOrg(ctx context.Context, member bool, projectID uuid.UUID, page, perPage int) ([]*model.User, int, error)
 	// DisableUser disables a user in the database.
 	DisableUser(ctx context.Context, id uuid.UUID) error
 	// EnableUser enables a user in the database.
@@ -72,7 +72,9 @@ type UserStore interface {
 	// VerifyUser verifies a user in the database.
 	VerifyUser(ctx context.Context, id uuid.UUID) error
 	// UserExists checks if a user exists in the database.
-	UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error)
+	UserExists(ctx context.Context, projectID uuid.UUID, username, email string) ([]*model.User, error)
+	// GetUserCount retrieves the number of users in a project.
+	GetUserCount(ctx context.Context, projectID uuid.UUID) (uint32, error)
 }
 
 type SessionStore interface {
@@ -102,6 +104,8 @@ type ProjectMemberStore interface {
 	UpdateProjectMember(ctx context.Context, permission *model.ProjectMember) error
 	// DeleteProjectMember deletes a permission from the database.
 	DeleteProjectMember(ctx context.Context, orgID, userID uuid.UUID) error
+	// GetMemberCount retrieves the number of members in a project.
+	GetMemberCount(ctx context.Context, projectID uuid.UUID) (uint32, error)
 }
 
 // ProviderStore is the interface for interacting with the provider database.

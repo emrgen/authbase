@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/olekukonko/tablewriter"
@@ -209,6 +210,8 @@ func listUserCommand() *cobra.Command {
 			}
 
 			table.Render()
+
+			fmt.Printf("Users: page: %v, showing: %v, total: %v\n", res.Meta.Page, len(res.Users), res.Meta.Total)
 		},
 	}
 

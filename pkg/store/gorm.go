@@ -15,6 +15,20 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) GetUserCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
+	var count int64
+	g.db.Model(&model.User{}).Where("project_id = ?", projectID).Count(&count)
+
+	return uint32(count), nil
+}
+
+func (g *GormStore) GetMemberCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
+	var count int64
+	g.db.Model(&model.ProjectMember{}).Where("project_id = ?", projectID).Count(&count)
+
+	return uint32(count), nil
+}
+
 func (g *GormStore) ListProjectMembersUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error) {
 	var permissions []*model.ProjectMember
 	err := g.db.Find(&permissions, "project_id = ? AND user_id IN ?", orgID, userIDs).Error

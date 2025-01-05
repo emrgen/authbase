@@ -594,6 +594,8 @@ message GetProjectRequest {
 
 message GetProjectResponse {
   Project project = 1;
+  uint64 members = 2;
+  uint64 users = 3;
 }
 
 message GetProjectIdRequest {
