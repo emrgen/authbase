@@ -172,8 +172,7 @@ func listUserCommand() *cobra.Command {
 			verifyToken()
 
 			if ProjectId == "" {
-				logrus.Errorf("missing required flag: --project-id")
-				return
+				ProjectId = tokenProjectID()
 			}
 
 			client, err := authbase.NewClient(":4000")

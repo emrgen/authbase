@@ -21,3 +21,5 @@
 - [x] list members of the project
 - [x] add member to the project
 - [x] remove member from the project
+- [x] create space
+- [x] list space

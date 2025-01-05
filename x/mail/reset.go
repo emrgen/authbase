@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// ResetPassword sends an email to the user to reset their password.
+// The callback contains a code that the user can use to reset their password.
 func ResetPassword(email string, callback string) error {
 	t, err := template.ParseFiles("templates/reset.html")
 	if err != nil {

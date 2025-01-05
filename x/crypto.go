@@ -36,6 +36,7 @@ func RefreshToken() string {
 	return base64EncodeStripped(string(b))
 }
 
+// Keygen creates a new random key
 func Keygen() string {
 	b := make([]byte, 20)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {

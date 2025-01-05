@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	gatewayfile "github.com/black-06/grpc-gateway-file"
+	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
 	"github.com/emrgen/authbase/pkg/permission"
@@ -13,19 +14,10 @@ import (
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
 	gopackv1 "github.com/emrgen/gopack/apis/v1"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/protobuf/encoding/protojson"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"sync"
-	"time"
-
-	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/gobuffalo/packr"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcvalidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -33,25 +25,13 @@ import (
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync"
 )
-
-func UnaryRequestTimeInterceptor() grpc.UnaryClientInterceptor {
-	return func(
-		ctx context.Context,
-		method string,
-		req interface{},
-		reply interface{},
-		cc *grpc.ClientConn,
-		invoker grpc.UnaryInvoker,
-		opts ...grpc.CallOption,
-	) error {
-		start := time.Now()
-		err := invoker(ctx, method, req, reply, cc, opts...)
-		reqTime := time.Since(start)
-		logrus.Infof("request time: %v: %v", method, reqTime)
-		return err
-	}
-}
 
 type Server struct {
 	config          *config.Config
@@ -141,6 +121,7 @@ func (s *Server) registerServices() error {
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),
 			x.AuthInterceptor(verifier),
+			UnaryGrpcRequestTimeInterceptor(),
 		)),
 	)
 

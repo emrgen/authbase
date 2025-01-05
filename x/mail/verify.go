@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// VerifyEmail sends an email to the user to verify their email.
+// The callback is the link to verify the email.
 func VerifyEmail(email string, callback string) error {
 	t, err := template.ParseFiles("templates/verify.html")
 	if err != nil {

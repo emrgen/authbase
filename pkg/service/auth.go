@@ -170,7 +170,14 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		return nil, errors.New("incorrect password")
 	}
 
-	perm, err := as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(user.ID))
+	perm := &model.ProjectMember{}
+
+	if user.Member {
+		perm, err = as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(user.ID))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// generate tokens
 	jti := uuid.New().String()

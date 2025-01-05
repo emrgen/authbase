@@ -3,7 +3,6 @@ package permission
 import (
 	"context"
 	"errors"
-
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"

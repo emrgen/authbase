@@ -263,7 +263,7 @@ func (t *OfflineTokenService) DeleteToken(ctx context.Context, request *v1.Delet
 	return &v1.DeleteTokenResponse{}, nil
 }
 
-// VerifyToken verifies a token and returns the project id and user id
+// VerifyOfflineToken verifies a token and returns the project id and user id
 // no need to check the permission here
 func (t *OfflineTokenService) VerifyOfflineToken(ctx context.Context, request *v1.OfflineTokenVerifyRequest) (*v1.OfflineTokenVerifyResponse, error) {
 	token := request.GetToken()

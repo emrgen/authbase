@@ -42,8 +42,8 @@ func (o *OauthService) OAuthLogin(ctx context.Context, request *v1.OAuthLoginReq
 	return &v1.OAuthLoginResponse{
 		Provider: &v1.OAuthProvider{
 			Name:         provider.Name,
-			ClientId:     "",
-			ClientSecret: "",
+			ClientId:     provider.Config.ClientID,
+			ClientSecret: provider.Config.ClientSecret,
 			RedirectUris: nil,
 		},
 	}, nil
@@ -62,12 +62,13 @@ func (o *OauthService) OAuthCallback(ctx context.Context, request *v1.OAuthCallb
 	return &v1.OAuthCallbackResponse{}, nil
 }
 
+// Logout logs out a user, invalidating the token and removing the session
 func (o *OauthService) Logout(ctx context.Context, request *v1.OauthLogoutRequest) (*v1.OauthLogoutResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-// OAuthVerifyToken verifies the token for a user
+// OAuthVerifyToken verifies the token for a user for the provider
 func (o *OauthService) OAuthVerifyToken(ctx context.Context, request *v1.VerifyOAuthTokenRequest) (*v1.VerifyOAuthTokenResponse, error) {
 	//TODO implement me
 	panic("implement me")

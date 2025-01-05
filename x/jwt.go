@@ -95,6 +95,11 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
+	jti, ok := claims["jti"].(string)
+	if !ok {
+		return nil, fmt.Errorf("jti not found")
+	}
+
 	userID, ok := claims["user_id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("user_id not found")
@@ -103,11 +108,6 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	projectID, ok := claims["project_id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("project_id not found")
-	}
-
-	jti, ok := claims["jti"].(string)
-	if !ok {
-		return nil, fmt.Errorf("jti not found")
 	}
 
 	provider, ok := claims["provider"].(string)

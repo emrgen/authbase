@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -147,4 +148,15 @@ func tokenContext() context.Context {
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	return ctx
+}
+
+func tokenProjectID() string {
+	// decode token
+	token, _, err := jwt.NewParser().ParseUnverified(Token, jwt.MapClaims{})
+	if err != nil {
+		panic(err)
+	}
+
+	claim := token.Claims.(jwt.MapClaims)
+	return claim["project_id"].(string)
 }

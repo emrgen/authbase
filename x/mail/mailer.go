@@ -6,23 +6,26 @@ import (
 	"os"
 )
 
+// MailerProvider provides a mailer for a given project.
 type MailerProvider interface {
-	Provide(orgID uuid.UUID) Mailer
+	Provide(projectID uuid.UUID) Mailer
 }
 
+// Mailer is an interface for sending emails.
 type Mailer interface {
 	SendMail(from, to, subject, body string) error
 }
 
-type Manager struct {
+// SimpleMailer is a mailer provider.
+type SimpleMailer struct {
 	host string
 	port int
 	user string
 	pass string
 }
 
-func NewMailerProvider(host string, port int, user, pass string) *Manager {
-	return &Manager{
+func NewMailerProvider(host string, port int, user, pass string) *SimpleMailer {
+	return &SimpleMailer{
 		host: host,
 		port: port,
 		user: user,
@@ -30,7 +33,7 @@ func NewMailerProvider(host string, port int, user, pass string) *Manager {
 	}
 }
 
-func (m *Manager) Provide(orgID uuid.UUID) Mailer {
+func (m *SimpleMailer) Provide(orgID uuid.UUID) Mailer {
 	return &MailerImpl{
 		host: m.host,
 		port: m.port,

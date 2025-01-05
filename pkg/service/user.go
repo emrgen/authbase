@@ -9,6 +9,8 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -120,15 +122,15 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 
 	err = u.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.PermissionDenied, err.Error())
 	}
 
 	page := x.GetPageFromRequest(request)
 	users, total, err := as.ListUsersByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
 
-	var userProtos []*v1.User
+	var userProtoList []*v1.User
 	for _, user := range users {
-		userProtos = append(userProtos, &v1.User{
+		userProtoList = append(userProtoList, &v1.User{
 			Id:        user.ID,
 			Username:  user.Username,
 			Email:     user.Email,
@@ -139,7 +141,7 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 		})
 	}
 
-	return &v1.ListUsersResponse{Users: userProtos, Meta: &v1.Meta{Total: int32(total)}}, nil
+	return &v1.ListUsersResponse{Users: userProtoList, Meta: &v1.Meta{Total: int32(total)}}, nil
 }
 
 // UpdateUser updates a user.

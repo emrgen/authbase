@@ -138,7 +138,8 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectRequest) (*v1.GetProjectResponse, error) {
 	var err error
 
-	err = o.perm.CheckMasterProjectPermission(ctx, "read")
+	projectID := uuid.MustParse(request.GetId())
+	err = o.perm.CheckProjectPermission(ctx, projectID, "read")
 	if err != nil {
 		return nil, err
 	}
