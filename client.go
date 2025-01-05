@@ -18,6 +18,7 @@ type Client interface {
 	v1.OauthServiceClient
 	gopackv1.TokenServiceClient
 	v1.OfflineTokenServiceClient
+	v1.SessionServiceClient
 	io.Closer
 }
 
@@ -32,6 +33,7 @@ type client struct {
 	v1.OauthServiceClient
 	gopackv1.TokenServiceClient
 	v1.OfflineTokenServiceClient
+	v1.SessionServiceClient
 }
 
 func NewClient(port string) (Client, error) {
@@ -50,6 +52,7 @@ func NewClient(port string) (Client, error) {
 		TokenServiceClient:        gopackv1.NewTokenServiceClient(conn),
 		AdminProjectServiceClient: v1.NewAdminProjectServiceClient(conn),
 		OfflineTokenServiceClient: v1.NewOfflineTokenServiceClient(conn),
+		SessionServiceClient:      v1.NewSessionServiceClient(conn),
 	}, nil
 }
 

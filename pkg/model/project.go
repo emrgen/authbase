@@ -16,7 +16,7 @@ type PasswordPolicy struct {
 type Project struct {
 	gorm.Model
 	ID                string         `gorm:"primaryKey;uuid;not null;"`
-	Name              string         `gorm:"not null;unique;index:idx_project_name"`
+	Name              string         `gorm:"not null;unique;index:idx_project_name"` // unique project name
 	OwnerID           string         `gorm:"not null"`
 	ProjectID         string         `gorm:"uuid;default:null"`                              // filled when running in multistore mode
 	Owner             *User          `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE"` // filled when running in multistore mode

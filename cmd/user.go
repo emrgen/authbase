@@ -465,7 +465,7 @@ func revokeUserSessionsCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			_, err = client.RevokeAllSessions(tokenContext(), &v1.RevokeAllSessionsRequest{
+			_, err = client.DeleteAllSessions(tokenContext(), &v1.DeleteAllSessionsRequest{
 				UserId: userID,
 			})
 			if err != nil {
@@ -553,8 +553,7 @@ func disableUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			_, err = client.DisableUser(ctx, &v1.DisableUserRequest{
-				UserId:    userID,
-				ProjectId: ProjectId,
+				UserId: userID,
 			})
 
 			logrus.Infof("user disabled successfully")

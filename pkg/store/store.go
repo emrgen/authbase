@@ -44,6 +44,10 @@ type ProjectStore interface {
 	UpdateProject(ctx context.Context, org *model.Project) error
 	// DeleteProject deletes an project from the database.
 	DeleteProject(ctx context.Context, id uuid.UUID) error
+	// CreateKeypair creates a new keypair in the database.
+	CreateKeypair(ctx context.Context, keypair *model.Keypair) error
+	// GetKeypair retrieves a keypair by its ID.
+	GetKeypair(ctx context.Context, id uuid.UUID) (*model.Keypair, error)
 }
 
 // UserStore is the interface for interacting with the user database.
@@ -79,7 +83,7 @@ type SessionStore interface {
 	// ListActiveSessions retrieves a list of active sessions.
 	ListActiveSessions(ctx context.Context, userID uuid.UUID) ([]*model.Session, error)
 	// DeleteSession deletes a session from the database.
-	DeleteSession(ctx context.Context, id uuid.UUID) error
+	DeleteSession(ctx context.Context, sessionID uuid.UUID) error
 	// DeleteSessionByUserID deletes a session from the database by user ID.
 	DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error
 }
@@ -91,7 +95,7 @@ type ProjectMemberStore interface {
 	// GetProjectMemberByID retrieves a permission by its ID.
 	GetProjectMemberByID(ctx context.Context, orgID, userID uuid.UUID) (*model.ProjectMember, error)
 	// ListProjectMembers retrieves a list of permissions.
-	ListProjectMembers(ctx context.Context, page, perPage int) ([]*model.ProjectMember, error)
+	ListProjectMembers(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.ProjectMember, error)
 	// ListProjectMembersUsers retrieves a list of permissions by project.
 	ListProjectMembersUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error)
 	// UpdateProjectMember updates a permission in the database.

@@ -9,11 +9,11 @@ import {
   SelectValueText,
 } from "../ui/select";
 
-export const OrgSelect = () => {
+export const ProjectSelect = () => {
   return (
     <SelectRoot collection={frameworks} size="sm" width="full" border={'1px solid #aaa'} borderRadius={6}>
       <SelectTrigger>
-        <SelectValueText placeholder="Select Organization" />
+        <SelectValueText placeholder="Select Project" />
       </SelectTrigger>
       <SelectContent>
         {frameworks.items.map((movie) => (

@@ -85,15 +85,6 @@ message LogoutResponse {
   string message = 1;
 }
 
-message RevokeAllSessionsRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
-}
-
-message RevokeAllSessionsResponse {
-  uint64 session_count = 1;
-  string message = 2;
-}
-
 message RefreshRequest {
   string refresh_token = 1;
   optional string project_id = 2 [(validate.rules).string.uuid = true];
@@ -130,6 +121,59 @@ message UserEmailExistsResponse {
   bool username_exists = 2;
 }
 
+message Session {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string user_id = 2 [(validate.rules).string.uuid = true];
+  string project_id = 3 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+message ListUserSessionRequest {
+  string user_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message ListUserSessionResponse {
+  repeated Session sessions = 1;
+  Meta meta = 2;
+}
+
+
+message DeleteSessionsRequest {
+  string session_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteSessionsResponse {
+  uint64 session_count = 1;
+  string message = 2;
+}
+
+message DeleteAllSessionsRequest {
+  string user_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteAllSessionsResponse {
+  string message = 1;
+}
+
+service SessionService {
+  // ListUserSession
+  rpc ListUserSession(ListUserSessionRequest) returns (ListUserSessionResponse) {
+    option (google.api.http) = {get: "/v1/users/{user_id}/sessions"};
+  }
+
+  // DeleteSessions
+  rpc DeleteSessions(DeleteSessionsRequest) returns (DeleteSessionsResponse) {
+    option (google.api.http) = {delete: "/v1/users/-/sessions/{session_id}"};
+  }
+
+  // DeleteAllSessions
+  rpc DeleteAllSessions(DeleteAllSessionsRequest) returns (DeleteAllSessionsResponse) {
+    option (google.api.http) = {delete: "/v1/users/{user_id}/sessions"};
+  }
+}
+
 // Auth service
 
 service AuthService {
@@ -155,20 +199,15 @@ service AuthService {
       post: "/v1/auth/login"
       body: "*"
     };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "Login"
+    };
   }
 
   // Logout
   rpc Logout(LogoutRequest) returns (LogoutResponse) {
     option (google.api.http) = {
       post: "/v1/auth/logout"
-      body: "*"
-    };
-  }
-
-  // LogoutAll
-  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/logout-all"
       body: "*"
     };
   }
@@ -262,6 +301,8 @@ service OauthService {
     };
   }
 }
+
+// Token
 
 message Token {
   string id = 1 [(validate.rules).string.uuid = true];
@@ -421,27 +462,27 @@ message DeleteUserResponse {
   string message = 1;
 }
 
-message ActiveUsersRequest {
+message ListActiveUsersRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
   optional Page page = 2;
 }
 
-message ActiveUsersResponse {
+message ListActiveUsersResponse {
   repeated User users = 1;
   Meta meta = 2;
 }
 
-message InactiveUserRequest {
+message ListInactiveUsersRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
+  optional Page page = 2;
 }
 
-message InactiveUserResponse {
-  string message = 1;
+message ListInactiveUserResponse {
+  repeated User users = 1;
+  Meta meta = 2;
 }
 
 message DisableUserRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -464,52 +505,53 @@ service UserService {
   // CreateUser
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
     option (google.api.http) = {
-      post: "/v1/users"
+      post: "/v1/users/projects/{project_id}"
       body: "*"
     };
   }
 
   // GetUser
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
-    option (google.api.http) = {post: "/v1/users/{id}"};
+    option (google.api.http) = {post: "/v1/projects/-/users/{id}"};
   }
 
   // ListUsers
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {get: "/v1/users/-/projects/{project_id}"};
+    option (google.api.http) = {get: "/v1/projects/{project_id}/users"};
   }
 
   // UpdateUser
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
-      put: "/v1/users/{id}"
+      put: "/v1/projects/{project_id}/users/{id}"
       body: "*"
     };
   }
 
   // DeleteUser
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
-    option (google.api.http) = {delete: "/v1/users/{id}"};
+    option (google.api.http) = {delete: "/v1/projects/{project_id}/users/{id}"};
   }
 
-  // ActiveUsers
-  rpc ActiveUsers(ActiveUsersRequest) returns (ActiveUsersResponse) {
-    option (google.api.http) = {get: "/v1/users/active"};
+  // ActivateUsers
+  rpc ListActiveUsers(ListActiveUsersRequest) returns (ListActiveUsersResponse) {
+    option (google.api.http) = {get: "/v1/projects/{project_id}/users/active"};
   }
 
-  // InactiveUser
-  rpc InactiveUser(InactiveUserRequest) returns (InactiveUserResponse) {
-    option (google.api.http) = {delete: "/v1/users/-/deactivate/{user_id}"};
+
+  // InactiveUsers
+  rpc ListInactiveUsers(ListInactiveUsersRequest) returns (ListInactiveUserResponse) {
+    option (google.api.http) = {get: "/v1/projects/{project_id}/users/inactive"};
   }
 
   // DisableUser
   rpc DisableUser(DisableUserRequest) returns (DisableUserResponse) {
-    option (google.api.http) = {delete: "/v1/users/-/disable/{user_id}"};
+    option (google.api.http) = {delete: "/v1/projects/-/users/{user_id}/disable"};
   }
 
   // EnableUser
   rpc EnableUser(EnableUserRequest) returns (EnableUserResponse) {
-    option (google.api.http) = {delete: "/v1/users/-/enable/{user_id}"};
+    option (google.api.http) = {delete: "/v1/projects/-/users/{user_id}/enable"};
   }
 }
 

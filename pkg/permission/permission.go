@@ -49,6 +49,7 @@ func (a *AuthZed) Check(ctx context.Context, objectID uuid.UUID, objectType stri
 	panic("implement me")
 }
 
+// MemberPermission is an interface representing the member permissions that are used in the service layer
 type MemberPermission interface {
 	//CreateProjectMember(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
 	//DeleteProjectMember(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
@@ -75,6 +76,7 @@ func NewAuthZedPermission() *AuthZedPermission {
 
 var _ AuthBasePermission = new(StoreBasedPermission)
 
+// StoreBasedPermission is a struct that implements the AuthBasePermission interface
 type StoreBasedPermission struct {
 	store store.Provider
 }
@@ -124,9 +126,11 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 }
 
 var permissionMap = map[string]uint32{
-	"read":  uint32(v1.Permission_READ),
-	"admin": uint32(v1.Permission_OWNER),
-	"owner": uint32(v1.Permission_OWNER),
+	"unknown": uint32(v1.Permission_UNKNOWN),
+	"none":    uint32(v1.Permission_NONE),
+	"read":    uint32(v1.Permission_READ),
+	"admin":   uint32(v1.Permission_OWNER),
+	"owner":   uint32(v1.Permission_OWNER),
 }
 
 // CheckProjectPermission checks if the user has the permission to perform the action on the project

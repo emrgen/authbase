@@ -223,8 +223,8 @@ func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequ
 	}, nil
 }
 
-// ActiveUsers lists active users.
-func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRequest) (*v1.ActiveUsersResponse, error) {
+// ListActiveUsers lists active users.
+func (u *UserService) ListActiveUsers(ctx context.Context, request *v1.ListActiveUsersRequest) (*v1.ListActiveUsersResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
@@ -262,38 +262,7 @@ func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRe
 		})
 	}
 
-	return &v1.ActiveUsersResponse{Users: userProtos}, nil
-}
-
-// InactiveUser deactivates a user.
-func (u *UserService) InactiveUser(ctx context.Context, request *v1.InactiveUserRequest) (*v1.InactiveUserResponse, error) {
-	as, err := store.GetProjectStore(ctx, u.store)
-	if err != nil {
-		return nil, err
-	}
-	userID, err := uuid.Parse(request.GetUserId())
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := as.GetUserByID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
-	if err != nil {
-		return nil, err
-	}
-
-	err = as.DeleteSession(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &v1.InactiveUserResponse{
-		Message: "User deactivated successfully.",
-	}, nil
+	return &v1.ListActiveUsersResponse{Users: userProtos}, nil
 }
 
 // DisableUser activates a user.

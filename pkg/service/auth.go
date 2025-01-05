@@ -278,41 +278,6 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 	return &v1.LogoutResponse{Message: "logged out"}, nil
 }
 
-// RevokeAllSessions logs out all sessions of a user
-func (a *AuthService) RevokeAllSessions(ctx context.Context, request *v1.RevokeAllSessionsRequest) (*v1.RevokeAllSessionsResponse, error) {
-	var err error
-
-	userID := uuid.MustParse(request.GetUserId())
-	as, err := store.GetProjectStore(ctx, a.store)
-	if err != nil {
-		return nil, err
-	}
-
-	// user project id
-	user, err := as.GetUserByID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	orgID := uuid.MustParse(user.ProjectID)
-
-	err = a.perm.CheckProjectPermission(ctx, orgID, "write")
-	if err != nil {
-		return nil, err
-	}
-
-	sessions, err := as.ListActiveSessions(ctx, userID)
-	err = as.DeleteSessionByUserID(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &v1.RevokeAllSessionsResponse{
-		SessionCount: uint64(len(sessions)),
-		Message:      "logged out of all sessions",
-	}, nil
-}
-
 // Refresh generates a new access token using the refresh token
 func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (*v1.RefreshResponse, error) {
 	var foundToken bool

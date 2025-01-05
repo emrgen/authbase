@@ -143,7 +143,17 @@ func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.
 			if err := tx.Model(&model.User{}).Where("project_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
 				return err
 			}
-			return g.db.Where("project_id = ? AND member = ?", orgID, member).Limit(perPage).Offset(page * perPage).Find(&users).Error
+
+			members, err := g.ListProjectMembers(ctx, orgID, page, perPage)
+			if err != nil {
+				return err
+			}
+
+			for _, member := range members {
+				users = append(users, member.User)
+			}
+
+			return nil
 		} else {
 			if err := tx.Model(&model.User{}).Where("project_id = ?", orgID.String()).Count(&total).Error; err != nil {
 				return err
@@ -221,9 +231,30 @@ func (g *GormStore) UpdateProject(ctx context.Context, org *model.Project) error
 	return g.db.Save(org).Error
 }
 
+// DeleteProject deletes an organization from the database
 func (g *GormStore) DeleteProject(ctx context.Context, id uuid.UUID) error {
 	org := model.Project{ID: id.String()}
 	return g.db.Delete(&org).Error
+}
+
+func (g *GormStore) CreateKeypair(ctx context.Context, keypair *model.Keypair) error {
+	// NOTE: we should only have one keypair per project, so we can safely delete all existing keypairs and create a new one
+	// this will cause all the existing tokens to be invalidated and the users will have to re-authenticate
+	err := g.Transaction(func(tx AuthBaseStore) error {
+		if err := tx.(*GormStore).db.Where("project_id = ?", keypair.ProjectID).Delete(&model.Keypair{}).Error; err != nil {
+			return err
+		}
+
+		return tx.(*GormStore).db.Create(keypair).Error
+	})
+
+	return err
+}
+
+func (g *GormStore) GetKeypair(ctx context.Context, id uuid.UUID) (*model.Keypair, error) {
+	var keypair model.Keypair
+	err := g.db.Where("id = ?", id).First(&keypair).Error
+	return &keypair, err
 }
 
 func (g *GormStore) CreateProjectMember(ctx context.Context, permission *model.ProjectMember) error {
@@ -240,9 +271,9 @@ func (g *GormStore) GetProjectMemberByID(ctx context.Context, orgID, userID uuid
 	return &permission, err
 }
 
-func (g *GormStore) ListProjectMembers(ctx context.Context, page, perPage int) ([]*model.ProjectMember, error) {
+func (g *GormStore) ListProjectMembers(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.ProjectMember, error) {
 	var permissions []*model.ProjectMember
-	err := g.db.Limit(perPage).Offset(page * perPage).Find(&permissions).Error
+	err := g.db.Where("project_id = ?", projectID).Preload("User").Limit(perPage).Offset(page * perPage).Order("permission DESC").Find(&permissions).Error
 	return permissions, err
 }
 
