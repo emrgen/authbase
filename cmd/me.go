@@ -35,8 +35,8 @@ func whoamiCommand() *cobra.Command {
 
 			// print claims
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Organization ID", "User ID", "Email", "Username"})
-			table.Append([]string{claim["org_id"].(string), claim["user_id"].(string), claim["email"].(string), claim["username"].(string)})
+			table.SetHeader([]string{"Project ID", "User ID", "Email", "Username"})
+			table.Append([]string{claim["project_id"].(string), claim["user_id"].(string), claim["email"].(string), claim["username"].(string)})
 			table.Render()
 		},
 	}

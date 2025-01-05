@@ -21,14 +21,14 @@ func Execute() {
 }
 
 var Token string
-var OrganizationId string
+var ProjectId string
 var Username string
 var Password string
 
 func init() {
 	rootCmd.AddCommand(dbCmd)
 	rootCmd.AddCommand(serveCmd)
-	rootCmd.AddCommand(orgCommand)
+	rootCmd.AddCommand(projectCommand)
 	rootCmd.AddCommand(userCommand)
 	rootCmd.AddCommand(memberCommand)
 	rootCmd.AddCommand(configCommand)
@@ -38,8 +38,8 @@ func init() {
 	rootCmd.AddCommand(keygenCommand)
 
 	ctx := readContext()
-	if ctx.OrganizationId != "" {
-		rootCmd.PersistentFlags().StringVarP(&OrganizationId, "org-id", "o", ctx.OrganizationId, "organization id")
+	if ctx.ProjectId != "" {
+		rootCmd.PersistentFlags().StringVarP(&ProjectId, "project-id", "p", ctx.ProjectId, "project id")
 	}
 
 	if ctx.Token != "" {

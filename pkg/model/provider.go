@@ -10,10 +10,10 @@ type OAuthConfig struct {
 }
 
 type OauthProvider struct {
-	ID             string      `gorm:"unique;not null" json:"id"`
-	Name           string      `gorm:"primaryKey;not null"`
-	OrganizationID string      `gorm:"primaryKey;not null"`
-	Config         OAuthConfig `gorm:"embedded;embeddedPrefix:config_"`
+	ID        string      `gorm:"unique;not null" json:"id"`
+	Name      string      `gorm:"primaryKey;not null"`
+	ProjectID string      `gorm:"primaryKey;not null"`
+	Config    OAuthConfig `gorm:"embedded;embeddedPrefix:config_"`
 }
 
 func (OauthProvider) TableName() string {

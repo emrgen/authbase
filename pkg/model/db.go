@@ -15,7 +15,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	if err := db.AutoMigrate(&Permission{}); err != nil {
+	if err := db.AutoMigrate(&ProjectMember{}); err != nil {
 		return err
 	}
 
@@ -23,7 +23,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	if err := db.AutoMigrate(&Organization{}); err != nil {
+	if err := db.AutoMigrate(&Project{}); err != nil {
 		return err
 	}
 
@@ -36,6 +36,10 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(&Session{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&Keypair{}); err != nil {
 		return err
 	}
 

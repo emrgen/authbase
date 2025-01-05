@@ -10,21 +10,21 @@ import (
 	"strconv"
 )
 
-var orgCommand = &cobra.Command{
-	Use:   "org",
-	Short: "org commands",
+var projectCommand = &cobra.Command{
+	Use:   "project",
+	Short: "project commands",
 }
 
 func init() {
-	orgCommand.AddCommand(createOrgCommand())
-	orgCommand.AddCommand(listOrgCommand())
-	orgCommand.AddCommand(updateOrgCommand())
-	orgCommand.AddCommand(deleteOrgCommand())
-	orgCommand.AddCommand(getOrgByNameCommand())
+	projectCommand.AddCommand(createProjectCommand())
+	projectCommand.AddCommand(listProjectCommand())
+	projectCommand.AddCommand(updateProjectCommand())
+	projectCommand.AddCommand(deleteProjectCommand())
+	projectCommand.AddCommand(getProjectByNameCommand())
 }
 
-func createOrgCommand() *cobra.Command {
-	var organization string
+func createProjectCommand() *cobra.Command {
+	var project string
 	var password string
 	var username string
 	var email string
@@ -41,8 +41,8 @@ func createOrgCommand() *cobra.Command {
 				return
 			}
 
-			if organization == "" {
-				logrus.Errorf("missing required flags: --organization")
+			if project == "" {
+				logrus.Errorf("missing required flags: --project")
 				return
 			}
 
@@ -57,7 +57,7 @@ func createOrgCommand() *cobra.Command {
 			}
 
 			if password == "" {
-				logrus.Infof("creating organization without password")
+				logrus.Infof("creating project without password")
 			}
 
 			client, err := authbase.NewClient(":4000")
@@ -69,51 +69,51 @@ func createOrgCommand() *cobra.Command {
 
 			ctx := tokenContext()
 
-			// create the master organization
+			// create the master project
 			if master {
-				logrus.Infof("creating master organization")
-				organization, err := client.CreateAdminOrganization(ctx, &v1.CreateAdminOrganizationRequest{
-					Name:     organization,
+				logrus.Infof("creating master project")
+				project, err := client.CreateAdminProject(ctx, &v1.CreateAdminProjectRequest{
+					Name:     project,
 					Username: username,
 					Email:    email,
 					Password: &password,
 				})
 				if err != nil {
-					logrus.Errorf("error creating master organization: %v", err)
+					logrus.Errorf("error creating master project: %v", err)
 					return
 				}
-				logrus.Infof("master organization created: %v", organization)
+				logrus.Infof("master project created: %v", project)
 			} else {
-				organization, err := client.CreateOrganization(ctx, &v1.CreateOrganizationRequest{
-					Name:     organization,
+				project, err := client.CreateProject(ctx, &v1.CreateProjectRequest{
+					Name:     project,
 					Username: username,
 					Email:    email,
 					Password: &password,
 				})
 				if err != nil {
-					logrus.Errorf("error creating organization: %v", err)
+					logrus.Errorf("error creating project: %v", err)
 					return
 				}
-				logrus.Infof("organization created: %v", organization)
+				logrus.Infof("project created: %v", project)
 			}
 		},
 	}
 
-	command.Flags().StringVarP(&organization, "organization", "o", "", "organization of the organization")
-	command.Flags().StringVarP(&username, "username", "u", "", "username of the organization")
-	command.Flags().StringVarP(&email, "email", "e", "", "email of the organization")
-	command.Flags().StringVarP(&password, "password", "p", "", "password of the organization")
-	command.Flags().BoolVarP(&master, "master", "m", false, "master organization")
+	command.Flags().StringVarP(&project, "project", "p", "", "project of the project")
+	command.Flags().StringVarP(&username, "username", "u", "", "username of the project")
+	command.Flags().StringVarP(&email, "email", "e", "", "email of the project")
+	command.Flags().StringVarP(&password, "password", "w", "", "password of the project")
+	command.Flags().BoolVarP(&master, "master", "m", false, "master project")
 
 	return command
 }
 
-func getOrgByNameCommand() *cobra.Command {
+func getProjectByNameCommand() *cobra.Command {
 	var orgName string
 
 	command := &cobra.Command{
 		Use:   "exists",
-		Short: "get org by name",
+		Short: "get project by name",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
@@ -134,27 +134,27 @@ func getOrgByNameCommand() *cobra.Command {
 			defer client.Close()
 
 			ctx := tokenContext()
-			organization, err := client.GetOrganizationId(ctx, &v1.GetOrganizationIdRequest{
+			project, err := client.GetProjectId(ctx, &v1.GetProjectIdRequest{
 				Name: orgName,
 			})
 			if err != nil {
-				logrus.Errorf("error getting organization: %v", err)
+				logrus.Errorf("error getting project: %v", err)
 				return
 			}
 
-			logrus.Infof("organization: %v", organization)
+			logrus.Infof("project: %v", project)
 		},
 	}
 
-	command.Flags().StringVarP(&orgName, "orgName", "o", "", "name of the organization")
+	command.Flags().StringVarP(&orgName, "projectName", "p", "", "name of the project")
 
 	return command
 }
 
-func listOrgCommand() *cobra.Command {
+func listProjectCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list org",
+		Short: "list projects",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
@@ -165,17 +165,17 @@ func listOrgCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			organizations, err := client.ListOrganizations(ctx, &v1.ListOrganizationsRequest{})
+			projects, err := client.ListProjects(ctx, &v1.ListProjectsRequest{})
 			if err != nil {
-				logrus.Errorf("error listing organizations: %v", err)
+				logrus.Errorf("error listing projects: %v", err)
 				return
 			}
 
-			// print the organizations in a table
+			// print the projects in a table
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Name", "Owner ID", "Master"})
-			for i, organization := range organizations.Organizations {
-				table.Append([]string{strconv.FormatInt(int64(i+1), 10), organization.Id, organization.Name, organization.OwnerId, strconv.FormatBool(organization.Master)})
+			for i, project := range projects.Projects {
+				table.Append([]string{strconv.FormatInt(int64(i+1), 10), project.Id, project.Name, project.OwnerId, strconv.FormatBool(project.Master)})
 			}
 
 			table.Render()
@@ -185,7 +185,7 @@ func listOrgCommand() *cobra.Command {
 	return command
 }
 
-func updateOrgCommand() *cobra.Command {
+func updateProjectCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "update",
 		Short: "update org",
@@ -194,7 +194,7 @@ func updateOrgCommand() *cobra.Command {
 	return command
 }
 
-func deleteOrgCommand() *cobra.Command {
+func deleteProjectCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "delete",
 		Short: "delete org",

@@ -8,11 +8,11 @@ import (
 
 type Session struct {
 	gorm.Model
-	ID             string `gorm:"primaryKey"`
-	UserID         string
-	User           *User `gorm:"foreignKey:UserID;OnDelete:CASCADE;"`
-	OrganizationID string
-	ExpiredAt      time.Time `gorm:"default:null"`
+	ID        string `gorm:"primaryKey"`
+	UserID    string
+	User      *User `gorm:"foreignKey:UserID;OnDelete:CASCADE;"`
+	ProjectID string
+	ExpiredAt time.Time `gorm:"default:null"`
 }
 
 func (Session) TableName() string {

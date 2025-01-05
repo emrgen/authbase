@@ -29,12 +29,12 @@ func NewUserService(perm permission.AuthBasePermission, store store.Provider, ca
 // CreateUser creates a new user.
 func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
 	var err error
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = u.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +46,10 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 	}
 
 	user := model.User{
-		ID:             uuid.New().String(),
-		Username:       request.GetUsername(),
-		Email:          request.GetEmail(),
-		OrganizationID: orgID.String(),
+		ID:        uuid.New().String(),
+		Username:  request.GetUsername(),
+		Email:     request.GetEmail(),
+		ProjectID: orgID.String(),
 	}
 
 	password := request.GetPassword()
@@ -93,7 +93,7 @@ func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "read")
+	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "read")
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +113,12 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = u.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequ
 			return err
 		}
 
-		err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+		err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 		if err != nil {
 			return err
 		}
@@ -208,7 +208,7 @@ func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequ
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}
@@ -230,12 +230,12 @@ func (u *UserService) ActiveUsers(ctx context.Context, request *v1.ActiveUsersRe
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = u.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func (u *UserService) InactiveUser(ctx context.Context, request *v1.InactiveUser
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func (u *UserService) DisableUser(ctx context.Context, request *v1.DisableUserRe
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func (u *UserService) EnableUser(ctx context.Context, request *v1.EnableUserRequ
 		return nil, err
 	}
 
-	err = u.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}

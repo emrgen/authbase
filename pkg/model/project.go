@@ -2,7 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
-// PasswordPolicy represents a password policy for an organization
+// PasswordPolicy represents a password policy for an project
 type PasswordPolicy struct {
 	MinLength int `json:"min_length"`
 	MaxLength int `json:"max_length"`
@@ -12,11 +12,11 @@ type PasswordPolicy struct {
 	MinSymbol int `json:"min_symbol"`
 }
 
-// Organization represents an organization
-type Organization struct {
+// Project represents an project
+type Project struct {
 	gorm.Model
 	ID                string         `gorm:"primaryKey;uuid;not null;"`
-	Name              string         `gorm:"not null;unique;index:idx_organization_name"`
+	Name              string         `gorm:"not null;unique;index:idx_project_name"`
 	OwnerID           string         `gorm:"not null"`
 	ProjectID         string         `gorm:"uuid;default:null"`                              // filled when running in multistore mode
 	Owner             *User          `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE"` // filled when running in multistore mode
@@ -26,7 +26,7 @@ type Organization struct {
 	PasswordPolicy    PasswordPolicy `gorm:"embedded;embeddedPrefix:password_policy_"`
 }
 
-// TableName returns the table name for the organization model
-func (Organization) TableName() string {
-	return tableName("organizations")
+// TableName returns the table name for the project model
+func (Project) TableName() string {
+	return tableName("projects")
 }

@@ -18,27 +18,27 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var _ v1.OrganizationServiceServer = new(OrganizationService)
+var _ v1.ProjectServiceServer = new(ProjectService)
 
-type OrganizationService struct {
+type ProjectService struct {
 	perm  permission.MemberPermission
 	store store.Provider
 	cache *cache.Redis
-	v1.UnimplementedOrganizationServiceServer
+	v1.UnimplementedProjectServiceServer
 }
 
-// NewOrganizationService creates a new organization service
-func NewOrganizationService(perm permission.MemberPermission, store store.Provider, cache *cache.Redis) *OrganizationService {
-	return &OrganizationService{perm: perm, store: store, cache: cache}
+// NewProjectService creates a new project service
+func NewProjectService(perm permission.MemberPermission, store store.Provider, cache *cache.Redis) *ProjectService {
+	return &ProjectService{perm: perm, store: store, cache: cache}
 }
 
-// CreateOrganization creates a new organization and the owner user
-func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v1.CreateOrganizationRequest) (*v1.CreateOrganizationResponse, error) {
+// CreateProject creates a new project and the owner user
+func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreateProjectRequest) (*v1.CreateProjectResponse, error) {
 	var err error
 
-	// TODO: use token with create organization permission to reduce the token scope
-	// check if the user has permission to create an organization
-	err = o.perm.CheckMasterOrganizationPermission(ctx, "write")
+	// TODO: use token with create project permission to reduce the token scope
+	// check if the user has permission to create an project
+	err = o.perm.CheckMasterProjectPermission(ctx, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -58,28 +58,28 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		Member:   true,
 	}
 
-	org := model.Organization{
+	org := model.Project{
 		ID:      uuid.New().String(),
 		Name:    request.GetName(),
 		OwnerID: user.ID,
 	}
-	user.OrganizationID = org.ID
+	user.ProjectID = org.ID
 
-	perm := model.Permission{
-		OrganizationID: org.ID,
-		UserID:         user.ID,
-		Permission:     uint32(v1.Permission_ADMIN),
+	perm := model.ProjectMember{
+		ProjectID:  org.ID,
+		UserID:     user.ID,
+		Permission: uint32(v1.Permission_ADMIN),
 	}
 
-	// if this is the first organization, make the organization is the master organization
+	// if this is the first project, make the project is the master project
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		_, total, _ := tx.ListOrganizations(ctx, 1, 1)
+		_, total, _ := tx.ListProjects(ctx, 1, 1)
 		if total == 0 {
 			org.Master = true
 			user.SassAdmin = true
 		}
 
-		err := tx.CreateOrganization(ctx, &org)
+		err := tx.CreateProject(ctx, &org)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 			return err
 		}
 
-		err = tx.CreatePermission(ctx, &perm)
+		err = tx.CreateProjectMember(ctx, &perm)
 		if err != nil {
 			return err
 		}
@@ -128,14 +128,14 @@ func (o *OrganizationService) CreateOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 
-	return &v1.CreateOrganizationResponse{
+	return &v1.CreateProjectResponse{
 		Id:   org.ID,
 		Name: org.Name,
 	}, nil
 }
 
-// GetOrganizationId gets the organization ID, given the name
-func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1.GetOrganizationIdRequest) (*v1.GetOrganizationIdResponse, error) {
+// GetProjectId gets the organization ID, given the name
+func (o *ProjectService) GetProjectId(ctx context.Context, request *v1.GetProjectIdRequest) (*v1.GetProjectIdResponse, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return nil, errors.New("failed to get peer")
@@ -151,21 +151,21 @@ func (o *OrganizationService) GetOrganizationId(ctx context.Context, request *v1
 		return nil, err
 	}
 
-	org, err := as.GetOrganizationByName(ctx, request.GetName())
+	org, err := as.GetProjectByName(ctx, request.GetName())
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.GetOrganizationIdResponse{
+	return &v1.GetProjectIdResponse{
 		Id:   org.ID,
 		Name: org.Name,
 	}, nil
 }
 
-func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.GetOrganizationRequest) (*v1.GetOrganizationResponse, error) {
+func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectRequest) (*v1.GetProjectResponse, error) {
 	var err error
 
-	err = o.perm.CheckMasterOrganizationPermission(ctx, "read")
+	err = o.perm.CheckMasterProjectPermission(ctx, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -180,13 +180,13 @@ func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.G
 		return nil, err
 	}
 
-	org, err := as.GetOrganizationByID(ctx, id)
+	org, err := as.GetProjectByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.GetOrganizationResponse{
-		Organization: &v1.Organization{
+	return &v1.GetProjectResponse{
+		Project: &v1.Project{
 			Id:        org.ID,
 			Name:      org.Name,
 			OwnerId:   org.OwnerID,
@@ -196,10 +196,10 @@ func (o *OrganizationService) GetOrganization(ctx context.Context, request *v1.G
 	}, nil
 }
 
-func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1.ListOrganizationsRequest) (*v1.ListOrganizationsResponse, error) {
+func (o *ProjectService) ListProjects(ctx context.Context, request *v1.ListProjectsRequest) (*v1.ListProjectsResponse, error) {
 	var err error
 
-	err = o.perm.CheckMasterOrganizationPermission(ctx, "read")
+	err = o.perm.CheckMasterProjectPermission(ctx, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -210,14 +210,14 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 	}
 	page := utils.GetPage(request)
 
-	orgs, total, err := as.ListOrganizations(ctx, int(page.Page), int(page.Size))
+	orgs, total, err := as.ListProjects(ctx, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}
 
-	var organizations []*v1.Organization
+	var organizations []*v1.Project
 	for _, org := range orgs {
-		organizations = append(organizations, &v1.Organization{
+		organizations = append(organizations, &v1.Project{
 			Id:        org.ID,
 			Name:      org.Name,
 			OwnerId:   org.OwnerID,
@@ -227,8 +227,8 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 		})
 	}
 
-	return &v1.ListOrganizationsResponse{
-		Organizations: organizations,
+	return &v1.ListProjectsResponse{
+		Projects: organizations,
 		Meta: &v1.Meta{
 			Total: int32(total),
 			Page:  page.Page,
@@ -237,14 +237,14 @@ func (o *OrganizationService) ListOrganizations(ctx context.Context, request *v1
 	}, nil
 }
 
-func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v1.UpdateOrganizationRequest) (*v1.UpdateOrganizationResponse, error) {
+func (o *ProjectService) UpdateProject(ctx context.Context, request *v1.UpdateProjectRequest) (*v1.UpdateProjectResponse, error) {
 	var err error
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.perm.CheckOrganizationPermission(ctx, id, "write")
+	err = o.perm.CheckProjectPermission(ctx, id, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -254,14 +254,14 @@ func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		org, err := tx.GetOrganizationByID(ctx, id)
+		org, err := tx.GetProjectByID(ctx, id)
 		if err != nil {
 			return err
 		}
 
 		org.Name = request.GetName()
 
-		err = tx.UpdateOrganization(ctx, org)
+		err = tx.UpdateProject(ctx, org)
 		if err != nil {
 			return err
 		}
@@ -272,16 +272,16 @@ func (o *OrganizationService) UpdateOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 
-	return &v1.UpdateOrganizationResponse{}, nil
+	return &v1.UpdateProjectResponse{}, nil
 }
 
-func (o *OrganizationService) DeleteOrganization(ctx context.Context, request *v1.DeleteOrganizationRequest) (*v1.DeleteOrganizationResponse, error) {
+func (o *ProjectService) DeleteProject(ctx context.Context, request *v1.DeleteProjectRequest) (*v1.DeleteProjectResponse, error) {
 
 	id, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
-	err = o.perm.CheckOrganizationPermission(ctx, id, "write")
+	err = o.perm.CheckProjectPermission(ctx, id, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -291,21 +291,21 @@ func (o *OrganizationService) DeleteOrganization(ctx context.Context, request *v
 		return nil, err
 	}
 
-	err = as.DeleteOrganization(ctx, id)
+	err = as.DeleteProject(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.DeleteOrganizationResponse{}, nil
+	return &v1.DeleteProjectResponse{}, nil
 }
 
-func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.AddOauthProviderRequest) (*v1.AddOauthProviderResponse, error) {
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+func (o *ProjectService) AddOauthProvider(ctx context.Context, request *v1.AddOauthProviderRequest) (*v1.AddOauthProviderResponse, error) {
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = o.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -329,9 +329,9 @@ func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.
 	}
 
 	providerModel := model.OauthProvider{
-		ID:             uuid.New().String(),
-		OrganizationID: orgID.String(),
-		Config:         oauthConfig,
+		ID:        uuid.New().String(),
+		ProjectID: orgID.String(),
+		Config:    oauthConfig,
 	}
 
 	err = as.CreateOauthProvider(ctx, &providerModel)
@@ -344,13 +344,13 @@ func (o *OrganizationService) AddOauthProvider(ctx context.Context, request *v1.
 	}, nil
 }
 
-func (o *OrganizationService) GetOauthProvider(ctx context.Context, request *v1.GetOauthProviderRequest) (*v1.GetOauthProviderResponse, error) {
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+func (o *ProjectService) GetOauthProvider(ctx context.Context, request *v1.GetOauthProviderRequest) (*v1.GetOauthProviderResponse, error) {
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = o.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -375,13 +375,13 @@ func (o *OrganizationService) GetOauthProvider(ctx context.Context, request *v1.
 	}, nil
 }
 
-func (o *OrganizationService) ListOauthProviders(ctx context.Context, request *v1.ListOauthProvidersRequest) (*v1.ListOauthProvidersResponse, error) {
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+func (o *ProjectService) ListOauthProviders(ctx context.Context, request *v1.ListOauthProvidersRequest) (*v1.ListOauthProvidersResponse, error) {
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = o.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -421,11 +421,11 @@ func (o *OrganizationService) ListOauthProviders(ctx context.Context, request *v
 // The provider ID is required to update the provider information.
 // Example:
 //
-//	organization_id: "organization_id",
+//	project_id: "project_id",
 //	provider: "Google",
 //	client_id: "client_id",
 //	client_secret: "client_secret",
-func (o *OrganizationService) UpdateOauthProvider(ctx context.Context, request *v1.UpdateOauthProviderRequest) (*v1.UpdateOauthProviderResponse, error) {
+func (o *ProjectService) UpdateOauthProvider(ctx context.Context, request *v1.UpdateOauthProviderRequest) (*v1.UpdateOauthProviderResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -435,7 +435,7 @@ func (o *OrganizationService) UpdateOauthProvider(ctx context.Context, request *
 // Example:
 //
 //	id: "provider_id"
-func (o *OrganizationService) DeleteOauthProvider(ctx context.Context, request *v1.DeleteOauthProviderRequest) (*v1.DeleteOauthProviderResponse, error) {
+func (o *ProjectService) DeleteOauthProvider(ctx context.Context, request *v1.DeleteOauthProviderRequest) (*v1.DeleteOauthProviderResponse, error) {
 	//TODO implement me
 	panic("implement")
 }

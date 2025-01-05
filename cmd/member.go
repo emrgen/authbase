@@ -73,8 +73,8 @@ func addMemberCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization")
+			if ProjectId == "" {
+				logrus.Errorf("missing required flag: --project")
 				return
 			}
 
@@ -101,9 +101,9 @@ func addMemberCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			res, err := client.AddMember(ctx, &v1.AddMemberRequest{
-				MemberId:       userID,
-				OrganizationId: OrganizationId,
-				Permission:     v1.Permission(permission),
+				MemberId:   userID,
+				ProjectId:  ProjectId,
+				Permission: v1.Permission(permission),
 			})
 			if err != nil {
 				logrus.Errorf("failed to add member: %v", err)
@@ -137,14 +137,14 @@ func listMemberCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.ListMember(tokenContext(), &v1.ListMemberRequest{
-				OrganizationId: OrganizationId,
+				ProjectId: ProjectId,
 			})
 			if err != nil {
 				logrus.Errorf("failed to list member: %v", err)
 				return
 			}
 
-			logrus.Infof("member list for organization: %v", OrganizationId)
+			logrus.Infof("member list for project: %v", ProjectId)
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Username", "Email", "Permission"})
 			for i, member := range res.Members {
@@ -170,8 +170,6 @@ func listMemberCommand() *cobra.Command {
 
 func updateMemberCommand() *cobra.Command {
 	var userID string
-	var username string
-	var email string
 	var permission uint32
 
 	command := &cobra.Command{
@@ -220,8 +218,6 @@ func updateMemberCommand() *cobra.Command {
 
 	bindContextFlags(command)
 	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
-	command.Flags().StringVarP(&username, "username", "n", "", "username")
-	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().Uint32VarP(&permission, "permission", "p", 0, "permission")
 
 	return command
@@ -250,8 +246,8 @@ func deleteMemberCommand() *cobra.Command {
 			defer client.Close()
 
 			_, err = client.RemoveMember(tokenContext(), &v1.RemoveMemberRequest{
-				OrganizationId: OrganizationId,
-				MemberId:       userID,
+				ProjectId: ProjectId,
+				MemberId:  userID,
 			})
 
 			logrus.Infof("org member removed successfully")
@@ -273,8 +269,8 @@ func removeMemberCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization")
+			if ProjectId == "" {
+				logrus.Errorf("missing required flag: --project")
 				return
 			}
 
@@ -290,7 +286,7 @@ func removeMemberCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			res, err := client.RemoveMember(ctx, &v1.RemoveMemberRequest{MemberId: userID, OrganizationId: OrganizationId})
+			res, err := client.RemoveMember(ctx, &v1.RemoveMemberRequest{MemberId: userID, ProjectId: ProjectId})
 			if err != nil {
 				logrus.Errorf("failed to remove member: %v", err)
 				return

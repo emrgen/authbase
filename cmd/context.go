@@ -21,11 +21,11 @@ func init() {
 }
 
 type Context struct {
-	OrganizationId string `json:"organization_id"`
-	Token          string `json:"token"`
-	Username       string `json:"username"`
-	Password       string `json:"password"`
-	ExpireAt       int64  `json:"expire_at"`
+	ProjectId string `json:"project_id"`
+	Token     string `json:"token"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	ExpireAt  int64  `json:"expire_at"`
 }
 
 func loadToken() {
@@ -64,13 +64,13 @@ func writeContext(context Context) {
 // saves the context info to the config file in ~/.config/authbase
 func setContextCommand() *cobra.Command {
 	var token string
-	var organization string
+	var project string
 	command := &cobra.Command{
 		Use:   "set",
 		Short: "set context",
 		Run: func(cmd *cobra.Command, args []string) {
-			if token == "" || organization == "" {
-				logrus.Infof(`missing required flags: --token, --organization`)
+			if token == "" || project == "" {
+				logrus.Infof(`missing required flags: --token, --project`)
 				return
 			}
 
@@ -79,8 +79,8 @@ func setContextCommand() *cobra.Command {
 			viper.AddConfigPath("./.tmp")
 			viper.SetConfigType("yml")
 			viper.Set("context", Context{
-				OrganizationId: organization,
-				Token:          token,
+				ProjectId: project,
+				Token:     token,
 			})
 
 			if err := viper.WriteConfig(); err != nil {
@@ -92,7 +92,7 @@ func setContextCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&token, "token", "t", "", "token")
-	command.Flags().StringVarP(&organization, "organization", "o", "", "organization")
+	command.Flags().StringVarP(&project, "project", "p", "", "project")
 
 	return command
 }
@@ -121,7 +121,7 @@ func verifyContext() {
 		return
 	}
 
-	if OrganizationId == "" {
+	if ProjectId == "" {
 		logrus.Error("missing required flags: --organization")
 		return
 	}
@@ -136,7 +136,7 @@ func verifyToken() {
 
 func bindContextFlags(command *cobra.Command) {
 	command.Flags().StringVarP(&Token, "token", "t", "", "token")
-	command.Flags().StringVarP(&OrganizationId, "organization", "o", "", "organization")
+	command.Flags().StringVarP(&ProjectId, "project", "r", "", "project")
 }
 
 func tokenContext() context.Context {

@@ -9,8 +9,8 @@ import (
 )
 
 type Client interface {
-	v1.AdminOrganizationServiceClient
-	v1.OrganizationServiceClient
+	v1.AdminProjectServiceClient
+	v1.ProjectServiceClient
 	v1.UserServiceClient
 	v1.MemberServiceClient
 	v1.PermissionServiceClient
@@ -23,8 +23,8 @@ type Client interface {
 
 type client struct {
 	conn *grpc.ClientConn
-	v1.AdminOrganizationServiceClient
-	v1.OrganizationServiceClient
+	v1.AdminProjectServiceClient
+	v1.ProjectServiceClient
 	v1.UserServiceClient
 	v1.MemberServiceClient
 	v1.PermissionServiceClient
@@ -40,16 +40,16 @@ func NewClient(port string) (Client, error) {
 		return nil, err
 	}
 	return &client{
-		conn:                           conn,
-		OrganizationServiceClient:      v1.NewOrganizationServiceClient(conn),
-		UserServiceClient:              v1.NewUserServiceClient(conn),
-		MemberServiceClient:            v1.NewMemberServiceClient(conn),
-		PermissionServiceClient:        v1.NewPermissionServiceClient(conn),
-		AuthServiceClient:              v1.NewAuthServiceClient(conn),
-		OauthServiceClient:             v1.NewOauthServiceClient(conn),
-		TokenServiceClient:             gopackv1.NewTokenServiceClient(conn),
-		AdminOrganizationServiceClient: v1.NewAdminOrganizationServiceClient(conn),
-		OfflineTokenServiceClient:      v1.NewOfflineTokenServiceClient(conn),
+		conn:                      conn,
+		ProjectServiceClient:      v1.NewProjectServiceClient(conn),
+		UserServiceClient:         v1.NewUserServiceClient(conn),
+		MemberServiceClient:       v1.NewMemberServiceClient(conn),
+		PermissionServiceClient:   v1.NewPermissionServiceClient(conn),
+		AuthServiceClient:         v1.NewAuthServiceClient(conn),
+		OauthServiceClient:        v1.NewOauthServiceClient(conn),
+		TokenServiceClient:        gopackv1.NewTokenServiceClient(conn),
+		AdminProjectServiceClient: v1.NewAdminProjectServiceClient(conn),
+		OfflineTokenServiceClient: v1.NewOfflineTokenServiceClient(conn),
 	}, nil
 }
 

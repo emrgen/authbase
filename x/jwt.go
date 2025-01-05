@@ -19,18 +19,18 @@ func jwtSecret() string {
 }
 
 type Claims struct {
-	Username       string            `json:"username"`
-	Email          string            `json:"email"`
-	OrganizationID string            `json:"org_id"`
-	UserID         string            `json:"user_id"`
-	Permission     uint32            `json:"permission"`
-	Audience       string            `json:"aud"`
-	Jti            string            `json:"jti"`
-	ExpireAt       time.Time         `json:"exp"`
-	IssuedAt       time.Time         `json:"iat"`
-	Provider       string            `json:"provider"` // google, github, etc
-	Scopes         []string          `json:"scopes"`
-	Data           map[string]string `json:"data"`
+	Username   string            `json:"username"`
+	Email      string            `json:"email"`
+	ProjectID  string            `json:"project_id"`
+	UserID     string            `json:"user_id"`
+	Permission uint32            `json:"permission"`
+	Audience   string            `json:"aud"`
+	Jti        string            `json:"jti"`
+	ExpireAt   time.Time         `json:"exp"`
+	IssuedAt   time.Time         `json:"iat"`
+	Provider   string            `json:"provider"` // google, github, etc
+	Scopes     []string          `json:"scopes"`
+	Data       map[string]string `json:"data"`
 }
 
 type JWTToken struct {
@@ -43,16 +43,16 @@ type JWTToken struct {
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": claims.Username,
-		"email":    claims.Email,
-		"user_id":  claims.UserID,
-		"org_id":   claims.OrganizationID,
-		"exp":      claims.ExpireAt.Unix(),
-		"iat":      time.Now().Unix(),
-		"jti":      claims.Jti,
-		"provider": "authbase",
-		"data":     claims.Data,
-		"scopes":   claims.Scopes,
+		"username":   claims.Username,
+		"email":      claims.Email,
+		"user_id":    claims.UserID,
+		"project_id": claims.ProjectID,
+		"exp":        claims.ExpireAt.Unix(),
+		"iat":        time.Now().Unix(),
+		"jti":        claims.Jti,
+		"provider":   "authbase",
+		"data":       claims.Data,
+		"scopes":     claims.Scopes,
 	})
 	tokenString, err := token.SignedString([]byte(jwtSecret()))
 	if err != nil {
@@ -100,9 +100,9 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, fmt.Errorf("user_id not found")
 	}
 
-	orgID, ok := claims["org_id"].(string)
+	projectID, ok := claims["project_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("org_id not found")
+		return nil, fmt.Errorf("project_id not found")
 	}
 
 	jti, ok := claims["jti"].(string)
@@ -126,13 +126,13 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	}
 
 	return &Claims{
-		UserID:         userID,
-		OrganizationID: orgID,
-		Jti:            jti,
-		Provider:       provider,
-		ExpireAt:       expireAt.Time,
-		IssuedAt:       issuedAt.Time,
-		Scopes:         scopes,
-		Data:           data,
+		UserID:    userID,
+		ProjectID: projectID,
+		Jti:       jti,
+		Provider:  provider,
+		ExpireAt:  expireAt.Time,
+		IssuedAt:  issuedAt.Time,
+		Scopes:    scopes,
+		Data:      data,
 	}, nil
 }

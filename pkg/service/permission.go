@@ -24,19 +24,19 @@ func NewPermissionService(perm permission.AuthBasePermission, store store.Provid
 	return &PermissionService{perm: perm, store: store, cache: cache}
 }
 
-// CreatePermission creates a new permission for a member in an organization
+// CreatePermission creates a new permission for a member in an project
 func (p *PermissionService) CreatePermission(ctx context.Context, request *v1.CreatePermissionRequest) (*v1.CreatePermissionResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
 	if err != nil {
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = p.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (p *PermissionService) CreatePermission(ctx context.Context, request *v1.Cr
 		return nil, err
 	}
 
-	err = p.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	err = p.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}
@@ -61,33 +61,33 @@ func (p *PermissionService) CreatePermission(ctx context.Context, request *v1.Cr
 		userPermission |= uint32(perm)
 	}
 
-	permissionModel := model.Permission{
-		OrganizationID: orgID.String(),
-		UserID:         userID.String(),
-		Permission:     userPermission,
+	permissionModel := model.ProjectMember{
+		ProjectID:  orgID.String(),
+		UserID:     userID.String(),
+		Permission: userPermission,
 	}
 
-	err = as.CreatePermission(ctx, &permissionModel)
+	err = as.CreateProjectMember(ctx, &permissionModel)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.CreatePermissionResponse{Message: "Permission created successfully"}, nil
+	return &v1.CreatePermissionResponse{Message: "ProjectMember created successfully"}, nil
 }
 
-// GetPermission gets the permission of a member in an organization
+// GetPermission gets the permission of a member in an project
 func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPermissionRequest) (*v1.GetPermissionResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
 	if err != nil {
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = p.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPe
 		return nil, err
 	}
 
-	perm, err := as.GetPermissionByID(ctx, orgID, userID)
+	perm, err := as.GetProjectMemberByID(ctx, orgID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -114,8 +114,8 @@ func (p *PermissionService) GetPermission(ctx context.Context, request *v1.GetPe
 	}, nil
 }
 
-// UpdatePermission updates the permission of a member in an organization
-// 1. check if the caller has organization write permission
+// UpdatePermission updates the permission of a member in an project
+// 1. check if the caller has project write permission
 // 2.
 func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.UpdatePermissionRequest) (*v1.UpdatePermissionResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
@@ -123,12 +123,12 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = p.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -149,14 +149,14 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		perm, err := tx.GetPermissionByID(ctx, orgID, userID)
+		perm, err := tx.GetProjectMemberByID(ctx, orgID, userID)
 		if err != nil {
 			return err
 		}
 
 		// Update the userPermission
 		perm.Permission = userPermission
-		err = tx.UpdatePermission(ctx, perm)
+		err = tx.UpdateProjectMember(ctx, perm)
 		if err != nil {
 			return err
 		}
@@ -167,22 +167,22 @@ func (p *PermissionService) UpdatePermission(ctx context.Context, request *v1.Up
 		return nil, err
 	}
 
-	return &v1.UpdatePermissionResponse{Message: "Permission updated successfully"}, nil
+	return &v1.UpdatePermissionResponse{Message: "ProjectMember updated successfully"}, nil
 }
 
-// DeletePermission deletes all permission of a member in an organization
+// DeletePermission deletes all permission of a member in an project
 func (p *PermissionService) DeletePermission(ctx context.Context, request *v1.DeletePermissionRequest) (*v1.DeletePermissionResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
 	if err != nil {
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = p.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -192,10 +192,10 @@ func (p *PermissionService) DeletePermission(ctx context.Context, request *v1.De
 		return nil, err
 	}
 
-	err = as.DeletePermission(ctx, orgID, userID)
+	err = as.DeleteProjectMember(ctx, orgID, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.DeletePermissionResponse{Message: "Permission deleted successfully"}, nil
+	return &v1.DeletePermissionResponse{Message: "ProjectMember deleted successfully"}, nil
 }

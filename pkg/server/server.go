@@ -59,7 +59,7 @@ type Server struct {
 	redis           *cache.Redis
 	permission      permission.AuthBasePermission
 	mailer          mail.MailerProvider
-	adminOrgService v1.AdminOrganizationServiceServer
+	adminOrgService v1.AdminProjectServiceServer
 	gl              net.Listener
 	rl              net.Listener
 	grpcServer      *grpc.Server
@@ -177,8 +177,8 @@ func (s *Server) registerServices() error {
 	oauthService := service.NewOauthService(s.provider, redis)
 	offlineTokenService := service.NewOfflineTokenService(perm, s.provider, redis)
 
-	v1.RegisterAdminOrganizationServiceServer(grpcServer, service.NewAdminOrganizationService(s.provider, redis))
-	v1.RegisterOrganizationServiceServer(grpcServer, service.NewOrganizationService(perm, s.provider, redis))
+	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
+	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
 	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(perm, s.provider, redis))
 	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(perm, s.provider, redis))
 	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(perm, s.provider, redis))
@@ -188,10 +188,10 @@ func (s *Server) registerServices() error {
 	gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
 
 	// Register the rest gateway
-	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+	if err = v1.RegisterProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterOrganizationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+	if err = v1.RegisterProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 	if err = v1.RegisterMemberServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -272,21 +272,21 @@ func (s *Server) run() error {
 
 	logrus.Infof("Press Ctrl+C to stop the server")
 
-	// if an admin organization is provided, create the org and the super admin user
+	// if an admin project is provided, create the org and the super admin user
 	if s.config.AdminOrg.Valid() {
-		logrus.Infof("trying to create admin organization: %v", s.config.AdminOrg)
-		adminOrgService := service.NewAdminOrganizationService(s.provider, s.redis)
-		_, err := adminOrgService.CreateAdminOrganization(context.TODO(), &v1.CreateAdminOrganizationRequest{
+		logrus.Infof("trying to create admin project: %v", s.config.AdminOrg)
+		adminOrgService := service.NewAdminProjectService(s.provider, s.redis)
+		_, err := adminOrgService.CreateAdminProject(context.TODO(), &v1.CreateAdminProjectRequest{
 			Name:     s.config.AdminOrg.OrgName,
 			Username: s.config.AdminOrg.Username,
 			Email:    s.config.AdminOrg.Email,
 			Password: &s.config.AdminOrg.Password,
 		})
 		if err != nil {
-			if !errors.Is(err, store.ErrOrganizationExists) {
-				logrus.Infof("admin organization already exists, skipping creation")
+			if !errors.Is(err, store.ErrProjectExists) {
+				logrus.Infof("admin project already exists, skipping creation")
 			} else {
-				logrus.Errorf("error creating admin organization: %v", err)
+				logrus.Errorf("error creating admin project: %v", err)
 				return err
 			}
 		}

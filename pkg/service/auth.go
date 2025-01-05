@@ -33,10 +33,10 @@ func NewAuthService(store store.Provider, perm permission.AuthBasePermission, ma
 	return &AuthService{store: store, perm: perm, mailer: mailer, cache: cache}
 }
 
-// UserEmailExists checks if a user with the given email or username already exists in an organization
+// UserEmailExists checks if a user with the given email or username already exists in an project
 // NOTE: should be rate limited by ip address
 func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.UserEmailExistsRequest) (*v1.UserEmailExistsResponse, error) {
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	email := request.GetEmail()
 	username := request.GetUsername()
 	password := request.GetPassword()
-	orgID := uuid.MustParse(request.GetOrganizationId())
+	orgID := uuid.MustParse(request.GetProjectId())
 
 	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
@@ -96,13 +96,13 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	hashedPassword, _ := x.HashPassword(password, salt)
 
 	user := &model.User{
-		ID:             uuid.New().String(),
-		OrganizationID: orgID.String(),
-		Username:       username,
-		Email:          email,
-		Password:       string(hashedPassword),
-		Salt:           salt,
-		Verified:       false,
+		ID:        uuid.New().String(),
+		ProjectID: orgID.String(),
+		Username:  username,
+		Email:     email,
+		Password:  string(hashedPassword),
+		Salt:      salt,
+		Verified:  false,
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
@@ -150,7 +150,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	email := request.GetEmail()
 	password := request.GetPassword()
 
-	orgID := uuid.MustParse(request.GetOrganizationId())
+	orgID := uuid.MustParse(request.GetProjectId())
 	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
@@ -170,22 +170,22 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		return nil, errors.New("incorrect password")
 	}
 
-	perm, err := as.GetPermissionByID(ctx, orgID, uuid.MustParse(user.ID))
+	perm, err := as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(user.ID))
 
 	// generate tokens
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		Username:       user.Username,
-		Email:          user.Email,
-		OrganizationID: user.OrganizationID,
-		UserID:         user.ID,
-		Permission:     perm.Permission,
-		Audience:       "",
-		Jti:            jti,
-		ExpireAt:       time.Now().Add(5 * time.Hour),
-		IssuedAt:       time.Now(),
-		Provider:       "authbase",
-		Data:           nil,
+		Username:   user.Username,
+		Email:      user.Email,
+		ProjectID:  user.ProjectID,
+		UserID:     user.ID,
+		Permission: perm.Permission,
+		Audience:   "",
+		Jti:        jti,
+		ExpireAt:   time.Now().Add(5 * time.Hour),
+		IssuedAt:   time.Now(),
+		Provider:   "authbase",
+		Data:       nil,
 	})
 	if err != nil {
 		return nil, err
@@ -202,11 +202,11 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	// TODO: save the token to the db in encrypted form
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		err = as.CreateRefreshToken(ctx, &model.RefreshToken{
-			Token:          token.RefreshToken,
-			OrganizationID: user.OrganizationID,
-			UserID:         user.ID,
-			ExpireAt:       refreshExpireAt,
-			IssuedAt:       token.IssuedAt,
+			Token:     token.RefreshToken,
+			ProjectID: user.ProjectID,
+			UserID:    user.ID,
+			ExpireAt:  refreshExpireAt,
+			IssuedAt:  token.IssuedAt,
 		})
 		if err != nil {
 			return err
@@ -216,9 +216,9 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		// user the jti as the session id
 		// this will allow multiple sessions for a user at the same time
 		err = as.CreateSession(ctx, &model.Session{
-			ID:             jti,
-			UserID:         user.ID,
-			OrganizationID: user.OrganizationID,
+			ID:        jti,
+			UserID:    user.ID,
+			ProjectID: user.ProjectID,
 		})
 		if err != nil {
 			return err
@@ -288,15 +288,15 @@ func (a *AuthService) RevokeAllSessions(ctx context.Context, request *v1.RevokeA
 		return nil, err
 	}
 
-	// user organization id
+	// user project id
 	user, err := as.GetUserByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	orgID := uuid.MustParse(user.OrganizationID)
+	orgID := uuid.MustParse(user.ProjectID)
 
-	err = a.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = a.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +317,7 @@ func (a *AuthService) RevokeAllSessions(ctx context.Context, request *v1.RevokeA
 func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (*v1.RefreshResponse, error) {
 	var foundToken bool
 	var userID string
-	var organizationID string
+	var projectID string
 
 	// check if the refresh token is still valid
 	refreshToken := request.GetRefreshToken()
@@ -333,7 +333,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		return nil, err
 	}
 
-	orgID := uuid.MustParse(request.GetOrganizationId())
+	orgID := uuid.MustParse(request.GetProjectId())
 	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
@@ -346,7 +346,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 			return nil, err
 		}
 		userID = token.UserID
-		organizationID = token.OrganizationID
+		projectID = token.ProjectID
 		foundToken = true
 	}
 
@@ -363,7 +363,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 
 		foundToken = true
 		userID = token.UserID
-		organizationID = token.OrganizationID
+		projectID = token.ProjectID
 	}
 
 	user, err := as.GetUserByID(ctx, uuid.MustParse(userID))
@@ -371,24 +371,24 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		return nil, err
 	}
 
-	perm, err := as.GetPermissionByID(ctx, orgID, uuid.MustParse(userID))
+	perm, err := as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(userID))
 	if err != nil {
 		return nil, err
 	}
 
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		OrganizationID: organizationID,
-		UserID:         user.ID,
-		Username:       claims.Username,
-		Email:          claims.Email,
-		Permission:     perm.Permission,
-		Audience:       claims.Audience,
-		Jti:            jti,
-		ExpireAt:       time.Now().Add(5 * time.Hour),
-		IssuedAt:       time.Now(),
-		Provider:       "authbase",
-		Data:           nil,
+		ProjectID:  projectID,
+		UserID:     user.ID,
+		Username:   claims.Username,
+		Email:      claims.Email,
+		Permission: perm.Permission,
+		Audience:   claims.Audience,
+		Jti:        jti,
+		ExpireAt:   time.Now().Add(5 * time.Hour),
+		IssuedAt:   time.Now(),
+		Provider:   "authbase",
+		Data:       nil,
 	})
 	if err != nil {
 		return nil, err

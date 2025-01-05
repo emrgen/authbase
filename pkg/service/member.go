@@ -26,7 +26,7 @@ func NewMemberService(perm permission.AuthBasePermission, store store.Provider, 
 	return &MemberService{perm: perm, store: store, cache: cache}
 }
 
-// CreateMember creates a member of an organization
+// CreateMember creates a member of an project
 func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemberRequest) (*v1.CreateMemberResponse, error) {
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
@@ -34,18 +34,18 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 	}
 
 	member := model.User{
-		ID:             uuid.New().String(),
-		OrganizationID: request.GetOrganizationId(),
-		Username:       request.GetUsername(),
-		Email:          request.GetEmail(),
-		Member:         true,
+		ID:        uuid.New().String(),
+		ProjectID: request.GetProjectId(),
+		Username:  request.GetUsername(),
+		Email:     request.GetEmail(),
+		Member:    true,
 	}
 
 	// create a perm for the new member
-	perm := model.Permission{
-		OrganizationID: request.GetOrganizationId(),
-		UserID:         member.ID,
-		Permission:     uint32(request.GetPermission()),
+	perm := model.ProjectMember{
+		ProjectID:  request.GetProjectId(),
+		UserID:     member.ID,
+		Permission: uint32(request.GetPermission()),
 	}
 
 	// if the user already exists, return an error
@@ -54,7 +54,7 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 			return err
 		}
 
-		if err := tx.CreatePermission(ctx, &perm); err != nil {
+		if err := tx.CreateProjectMember(ctx, &perm); err != nil {
 			return err
 		}
 
@@ -69,7 +69,7 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 	}, nil
 }
 
-// GetMember gets a member by ID of an organization
+// GetMember gets a member by ID of an project
 func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequest) (*v1.GetMemberResponse, error) {
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
@@ -85,18 +85,18 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(member.OrganizationID)
+	orgID, err := uuid.Parse(member.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
 	// check if the user has the read permission
-	err = m.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = m.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
 
-	perm, err := as.GetPermissionByID(ctx, orgID, id)
+	perm, err := as.GetProjectMemberByID(ctx, orgID, id)
 	return &v1.GetMemberResponse{
 		Member: &v1.Member{
 			Id:         member.ID,
@@ -106,15 +106,15 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 	}, nil
 }
 
-// ListMember lists members of an organization
+// ListMember lists members of an project
 func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRequest) (*v1.ListMemberResponse, error) {
 	var err error
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = m.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 		userIDs = append(userIDs, id)
 	}
 
-	permissions, err := as.ListPermissionsByUsers(ctx, orgID, userIDs)
+	permissions, err := as.ListProjectMembersUsers(ctx, orgID, userIDs)
 	permissionMap := make(map[string]uint32)
 	for _, perm := range permissions {
 		permissionMap[perm.UserID] = perm.Permission
@@ -166,7 +166,7 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 	}, nil
 }
 
-// UpdateMember updates a member of an organization
+// UpdateMember updates a member of an project
 func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemberRequest) (*v1.UpdateMemberResponse, error) {
 	var err error
 	userID, err := uuid.Parse(request.GetMemberId())
@@ -184,19 +184,19 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(member.OrganizationID)
+	orgID, err := uuid.Parse(member.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = m.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
 
 	// update the member and the permission
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		perm, err := tx.GetPermissionByID(ctx, orgID, userID)
+		perm, err := tx.GetProjectMemberByID(ctx, orgID, userID)
 
 		if request.GetPermission() != v1.Permission_UNKNOWN {
 			perm.Permission = uint32(request.GetPermission())
@@ -207,7 +207,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 			return err
 		}
 
-		err = tx.UpdatePermission(ctx, perm)
+		err = tx.UpdateProjectMember(ctx, perm)
 		if err != nil {
 			return err
 		}
@@ -232,12 +232,12 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = m.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -253,16 +253,16 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 	}
 	user.Member = true
 
-	err = m.perm.CheckOrganizationPermission(ctx, uuid.MustParse(user.OrganizationID), "write")
+	err = m.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}
 
-	perm, err := as.GetPermissionByID(ctx, orgID, userID)
+	perm, err := as.GetProjectMemberByID(ctx, orgID, userID)
 	if errors.Is(err, store.ErrPermissionNotFound) {
-		perm = &model.Permission{
-			OrganizationID: orgID.String(),
-			UserID:         userID.String(),
+		perm = &model.ProjectMember{
+			ProjectID: orgID.String(),
+			UserID:    userID.String(),
 		}
 	} else if err != nil {
 		return nil, nil
@@ -279,7 +279,7 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 			return err
 		}
 
-		err = tx.CreatePermission(ctx, perm)
+		err = tx.CreateProjectMember(ctx, perm)
 		if err != nil {
 			return err
 		}
@@ -297,12 +297,12 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 
 // RemoveMember removes a member from an organization
 func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error) {
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.perm.CheckOrganizationPermission(ctx, orgID, "write")
+	err = m.perm.CheckProjectPermission(ctx, orgID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemb
 		}
 
 		// delete the permission of the user
-		err = tx.DeletePermission(ctx, orgID, memberID)
+		err = tx.DeleteProjectMember(ctx, orgID, memberID)
 		if err != nil {
 			return err
 		}

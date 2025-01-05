@@ -29,7 +29,7 @@ func (o *OauthService) OAuthLogin(ctx context.Context, request *v1.OAuthLoginReq
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 
 	provider, err := as.GetOauthProviderByName(ctx, orgID, request.Provider)
 	if err != nil {

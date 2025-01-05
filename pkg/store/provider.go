@@ -67,7 +67,7 @@ func NewProvider(provider Provider) *MultiStoreProvider {
 	}
 }
 
-// Provide returns a store for the given organization ID.
+// Provide returns a store for the given project ID.
 func (s *MultiStoreProvider) Provide(projectID uuid.UUID) (AuthBaseStore, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

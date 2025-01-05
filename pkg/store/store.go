@@ -3,14 +3,13 @@ package store
 import (
 	"context"
 	"errors"
-
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/google/uuid"
 )
 
 var (
-	ErrOrganizationExists      = errors.New("organization already exists")
-	ErrOrganizationNotFound    = errors.New("organization not found")
+	ErrProjectExists           = errors.New("project already exists")
+	ErrProjectNotFound         = errors.New("project not found")
 	ErrPermissionNotFound      = errors.New("permission not found")
 	ErrPermissionAlreadyExists = errors.New("permission already exists")
 )
@@ -19,8 +18,8 @@ var (
 type AuthBaseStore interface {
 	UserStore
 	SessionStore
-	OrganizationStore
-	PermissionStore
+	ProjectStore
+	ProjectMemberStore
 	ProviderStore
 	RefreshTokenStore
 	TokenStore
@@ -29,22 +28,22 @@ type AuthBaseStore interface {
 	Transaction(func(AuthBaseStore) error) error
 }
 
-// OrganizationStore is the interface for interacting with the organization database.
-type OrganizationStore interface {
-	// CreateOrganization creates a new organization in the database.
-	CreateOrganization(ctx context.Context, org *model.Organization) error
-	// GetOrganizationByName retrieves an organization by its name.
-	GetOrganizationByName(ctx context.Context, name string) (*model.Organization, error)
-	// GetOrganizationByID retrieves an organization by its ID.
-	GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error)
-	// GetMasterOrganization retrieves the master organization.
-	GetMasterOrganization(ctx context.Context) (*model.Organization, error)
-	// ListOrganizations retrieves a list of organizations.
-	ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, int, error)
-	// UpdateOrganization updates an organization in the database.
-	UpdateOrganization(ctx context.Context, org *model.Organization) error
-	// DeleteOrganization deletes an organization from the database.
-	DeleteOrganization(ctx context.Context, id uuid.UUID) error
+// ProjectStore is the interface for interacting with the project database.
+type ProjectStore interface {
+	// CreateProject creates a new project in the database.
+	CreateProject(ctx context.Context, org *model.Project) error
+	// GetProjectByName retrieves an project by its name.
+	GetProjectByName(ctx context.Context, name string) (*model.Project, error)
+	// GetProjectByID retrieves an project by its ID.
+	GetProjectByID(ctx context.Context, id uuid.UUID) (*model.Project, error)
+	// GetMasterProject retrieves the master project.
+	GetMasterProject(ctx context.Context) (*model.Project, error)
+	// ListProjects retrieves a list of projects.
+	ListProjects(ctx context.Context, page, perPage int) ([]*model.Project, int, error)
+	// UpdateProject updates an project in the database.
+	UpdateProject(ctx context.Context, org *model.Project) error
+	// DeleteProject deletes an project from the database.
+	DeleteProject(ctx context.Context, id uuid.UUID) error
 }
 
 // UserStore is the interface for interacting with the user database.
@@ -60,7 +59,7 @@ type UserStore interface {
 	UpdateUser(ctx context.Context, user *model.User) error
 	// DeleteUser deletes a user from the database.
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	// ListUsersByOrg retrieves a list of users by organization.
+	// ListUsersByOrg retrieves a list of users by project.
 	ListUsersByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error)
 	// DisableUser disables a user in the database.
 	DisableUser(ctx context.Context, id uuid.UUID) error
@@ -85,20 +84,20 @@ type SessionStore interface {
 	DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
-// PermissionStore is the interface for interacting with the permission database.
-type PermissionStore interface {
-	// CreatePermission creates a new permission in the database.
-	CreatePermission(ctx context.Context, permission *model.Permission) error
-	// GetPermissionByID retrieves a permission by its ID.
-	GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error)
-	// ListPermissions retrieves a list of permissions.
-	ListPermissions(ctx context.Context, page, perPage int) ([]*model.Permission, error)
-	// ListPermissionsByUsers retrieves a list of permissions by organization.
-	ListPermissionsByUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.Permission, error)
-	// UpdatePermission updates a permission in the database.
-	UpdatePermission(ctx context.Context, permission *model.Permission) error
-	// DeletePermission deletes a permission from the database.
-	DeletePermission(ctx context.Context, orgID, userID uuid.UUID) error
+// ProjectMemberStore is the interface for interacting with the permission database.
+type ProjectMemberStore interface {
+	// CreateProjectMember creates a new permission in the database.
+	CreateProjectMember(ctx context.Context, permission *model.ProjectMember) error
+	// GetProjectMemberByID retrieves a permission by its ID.
+	GetProjectMemberByID(ctx context.Context, orgID, userID uuid.UUID) (*model.ProjectMember, error)
+	// ListProjectMembers retrieves a list of permissions.
+	ListProjectMembers(ctx context.Context, page, perPage int) ([]*model.ProjectMember, error)
+	// ListProjectMembersUsers retrieves a list of permissions by project.
+	ListProjectMembersUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error)
+	// UpdateProjectMember updates a permission in the database.
+	UpdateProjectMember(ctx context.Context, permission *model.ProjectMember) error
+	// DeleteProjectMember deletes a permission from the database.
+	DeleteProjectMember(ctx context.Context, orgID, userID uuid.UUID) error
 }
 
 // ProviderStore is the interface for interacting with the provider database.

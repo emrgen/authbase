@@ -33,7 +33,7 @@ message Meta {
 }
 
 message RegisterRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string Project_id = 1 [(validate.rules).string.uuid = true];
   string username = 2 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
@@ -61,7 +61,7 @@ message LoginRequest {
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
-  string organization_id = 4 [(validate.rules).string.uuid = true];
+  string project_id = 4 [(validate.rules).string.uuid = true];
 }
 
 message AuthToken {
@@ -96,7 +96,7 @@ message RevokeAllSessionsResponse {
 
 message RefreshRequest {
   string refresh_token = 1;
-  optional string organization_id = 2 [(validate.rules).string.uuid = true];
+  optional string project_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message RefreshResponse {
@@ -109,7 +109,7 @@ message RefreshResponse {
 
 message VerifyEmailRequest {
   string token = 1;
-  string organization_id = 2 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message VerifyEmailResponse {
@@ -117,7 +117,7 @@ message VerifyEmailResponse {
 }
 
 message UserEmailExistsRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3 [
     (validate.rules).string.min_len = 3,
@@ -191,7 +191,7 @@ service AuthService {
 }
 
 message OAuthLoginRequest {
-  string organization_id = 1;
+  string project_id = 1;
   string provider = 2;
 }
 
@@ -212,7 +212,7 @@ message OAuthCallbackResponse {
 message TokenRequest {
   string code = 1;
   string provider = 2;
-  string organization = 3;
+  string project = 3;
   string state = 4;
 }
 
@@ -233,7 +233,7 @@ message VerifyOAuthTokenRequest {
 }
 
 message VerifyOAuthTokenResponse {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permission = 3;
 }
@@ -267,14 +267,14 @@ message Token {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   string token = 3;
-  string organization_id = 4;
+  string project_id = 4;
   string user_id = 5;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp expires_at = 11;
 }
 
 message CreateTokenRequest {
-  string organization_id = 1;
+  string project_id = 1;
   string email = 2 [
     (validate.rules).string.min_len = 6,
     (validate.rules).string.max_len = 64
@@ -305,7 +305,7 @@ message GetTokenResponse {
 
 message ListTokensRequest {
   string user_id = 1 [(validate.rules).string.uuid = true];
-  string organization_id = 2 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
   optional string token = 3;
   optional string password = 4;
   Page page = 5;
@@ -329,7 +329,7 @@ message OfflineTokenVerifyRequest {
 }
 
 message OfflineTokenVerifyResponse {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permission = 3;
 }
@@ -340,7 +340,7 @@ service OfflineTokenService {
   // CreateToken
   rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
     option (google.api.http) = {
-      post: "/v1/tokens/organizations/{organization_id}"
+      post: "/v1/tokens/projects/{project_id}"
       body: "*"
     };
   }
@@ -352,7 +352,7 @@ service OfflineTokenService {
 
   // ListTokens
   rpc ListTokens(ListTokensRequest) returns (ListTokensResponse) {
-    option (google.api.http) = {get: "/v1/tokens/-/organizations/{organization_id}/users/{user_id}"};
+    option (google.api.http) = {get: "/v1/tokens/-/projects/{project_id}/users/{user_id}"};
   }
 
   // DeleteToken
@@ -367,7 +367,7 @@ service OfflineTokenService {
 }
 
 message CreateUserRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3;
   string password = 4 [
@@ -392,7 +392,7 @@ message GetUserResponse {
 }
 
 message ListUsersRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   Page page = 2;
 }
 
@@ -405,7 +405,7 @@ message UpdateUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
   string username = 2;
   string email = 3 [(validate.rules).string.email = true];
-  string organization_id = 4 [(validate.rules).string.uuid = true];
+  string project_id = 4 [(validate.rules).string.uuid = true];
 }
 
 message UpdateUserResponse {
@@ -414,7 +414,7 @@ message UpdateUserResponse {
 
 message DeleteUserRequest {
   string id = 1 [(validate.rules).string.uuid = true];
-  string organization_id = 2 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message DeleteUserResponse {
@@ -422,7 +422,7 @@ message DeleteUserResponse {
 }
 
 message ActiveUsersRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   optional Page page = 2;
 }
 
@@ -432,7 +432,7 @@ message ActiveUsersResponse {
 }
 
 message InactiveUserRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -441,7 +441,7 @@ message InactiveUserResponse {
 }
 
 message DisableUserRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -450,7 +450,7 @@ message DisableUserResponse {
 }
 
 message EnableUserRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string user_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -476,7 +476,7 @@ service UserService {
 
   // ListUsers
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {get: "/v1/users/-/organizations/{organization_id}"};
+    option (google.api.http) = {get: "/v1/users/-/projects/{project_id}"};
   }
 
   // UpdateUser
@@ -513,7 +513,7 @@ service UserService {
   }
 }
 
-message CreateOrganizationRequest {
+message CreateProjectRequest {
   string name = 1 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
@@ -527,16 +527,16 @@ message CreateOrganizationRequest {
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
-  optional string organization_id = 5 [(validate.rules).string.uuid = true];
+  optional string project_id = 5 [(validate.rules).string.uuid = true];
   optional bool verify_email = 6;
 }
 
-message CreateOrganizationResponse {
+message CreateProjectResponse {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
 }
 
-message Organization {
+message Project {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   bool master = 3;
@@ -545,33 +545,33 @@ message Organization {
   google.protobuf.Timestamp updated_at = 12;
 }
 
-message GetOrganizationRequest {
+message GetProjectRequest {
   string id = 1 [(validate.rules).string.uuid = true];
 }
 
-message GetOrganizationResponse {
-  Organization organization = 1;
+message GetProjectResponse {
+  Project project = 1;
 }
 
-message GetOrganizationIdRequest {
+message GetProjectIdRequest {
   string name = 1;
 }
 
-message GetOrganizationIdResponse {
+message GetProjectIdResponse {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
 }
 
-message ListOrganizationsRequest {
+message ListProjectsRequest {
   Page page = 1;
 }
 
-message ListOrganizationsResponse {
-  repeated Organization organizations = 1;
+message ListProjectsResponse {
+  repeated Project projects = 1;
   Meta meta = 2;
 }
 
-message UpdateOrganizationRequest {
+message UpdateProjectRequest {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2 [
     (validate.rules).string.min_len = 3,
@@ -579,17 +579,19 @@ message UpdateOrganizationRequest {
   ];
 }
 
-message UpdateOrganizationResponse {
-  Organization organization = 1;
+message UpdateProjectResponse {
+  Project project = 1;
 }
 
-message DeleteOrganizationRequest {
+message DeleteProjectRequest {
   string id = 1 [(validate.rules).string.uuid = true];
 }
 
-message DeleteOrganizationResponse {
+message DeleteProjectResponse {
   string message = 1;
 }
+
+message GetProjectConfigRequest {}
 
 message OAuthProvider {
   string id = 1 [(validate.rules).string.uuid = true];
@@ -600,7 +602,7 @@ message OAuthProvider {
 }
 
 message AddOauthProviderRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   OAuthProvider provider = 2;
 }
 
@@ -610,7 +612,7 @@ message AddOauthProviderResponse {
 
 message GetOauthProviderRequest {
   string provider = 1;
-  string organization_id = 2 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message GetOauthProviderResponse {
@@ -618,7 +620,7 @@ message GetOauthProviderResponse {
 }
 
 message ListOauthProvidersRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   Page page = 2;
 }
 
@@ -628,7 +630,7 @@ message ListOauthProvidersResponse {
 }
 
 message UpdateOauthProviderRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string provider = 2;
   string client_id = 3;
   string client_secret = 4;
@@ -647,82 +649,82 @@ message DeleteOauthProviderResponse {
   string message = 1;
 }
 
-// Organization service
+// Project service
 
-service OrganizationService {
-  // CreateOrganization
-  rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationResponse) {
+service ProjectService {
+  // CreateProject
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse) {
     option (google.api.http) = {
-      post: "/v1/organizations"
+      post: "/v1/projects"
       body: "*"
     };
   }
 
-  // GetOrganization
-  rpc GetOrganizationId(GetOrganizationIdRequest) returns (GetOrganizationIdResponse) {
-    option (google.api.http) = {get: "/v1/organizations/-/name/{name}"};
+  // GetProject
+  rpc GetProjectId(GetProjectIdRequest) returns (GetProjectIdResponse) {
+    option (google.api.http) = {get: "/v1/projects/-/name/{name}"};
   }
 
-  // GetOrganization
-  rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse) {
-    option (google.api.http) = {get: "/v1/organizations/{id}"};
+  // GetProject
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
+    option (google.api.http) = {get: "/v1/projects/{id}"};
   }
 
-  // ListOrganizations
-  rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse) {
-    option (google.api.http) = {get: "/v1/organizations"};
+  // ListProjects
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
+    option (google.api.http) = {get: "/v1/projects"};
   }
 
-  // UpdateOrganization
-  rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationResponse) {
+  // UpdateProject
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse) {
     option (google.api.http) = {
-      put: "/v1/organizations/{id}"
+      put: "/v1/projects/{id}"
       body: "*"
     };
   }
 
-  // DeleteOrganization
-  rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse) {
-    option (google.api.http) = {delete: "/v1/organizations/{id}"};
+  // DeleteProject
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse) {
+    option (google.api.http) = {delete: "/v1/projects/{id}"};
   }
 
   // AddOauthProvider
   rpc AddOauthProvider(AddOauthProviderRequest) returns (AddOauthProviderResponse) {
     option (google.api.http) = {
-      post: "/v1/organizations/{organization_id}/oauth-providers"
+      post: "/v1/projects/{project_id}/oauth-providers"
       body: "*"
     };
   }
 
   // GetOauthProvider
   rpc GetOauthProvider(GetOauthProviderRequest) returns (GetOauthProviderResponse) {
-    option (google.api.http) = {get: "/v1/organizations/{organization_id}/oauth-providers/{provider}"};
+    option (google.api.http) = {get: "/v1/projects/{project_id}/oauth-providers/{provider}"};
   }
 
   // ListOauthProviders
   rpc ListOauthProviders(ListOauthProvidersRequest) returns (ListOauthProvidersResponse) {
-    option (google.api.http) = {get: "/v1/organizations/{organization_id}/oauth-providers"};
+    option (google.api.http) = {get: "/v1/projects/{project_id}/oauth-providers"};
   }
 
   // UpdateOauthProvider
   rpc UpdateOauthProvider(UpdateOauthProviderRequest) returns (UpdateOauthProviderResponse) {
     option (google.api.http) = {
-      put: "/v1/organizations/{organization_id}/oauth-providers/{provider}"
+      put: "/v1/projects/{project_id}/oauth-providers/{provider}"
       body: "*"
     };
   }
 
   // DeleteOauthProvider
   rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
-    option (google.api.http) = {delete: "/v1/organizations/{id}/oauth-providers"};
+    option (google.api.http) = {delete: "/v1/projects/{id}/oauth-providers"};
   }
 }
 
-message CreateAdminOrganizationRequest {
+message CreateAdminProjectRequest {
   string name = 1 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
-  ]; // organization name
+  ]; // project name
   string username = 2 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
@@ -735,7 +737,7 @@ message CreateAdminOrganizationRequest {
   optional bool verify_email = 5;
 }
 
-message CreateAdminOrganizationResponse {
+message CreateAdminProjectResponse {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
 }
@@ -748,11 +750,11 @@ message CreateMigrationResponse {
   string message = 1;
 }
 
-service AdminOrganizationService {
-  // CreateAdminOrganization
-  rpc CreateAdminOrganization(CreateAdminOrganizationRequest) returns (CreateAdminOrganizationResponse) {
+service AdminProjectService {
+  // CreateAdminProject
+  rpc CreateAdminProject(CreateAdminProjectRequest) returns (CreateAdminProjectResponse) {
     option (google.api.http) = {
-      post: "/v1/admin/organizations"
+      post: "/v1/admin/projects"
       body: "*"
     };
   }
@@ -774,7 +776,7 @@ message Member {
 }
 
 message CreateMemberRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string username = 2 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
@@ -788,7 +790,7 @@ message CreateMemberResponse {
 }
 
 message GetMemberRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -797,7 +799,7 @@ message GetMemberResponse {
 }
 
 message ListMemberRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   Page page = 2;
 }
 
@@ -817,7 +819,7 @@ message UpdateMemberResponse {
 }
 
 message AddMemberRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
   Permission permission = 3;
 }
@@ -827,7 +829,7 @@ message AddMemberResponse {
 }
 
 message RemoveMemberRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -841,19 +843,19 @@ service MemberService {
   // CreateMember
   rpc CreateMember(CreateMemberRequest) returns (CreateMemberResponse) {
     option (google.api.http) = {
-      post: "/v1/members/-/organizations/{organization_id}"
+      post: "/v1/members/-/projects/{project_id}"
       body: "*"
     };
   }
 
   // GetMember
   rpc GetMember(GetMemberRequest) returns (GetMemberResponse) {
-    option (google.api.http) = {get: "/v1/members/{member_id}/organizations/{organization_id}"};
+    option (google.api.http) = {get: "/v1/members/{member_id}/projects/{project_id}"};
   }
 
   // ListMember
   rpc ListMember(ListMemberRequest) returns (ListMemberResponse) {
-    option (google.api.http) = {get: "/v1/members/-/organization/{organization_id}"};
+    option (google.api.http) = {get: "/v1/members/-/project/{project_id}"};
   }
 
   // UpdateMember
@@ -867,14 +869,14 @@ service MemberService {
   // AddMember
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {
     option (google.api.http) = {
-      post: "/v1/members/organizations/{organization_id}/members/{member_id}"
+      post: "/v1/members/projects/{project_id}/members/{member_id}"
       body: "*"
     };
   }
 
   // RemoveMember
   rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {
-    option (google.api.http) = {delete: "/v1/members/organizations/{organization_id}/members/{member_id}"};
+    option (google.api.http) = {delete: "/v1/members/projects/{project_id}/members/{member_id}"};
   }
 }
 
@@ -887,7 +889,7 @@ enum Permission {
 }
 
 message CreatePermissionRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permissions = 3;
 }
@@ -898,7 +900,7 @@ message CreatePermissionResponse {
 }
 
 message GetPermissionRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -907,7 +909,7 @@ message GetPermissionResponse {
 }
 
 message UpdatePermissionRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
   repeated Permission permissions = 3;
 }
@@ -917,7 +919,7 @@ message UpdatePermissionResponse {
 }
 
 message DeletePermissionRequest {
-  string organization_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -932,7 +934,7 @@ service PermissionService {
   // CreatePermission
   rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse) {
     option (google.api.http) = {
-      post: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
+      post: "/v1/projects/{project_id}/members/{member_id}/permissions"
       body: "*"
     };
 
@@ -948,19 +950,19 @@ service PermissionService {
 
   // GetPermission
   rpc GetPermission(GetPermissionRequest) returns (GetPermissionResponse) {
-    option (google.api.http) = {get: "/v1/organizations/{organization_id}/members/{member_id}/permissions"};
+    option (google.api.http) = {get: "/v1/projects/{project_id}/members/{member_id}/permissions"};
   }
 
   // UpdatePermission
   rpc UpdatePermission(UpdatePermissionRequest) returns (UpdatePermissionResponse) {
     option (google.api.http) = {
-      put: "/v1/organizations/{organization_id}/members/{member_id}/permissions"
+      put: "/v1/projects/{project_id}/members/{member_id}/permissions"
       body: "*"
     };
   }
 
   // DeletePermission
   rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse) {
-    option (google.api.http) = {delete: "/v1/organizations/{organization_id}/members/{member_id}/permissions"};
+    option (google.api.http) = {delete: "/v1/projects/{project_id}/members/{member_id}/permissions"};
   }
 }

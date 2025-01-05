@@ -46,8 +46,8 @@ func createUserCommand() *cobra.Command {
 				return
 			}
 
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization-id")
+			if ProjectId == "" {
+				logrus.Errorf("missing required flag: --project-id")
 				return
 			}
 
@@ -75,10 +75,10 @@ func createUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			user, err := client.CreateUser(ctx, &v1.CreateUserRequest{
-				OrganizationId: OrganizationId,
-				Email:          email,
-				Username:       username,
-				Password:       password,
+				ProjectId: ProjectId,
+				Email:     email,
+				Username:  username,
+				Password:  password,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create user: %v", err)
@@ -131,9 +131,9 @@ func checkEmailUsedCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.UserEmailExists(tokenContext(), &v1.UserEmailExistsRequest{
-				OrganizationId: OrganizationId,
-				Email:          email,
-				Username:       username,
+				ProjectId: ProjectId,
+				Email:     email,
+				Username:  username,
 			})
 			if err != nil {
 				logrus.Errorf("failed to check email: %v", err)
@@ -141,13 +141,13 @@ func checkEmailUsedCommand() *cobra.Command {
 			}
 
 			if res.UsernameExists {
-				logrus.Warn("username already exists within the organization")
+				logrus.Warn("username already exists within the project")
 			} else {
 				logrus.Infof("username is available")
 			}
 
 			if res.EmailExists {
-				logrus.Warn("email already exists within the organization")
+				logrus.Warn("email already exists within the project")
 			} else {
 				logrus.Infof("email is available")
 			}
@@ -170,8 +170,8 @@ func listUserCommand() *cobra.Command {
 			loadToken()
 			verifyToken()
 
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization-id")
+			if ProjectId == "" {
+				logrus.Errorf("missing required flag: --project-id")
 				return
 			}
 
@@ -184,7 +184,7 @@ func listUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			res, err := client.ListUsers(ctx, &v1.ListUsersRequest{
-				OrganizationId: OrganizationId,
+				ProjectId: ProjectId,
 			})
 			if err != nil {
 				logrus.Errorf("failed to list users: %v", err)
@@ -293,8 +293,8 @@ func registerUserCommand() *cobra.Command {
 		Use:   "register",
 		Short: "register user",
 		Run: func(cmd *cobra.Command, args []string) {
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization-id")
+			if ProjectId == "" {
+				logrus.Errorf("missing required flag: --project-id")
 				return
 			}
 
@@ -320,10 +320,10 @@ func registerUserCommand() *cobra.Command {
 			}
 
 			res, err := client.Register(context.Background(), &v1.RegisterRequest{
-				OrganizationId: OrganizationId,
-				Username:       username,
-				Email:          email,
-				Password:       password,
+				ProjectId: ProjectId,
+				Username:  username,
+				Email:     email,
+				Password:  password,
 			})
 			if err != nil {
 				logrus.Errorf("failed to register user: %v", err)
@@ -352,8 +352,8 @@ func loginUserCommand() *cobra.Command {
 		Use:   "login",
 		Short: "login user",
 		Run: func(cmd *cobra.Command, args []string) {
-			if OrganizationId == "" {
-				logrus.Errorf("missing required flag: --organization-id")
+			if ProjectId == "" {
+				logrus.Errorf("missing required flag: --project-id")
 				return
 			}
 
@@ -375,9 +375,9 @@ func loginUserCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.Login(context.Background(), &v1.LoginRequest{
-				Email:          email,
-				Password:       password,
-				OrganizationId: OrganizationId,
+				Email:     email,
+				Password:  password,
+				ProjectId: ProjectId,
 			})
 			if err != nil {
 				logrus.Errorf("failed to login user: %v", err)
@@ -401,7 +401,7 @@ func loginUserCommand() *cobra.Command {
 	bindContextFlags(command)
 
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
-	command.Flags().StringVarP(&password, "password", "p", "", "password")
+	command.Flags().StringVarP(&password, "password", "w", "", "password")
 
 	return command
 }
@@ -511,8 +511,8 @@ func enableUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			_, err = client.EnableUser(ctx, &v1.EnableUserRequest{
-				UserId:         userID,
-				OrganizationId: OrganizationId,
+				UserId:    userID,
+				ProjectId: ProjectId,
 			})
 
 			logrus.Infof("user enabled successfully")
@@ -553,8 +553,8 @@ func disableUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			_, err = client.DisableUser(ctx, &v1.DisableUserRequest{
-				UserId:         userID,
-				OrganizationId: OrganizationId,
+				UserId:    userID,
+				ProjectId: ProjectId,
 			})
 
 			logrus.Infof("user disabled successfully")

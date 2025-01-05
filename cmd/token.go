@@ -23,7 +23,7 @@ func init() {
 }
 
 func createTokenCommand() *cobra.Command {
-	var organizationId string
+	var projectId string
 	var email string
 	var password string
 	var save bool
@@ -32,13 +32,13 @@ func createTokenCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create token",
 		Run: func(cmd *cobra.Command, args []string) {
-			if organizationId == "" {
-				logrus.Error("missing required flags: --organization")
+			if projectId == "" {
+				logrus.Error("missing required flags: --project")
 				return
 			}
-			_, err := uuid.Parse(organizationId)
+			_, err := uuid.Parse(projectId)
 			if err != nil {
-				logrus.Error("organization id must be a valid uuid")
+				logrus.Error("project id must be a valid uuid")
 				return
 			}
 
@@ -59,11 +59,11 @@ func createTokenCommand() *cobra.Command {
 			}
 
 			token, err := client.CreateToken(context.Background(), &v1.CreateTokenRequest{
-				OrganizationId: organizationId,
-				Email:          email,
-				Password:       password,
-				ExpiresIn:      nil,
-				Name:           nil,
+				ProjectId: projectId,
+				Email:     email,
+				Password:  password,
+				ExpiresIn: nil,
+				Name:      nil,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create token %v", err)
@@ -76,18 +76,18 @@ func createTokenCommand() *cobra.Command {
 			if save {
 				logrus.Infof("context updated with token")
 				writeContext(Context{
-					OrganizationId: organizationId,
-					Token:          token.Token,
-					Username:       email,
-					Password:       password,
+					ProjectId: projectId,
+					Token:     token.Token,
+					Username:  email,
+					Password:  password,
 				})
 			}
 		},
 	}
 
-	command.Flags().StringVarP(&organizationId, "org-id", "o", "", "organization id")
+	command.Flags().StringVarP(&projectId, "project-id", "p", "", "project id")
 	command.Flags().StringVarP(&email, "email", "e", "", "user name")
-	command.Flags().StringVarP(&password, "password", "p", "", "password")
+	command.Flags().StringVarP(&password, "password", "w", "", "password")
 	command.Flags().BoolVarP(&save, "save", "s", false, "set context")
 
 	return command
@@ -135,8 +135,8 @@ func listTokenCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			res, err := client.ListTokens(ctx, &v1.ListTokensRequest{
-				OrganizationId: organizationId,
-				UserId:         userId,
+				ProjectId: organizationId,
+				UserId:    userId,
 			})
 			if err != nil {
 				logrus.Errorf("failed to list tokens %v", err)

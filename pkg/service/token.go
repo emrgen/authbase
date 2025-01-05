@@ -22,7 +22,7 @@ func NewTokenService(offlineTokenService v1.OfflineTokenServiceServer, oauthServ
 	}
 }
 
-// VerifyToken verifies the token and returns the user id and organization id
+// VerifyToken verifies the token and returns the user id and project id
 func (t TokenService) VerifyToken(ctx context.Context, request *gopackv1.VerifyTokenRequest) (*gopackv1.VerifyTokenResponse, error) {
 	bearerToken := request.GetToken()
 	token, _, err := jwt.NewParser().ParseUnverified(bearerToken, jwt.MapClaims{})
@@ -43,13 +43,13 @@ func (t TokenService) VerifyToken(ctx context.Context, request *gopackv1.VerifyT
 			return nil, err
 		}
 
-		return &gopackv1.VerifyTokenResponse{Valid: true, UserId: res.GetUserId(), OrganizationId: res.GetOrganizationId()}, nil
+		return &gopackv1.VerifyTokenResponse{Valid: true, UserId: res.GetUserId(), ProjectId: res.GetProjectId()}, nil
 	case "google":
 		res, err := t.oauthService.OAuthVerifyToken(ctx, &v1.VerifyOAuthTokenRequest{Token: bearerToken})
 		if err != nil {
 			return nil, err
 		}
-		return &gopackv1.VerifyTokenResponse{Valid: true, UserId: res.GetUserId(), OrganizationId: res.GetOrganizationId()}, nil
+		return &gopackv1.VerifyTokenResponse{Valid: true, UserId: res.GetUserId(), ProjectId: res.GetProjectId()}, nil
 	}
 
 	return &gopackv1.VerifyTokenResponse{Valid: false}, nil

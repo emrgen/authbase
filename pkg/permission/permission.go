@@ -13,13 +13,6 @@ import (
 
 type ObjectType string
 
-const (
-	ObjectTypeUser               ObjectType = "user"
-	ObjectTypeOrganization       ObjectType = "organization"
-	ObjectTypeProject            ObjectType = "project"
-	ObjectTypeMasterOrganization ObjectType = "master/organization"
-)
-
 type Permission interface {
 	CreatePermission(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) error
 	DeletePermission(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) error
@@ -57,13 +50,13 @@ func (a *AuthZed) Check(ctx context.Context, objectID uuid.UUID, objectType stri
 }
 
 type MemberPermission interface {
-	//CreatePermission(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
-	//DeletePermission(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
+	//CreateProjectMember(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
+	//DeleteProjectMember(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
 
-	// CheckMasterOrganizationPermission checks if the user has the permission to perform
-	CheckMasterOrganizationPermission(ctx context.Context, relation string) error
-	// CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
-	CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error
+	// CheckMasterProjectPermission checks if the user has the permission to perform
+	CheckMasterProjectPermission(ctx context.Context, relation string) error
+	// CheckProjectPermission checks if the user has the permission to perform the action on the project
+	CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation string) error
 }
 
 // AuthBasePermission is an interface representing the authbase permissions that are used in the service layer
@@ -90,8 +83,8 @@ func NewStoreBasedPermission(store store.Provider) *StoreBasedPermission {
 	return &StoreBasedPermission{store: store}
 }
 
-// CheckMasterOrganizationPermission checks if the user has the permission to perform the action on the master organization
-func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Context, relation string) error {
+// CheckMasterProjectPermission checks if the user has the permission to perform the action on the master project
+func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context, relation string) error {
 	userID, err := gox.GetUserID(ctx)
 	if err != nil {
 		return err
@@ -111,12 +104,12 @@ func (s *StoreBasedPermission) CheckMasterOrganizationPermission(ctx context.Con
 	}
 
 	if !user.Member {
-		return x.ErrNotOrganizationMember
+		return x.ErrNotProjectMember
 	}
 
-	// if the user is a member of the master organization
-	if user.Organization.Master {
-		permission, err := as.GetPermissionByID(ctx, uuid.MustParse(user.OrganizationID), userID)
+	// if the user is a member of the master project
+	if user.Project.Master {
+		permission, err := as.GetProjectMemberByID(ctx, uuid.MustParse(user.ProjectID), userID)
 		if err != nil {
 			return err
 		}
@@ -136,8 +129,8 @@ var permissionMap = map[string]uint32{
 	"admin": uint32(v1.Permission_ADMIN),
 }
 
-// CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
-func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
+// CheckProjectPermission checks if the user has the permission to perform the action on the project
+func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
 	userID, err := gox.GetUserID(ctx)
 	if err != nil {
 		return err
@@ -158,17 +151,17 @@ func (s *StoreBasedPermission) CheckOrganizationPermission(ctx context.Context, 
 	}
 
 	if !user.Member {
-		return x.ErrNotOrganizationMember
+		return x.ErrNotProjectMember
 	}
 
-	err = s.CheckMasterOrganizationPermission(ctx, relation)
+	err = s.CheckMasterProjectPermission(ctx, relation)
 	if errors.Is(err, x.ErrUnauthorized) {
 		_, err := gox.GetUserID(ctx)
 		if err != nil {
 			return err
 		}
 
-		permission, err := as.GetPermissionByID(ctx, orgID, userID)
+		permission, err := as.GetProjectMemberByID(ctx, orgID, userID)
 		if err != nil {
 			return err
 		}
@@ -198,14 +191,14 @@ func NewNullAuthbasePermission() *NullAuthbasePermission {
 
 var _ AuthBasePermission = new(NullAuthbasePermission)
 
-// CheckMasterOrganizationPermission checks if the user has the permission to perform
+// CheckMasterProjectPermission checks if the user has the permission to perform
 // for NullAuthbasePermission it always returns nil, meaning the user has the permission
-func (n *NullAuthbasePermission) CheckMasterOrganizationPermission(ctx context.Context, relation string) error {
+func (n *NullAuthbasePermission) CheckMasterProjectPermission(ctx context.Context, relation string) error {
 	return nil
 }
 
-// CheckOrganizationPermission checks if the user has the permission to perform the action on the organization
+// CheckProjectPermission checks if the user has the permission to perform the action on the project
 // for NullAuthbasePermission it always returns nil, meaning the user has the permission
-func (n *NullAuthbasePermission) CheckOrganizationPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
+func (n *NullAuthbasePermission) CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
 	return nil
 }

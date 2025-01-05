@@ -15,17 +15,17 @@ type GormStore struct {
 	db *gorm.DB
 }
 
-func (g *GormStore) ListPermissionsByUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.Permission, error) {
-	var permissions []*model.Permission
-	err := g.db.Find(&permissions, "organization_id = ? AND user_id IN ?", orgID, userIDs).Error
+func (g *GormStore) ListProjectMembersUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error) {
+	var permissions []*model.ProjectMember
+	err := g.db.Find(&permissions, "project_id = ? AND user_id IN ?", orgID, userIDs).Error
 	return permissions, err
 }
 
-func (g *GormStore) GetMasterOrganization(ctx context.Context) (*model.Organization, error) {
-	var org model.Organization
+func (g *GormStore) GetMasterProject(ctx context.Context) (*model.Project, error) {
+	var org model.Project
 	err := g.db.Where("master = ?", true).First(&org).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, ErrOrganizationNotFound
+		return nil, ErrProjectNotFound
 	}
 
 	return &org, err
@@ -41,7 +41,7 @@ func (g *GormStore) DeleteSessionByUserID(ctx context.Context, userID uuid.UUID)
 
 func (g *GormStore) ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error) {
 	var sessions []*model.Session
-	err := g.db.Limit(perPage).Offset(page*perPage).Preload("User").Find(&sessions, "organization_id = ?", orgID).Error
+	err := g.db.Limit(perPage).Offset(page*perPage).Preload("User").Find(&sessions, "project_id = ?", orgID).Error
 	return sessions, err
 }
 
@@ -93,7 +93,7 @@ func (g *GormStore) ListUserTokens(ctx context.Context, orgID, userID uuid.UUID,
 		if err := tx.Model(&model.Token{}).Count(&total).Error; err != nil {
 			return err
 		}
-		err := tx.Limit(perPage).Offset(page*perPage).Find(&tokens, "organization_id = ? AND user_id = ?", orgID, userID).Error
+		err := tx.Limit(perPage).Offset(page*perPage).Find(&tokens, "project_id = ? AND user_id = ?", orgID, userID).Error
 
 		return err
 	})
@@ -115,13 +115,13 @@ func (g *GormStore) CreateUser(ctx context.Context, user *model.User) error {
 
 func (g *GormStore) GetUserByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.User, error) {
 	var user model.User
-	err := g.db.Find(&user, "organization_id = ? AND email = ?", orgID, email).Error
+	err := g.db.Find(&user, "project_id = ? AND email = ?", orgID, email).Error
 	return &user, err
 }
 
 func (g *GormStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
-	err := g.db.Where("id = ?", id.String()).Preload("Organization").First(&user).Error
+	err := g.db.Where("id = ?", id.String()).Preload("Project").First(&user).Error
 	return &user, err
 }
 
@@ -140,15 +140,15 @@ func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
 		if member {
-			if err := tx.Model(&model.User{}).Where("organization_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.User{}).Where("project_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
 				return err
 			}
-			return g.db.Where("organization_id = ? AND member = ?", orgID, member).Limit(perPage).Offset(page * perPage).Find(&users).Error
+			return g.db.Where("project_id = ? AND member = ?", orgID, member).Limit(perPage).Offset(page * perPage).Find(&users).Error
 		} else {
-			if err := tx.Model(&model.User{}).Where("organization_id = ?", orgID.String()).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.User{}).Where("project_id = ?", orgID.String()).Count(&total).Error; err != nil {
 				return err
 			}
-			return g.db.Where("organization_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
+			return g.db.Where("project_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
 		}
 	})
 
@@ -172,43 +172,43 @@ func (g *GormStore) VerifyUser(ctx context.Context, id uuid.UUID) error {
 
 func (g *GormStore) UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error) {
 	var users []*model.User
-	err := g.db.Where("organization_id = ? AND (username = ? OR email = ?)", orgID, username, email).Find(&users).Error
+	err := g.db.Where("project_id = ? AND (username = ? OR email = ?)", orgID, username, email).Find(&users).Error
 	return users, err
 }
 
-func (g *GormStore) CreateOrganization(ctx context.Context, org *model.Organization) error {
+func (g *GormStore) CreateProject(ctx context.Context, org *model.Project) error {
 	err := g.db.Create(org).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrCheckConstraintViolated) {
-			return ErrOrganizationExists
+			return ErrProjectExists
 		}
 	}
 
 	return err
 }
 
-// GetOrganizationByName retrieves an organization by name
+// GetProjectByName retrieves an organization by name
 // TODO: heavily rate limited and should be used with caution,
 // maybe use reCAPTCHA to verify the user is not a bot
-func (g *GormStore) GetOrganizationByName(ctx context.Context, name string) (*model.Organization, error) {
-	var org model.Organization
+func (g *GormStore) GetProjectByName(ctx context.Context, name string) (*model.Project, error) {
+	var org model.Project
 	err := g.db.Where("name = ?", name).First(&org).Error
 	return &org, err
 }
 
-func (g *GormStore) GetOrganizationByID(ctx context.Context, id uuid.UUID) (*model.Organization, error) {
-	var org model.Organization
+func (g *GormStore) GetProjectByID(ctx context.Context, id uuid.UUID) (*model.Project, error) {
+	var org model.Project
 	err := g.db.Where("id = ?", id).First(&org).Error
 	return &org, err
 }
 
-func (g *GormStore) ListOrganizations(ctx context.Context, page, perPage int) ([]*model.Organization, int, error) {
-	var orgs []*model.Organization
+func (g *GormStore) ListProjects(ctx context.Context, page, perPage int) ([]*model.Project, int, error) {
+	var orgs []*model.Project
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Organization{}).Count(&total).Error; err != nil {
+		if err := tx.Model(&model.Project{}).Count(&total).Error; err != nil {
 			return err
 		}
 		return g.db.Limit(perPage).Offset(page * perPage).Find(&orgs).Error
@@ -217,22 +217,22 @@ func (g *GormStore) ListOrganizations(ctx context.Context, page, perPage int) ([
 	return orgs, int(total), err
 }
 
-func (g *GormStore) UpdateOrganization(ctx context.Context, org *model.Organization) error {
+func (g *GormStore) UpdateProject(ctx context.Context, org *model.Project) error {
 	return g.db.Save(org).Error
 }
 
-func (g *GormStore) DeleteOrganization(ctx context.Context, id uuid.UUID) error {
-	org := model.Organization{ID: id.String()}
+func (g *GormStore) DeleteProject(ctx context.Context, id uuid.UUID) error {
+	org := model.Project{ID: id.String()}
 	return g.db.Delete(&org).Error
 }
 
-func (g *GormStore) CreatePermission(ctx context.Context, permission *model.Permission) error {
+func (g *GormStore) CreateProjectMember(ctx context.Context, permission *model.ProjectMember) error {
 	return g.db.Create(permission).Error
 }
 
-func (g *GormStore) GetPermissionByID(ctx context.Context, orgID, userID uuid.UUID) (*model.Permission, error) {
-	var permission model.Permission
-	err := g.db.Where("organization_id = ? AND user_id = ?", orgID.String(), userID.String()).First(&permission).Error
+func (g *GormStore) GetProjectMemberByID(ctx context.Context, orgID, userID uuid.UUID) (*model.ProjectMember, error) {
+	var permission model.ProjectMember
+	err := g.db.Where("project_id = ? AND user_id = ?", orgID.String(), userID.String()).First(&permission).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrPermissionNotFound
 	}
@@ -240,18 +240,18 @@ func (g *GormStore) GetPermissionByID(ctx context.Context, orgID, userID uuid.UU
 	return &permission, err
 }
 
-func (g *GormStore) ListPermissions(ctx context.Context, page, perPage int) ([]*model.Permission, error) {
-	var permissions []*model.Permission
+func (g *GormStore) ListProjectMembers(ctx context.Context, page, perPage int) ([]*model.ProjectMember, error) {
+	var permissions []*model.ProjectMember
 	err := g.db.Limit(perPage).Offset(page * perPage).Find(&permissions).Error
 	return permissions, err
 }
 
-func (g *GormStore) UpdatePermission(ctx context.Context, permission *model.Permission) error {
+func (g *GormStore) UpdateProjectMember(ctx context.Context, permission *model.ProjectMember) error {
 	return g.db.Save(permission).Error
 }
 
-func (g *GormStore) DeletePermission(ctx context.Context, orgID, userID uuid.UUID) error {
-	permission := model.Permission{OrganizationID: orgID.String(), UserID: userID.String()}
+func (g *GormStore) DeleteProjectMember(ctx context.Context, orgID, userID uuid.UUID) error {
+	permission := model.ProjectMember{ProjectID: orgID.String(), UserID: userID.String()}
 	return g.db.Delete(&permission).Error
 }
 
@@ -268,19 +268,19 @@ func (g *GormStore) GetOauthProviderByID(ctx context.Context, id uuid.UUID) (*mo
 // GetOauthProviderByName implements AuthBaseStore.
 func (g *GormStore) GetOauthProviderByName(ctx context.Context, orgID uuid.UUID, provider string) (*model.OauthProvider, error) {
 	var oauthProvider model.OauthProvider
-	err := g.db.Where("organization_id = ? AND provider = ?", orgID, provider).First(&oauthProvider).Error
+	err := g.db.Where("project_id = ? AND provider = ?", orgID, provider).First(&oauthProvider).Error
 	return &oauthProvider, err
 }
 
 func (g *GormStore) ListOauthProviders(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.OauthProvider, uint32, error) {
 	var providers []*model.OauthProvider
-	err := g.db.Limit(perPage).Offset(page*perPage).Find(&providers, "organization_id = ?", orgID).Error
+	err := g.db.Limit(perPage).Offset(page*perPage).Find(&providers, "project_id = ?", orgID).Error
 	if err != nil {
 		return providers, 0, err
 	}
 
 	var total int64
-	if err := g.db.Model(&model.OauthProvider{}).Where("organization_id = ?", orgID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.OauthProvider{}).Where("project_id = ?", orgID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 

@@ -12,7 +12,7 @@ import (
 )
 
 // AuthInterceptor authenticates the request using the provided verifier.
-// on success, it sets the userID and organizationID in the context.
+// on success, it sets the userID and projectID in the context.
 func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		switch info.FullMethod {
@@ -22,7 +22,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			break
 		case v1.AuthService_Login_FullMethodName:
 			request := req.(*v1.LoginRequest)
-			orgID, err := uuid.Parse(request.GetOrganizationId())
+			orgID, err := uuid.Parse(request.GetProjectId())
 			if err != nil {
 				return nil, err
 			}
@@ -32,10 +32,10 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			}
 
 			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "organization_id", uuid.MustParse(request.GetOrganizationId()))
+			ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
 		case v1.OfflineTokenService_CreateToken_FullMethodName:
 			request := req.(*v1.CreateTokenRequest)
-			orgID, err := uuid.Parse(request.GetOrganizationId())
+			orgID, err := uuid.Parse(request.GetProjectId())
 			if err != nil {
 				return nil, err
 			}
@@ -45,7 +45,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			}
 
 			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "organization_id", uuid.MustParse(request.GetOrganizationId()))
+			ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
 		default:
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication
@@ -59,7 +59,7 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			}
 
 			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(claims.UserID))
-			ctx = context.WithValue(ctx, "organization_id", uuid.MustParse(claims.OrganizationID))
+			ctx = context.WithValue(ctx, "project_id", uuid.MustParse(claims.ProjectID))
 		}
 
 		return handler(ctx, req)

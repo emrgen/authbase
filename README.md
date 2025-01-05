@@ -20,8 +20,8 @@ func main() {
         log.Fatal(err)
     }
 
-    // Create a new organization. need token to create an organization.
-    org, err := client.CreateOrganization(context.Background(), &protos.Organization{
+    // Create a new project. need token to create an organization.
+    project, err := client.CreateProject(context.Background(), &protos.Project{
         Name: "org",
         Username: "admin",
         Email:    "admin@gmail.com",
@@ -35,7 +35,7 @@ func main() {
         Username: "user",
         Email:    "user@mail.com",
         Passowrd: "password",
-        OrganizationId: "org-id",
+		ProjectId: project.Id,
     })
     if err != nil {
         log.Fatal(err)
@@ -78,10 +78,10 @@ authbase org create --name=master --user=admin --email=email [--password=passwor
 authbase config code set --medium=email --value=smtp://user:password@localhost:587
 
 # Create a user token
-authbase token create --org=org-id --user=admin --password=admin
+authbase token create ---p=project-id-id --user=admin --password=admin
 
 # Set context
-authbase context set --token=token --org=org-id
+authbase context set --token=token ---p=project-id-id
 
 ############################################
 # Organization commands
@@ -101,13 +101,13 @@ authbase org delete --name=org
 
 # Add database to an organization 
 # with separate db set, on migrate the organization will be migrated to the database
-authbase org db set --org=org --db-url=postgres://user:password@localhost:5432/db
+authbase org db set ---p=project-id --db-url=postgres://user:password@localhost:5432/db
 
 # Add migration db to an organization
-authbase org migration db set --org=org --db-url=postgres://user:password@localhost:5432/db
+authbase org migration db set ---p=project-id --db-url=postgres://user:password@localhost:5432/db
 
 # Migrate an organization
-authbase org migrate --org=org
+authbase org migrate ---p=project-id
 
 ############################################
 # Provider commands
@@ -118,37 +118,37 @@ authbase org migrate --org=org
 authbase provider add --name=org --provider=google --client-id=client-id --client-secret=client-secret
 
 # Enable login strategy
-authbase strategy enable --org=org --strategy=password
-authbase strategy enable --org=org --strategy=oath2
+authbase strategy enable ---p=project-id --strategy=password
+authbase strategy enable ---p=project-id --strategy=oath2
 
 # Disable login strategy
-authbase strategy disable --org=org --strategy=password
-authbase strategy disable --org=org --strategy=oath2
+authbase strategy disable ---p=project-id --strategy=password
+authbase strategy disable ---p=project-id --strategy=oath2
 
 # Get a provider
-authbase provider get --org=org --provider=google
+authbase provider get ---p=project-id --provider=google
 
 # List all providers
-authbase provider list --org=org
+authbase provider list ---p=project-id
 
 # Remove a oauth provider
-authbase provider remove --org=org --provider=google
+authbase provider remove ---p=project-id --provider=google
 
 ############################################
 # Config commands
 ############################################
 
 # Set a email config
-authbase config code set --org=org --medium=email --value=smtp://user:password@localhost:587
+authbase config code set ---p=project-id --medium=email --value=smtp://user:password@localhost:587
 
 # Get a email config
-authbase config code get --org=org --medium=email
+authbase config code get ---p=project-id --medium=email
 
 # Remove a email config
-authbase config code remove --org=org --medium=email
+authbase config code remove ---p=project-id --medium=email
 
 # Set otp config
-authbase config opt set --org=org --key=phone --value=twilio://account-sid:auth-token@localhost:8080
+authbase config opt set ---p=project-id --key=phone --value=twilio://account-sid:auth-token@localhost:8080
 
 ############################################
 # Member commands

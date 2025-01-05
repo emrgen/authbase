@@ -44,19 +44,19 @@ func NewOfflineTokenService(perm permission.AuthBasePermission, store store.Prov
 // CreateToken creates an offline new token
 // 1. user authentication is already done by the middleware
 // 2. get project store
-// 3. check if the user has the permission to create a token in the organization
+// 3. check if the user has the permission to create a token in the project
 func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.CreateTokenRequest) (*v1.CreateTokenResponse, error) {
 	as, err := store.GetProjectStore(ctx, t.store)
 	if err != nil {
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = t.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 		return nil, err
 	}
 
-	perm, err := as.GetPermissionByID(ctx, orgID, userID)
+	perm, err := as.GetProjectMemberByID(ctx, orgID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,18 +94,18 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		Username:       user.Username,
-		Email:          user.Email,
-		OrganizationID: orgID.String(),
-		UserID:         userID.String(),
-		Permission:     perm.Permission,
-		Audience:       "",
-		Jti:            jti,
-		ExpireAt:       time.Now().Add(expireAfter),
-		IssuedAt:       time.Now(),
-		Provider:       "authbase",
-		Data:           data,
-		Scopes:         scopes,
+		Username:   user.Username,
+		Email:      user.Email,
+		ProjectID:  orgID.String(),
+		UserID:     userID.String(),
+		Permission: perm.Permission,
+		Audience:   "",
+		Jti:        jti,
+		ExpireAt:   time.Now().Add(expireAfter),
+		IssuedAt:   time.Now(),
+		Provider:   "authbase",
+		Data:       data,
+		Scopes:     scopes,
 	})
 	if err != nil {
 		return nil, err
@@ -113,16 +113,16 @@ func (t *OfflineTokenService) CreateToken(ctx context.Context, request *v1.Creat
 
 	// create a new token
 	tokenModel := &model.Token{
-		ID:             uuid.New().String(),
-		OrganizationID: request.GetOrganizationId(),
-		Name:           request.GetName(),
-		Token:          token.AccessToken,
-		ExpireAt:       token.ExpireAt,
+		ID:        uuid.New().String(),
+		ProjectID: request.GetProjectId(),
+		Name:      request.GetName(),
+		Token:     token.AccessToken,
+		ExpireAt:  token.ExpireAt,
 	}
 
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err = t.cache.Set(jti, tokenModel.OrganizationID, defaultRefreshTokenExpireIn)
+		err = t.cache.Set(jti, tokenModel.ProjectID, defaultRefreshTokenExpireIn)
 		if err != nil {
 			return err
 		}
@@ -161,36 +161,36 @@ func (t *OfflineTokenService) GetToken(ctx context.Context, request *v1.GetToken
 		return nil, err
 	}
 
-	err = t.perm.CheckOrganizationPermission(ctx, uuid.MustParse(token.OrganizationID), "read")
+	err = t.perm.CheckProjectPermission(ctx, uuid.MustParse(token.ProjectID), "read")
 	if err != nil {
 		return nil, err
 	}
 
 	return &v1.GetTokenResponse{
 		Token: &v1.Token{
-			Id:             token.ID,
-			Name:           token.Name,
-			OrganizationId: token.OrganizationID,
-			UserId:         token.UserID,
-			CreatedAt:      timestamppb.New(token.CreatedAt),
-			ExpiresAt:      timestamppb.New(token.ExpireAt),
+			Id:        token.ID,
+			Name:      token.Name,
+			ProjectId: token.ProjectID,
+			UserId:    token.UserID,
+			CreatedAt: timestamppb.New(token.CreatedAt),
+			ExpiresAt: timestamppb.New(token.ExpireAt),
 		},
 	}, nil
 }
 
-// ListTokens lists offline tokens by organization id and user id
+// ListTokens lists offline tokens by project id and user id
 func (t *OfflineTokenService) ListTokens(ctx context.Context, request *v1.ListTokensRequest) (*v1.ListTokensResponse, error) {
 	as, err := store.GetProjectStore(ctx, t.store)
 	if err != nil {
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetOrganizationId())
+	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.perm.CheckOrganizationPermission(ctx, orgID, "read")
+	err = t.perm.CheckProjectPermission(ctx, orgID, "read")
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (t *OfflineTokenService) DeleteToken(ctx context.Context, request *v1.Delet
 		return nil, err
 	}
 
-	err = t.perm.CheckOrganizationPermission(ctx, uuid.MustParse(token.OrganizationID), "write")
+	err = t.perm.CheckProjectPermission(ctx, uuid.MustParse(token.ProjectID), "write")
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func (t *OfflineTokenService) DeleteToken(ctx context.Context, request *v1.Delet
 	return &v1.DeleteTokenResponse{}, nil
 }
 
-// VerifyToken verifies a token and returns the organization id and user id
+// VerifyToken verifies a token and returns the project id and user id
 // no need to check the permission here
 func (t *OfflineTokenService) VerifyOfflineToken(ctx context.Context, request *v1.OfflineTokenVerifyRequest) (*v1.OfflineTokenVerifyResponse, error) {
 	token := request.GetToken()
@@ -277,7 +277,7 @@ func (t *OfflineTokenService) VerifyOfflineToken(ctx context.Context, request *v
 	}
 
 	return &v1.OfflineTokenVerifyResponse{
-		OrganizationId: jwt.OrganizationID,
-		UserId:         jwt.UserID,
+		ProjectId: jwt.ProjectID,
+		UserId:    jwt.UserID,
 	}, nil
 }

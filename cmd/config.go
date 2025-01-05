@@ -52,7 +52,7 @@ func setCodeMediumCommand() *cobra.Command {
 				return
 			}
 
-			//client.UpdateOrganizationConfig(context.Background(), &v1.UpdateOrganizationConfigRequest{})
+			//client.UpdateProjectConfig(context.Background(), &v1.UpdateProjectConfigRequest{})
 
 			logrus.Infof("code medium set successfully, %v --> %v", medium, via)
 		},

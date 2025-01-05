@@ -14,22 +14,22 @@ import (
 	"time"
 )
 
-var _ v1.AdminOrganizationServiceServer = (*AdminOrganizationService)(nil)
+var _ v1.AdminProjectServiceServer = (*AdminProjectService)(nil)
 
-type AdminOrganizationService struct {
+type AdminProjectService struct {
 	provider store.Provider
 	cache    *cache.Redis
 	limited  ratelimit.Limiter
-	v1.UnimplementedAdminOrganizationServiceServer
+	v1.UnimplementedAdminProjectServiceServer
 }
 
-// NewAdminOrganizationService creates a new admin organization service
-func NewAdminOrganizationService(store store.Provider, cache *cache.Redis) v1.AdminOrganizationServiceServer {
-	return &AdminOrganizationService{provider: store, cache: cache, limited: ratelimit.New(1)}
+// NewAdminProjectService creates a new admin project service
+func NewAdminProjectService(store store.Provider, cache *cache.Redis) v1.AdminProjectServiceServer {
+	return &AdminProjectService{provider: store, cache: cache, limited: ratelimit.New(1)}
 }
 
-// CreateAdminOrganization creates a new organization
-func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, request *v1.CreateAdminOrganizationRequest) (*v1.CreateAdminOrganizationResponse, error) {
+// CreateAdminProject creates a new project
+func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v1.CreateAdminProjectRequest) (*v1.CreateAdminProjectResponse, error) {
 	// if the app is running in master mode, return an error as this operation is not allowed
 	if os.Getenv("APP_MODE") == "multistore" {
 		return nil, x.ErrForbidden
@@ -41,13 +41,13 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 	as := a.provider.Default()
 
 	// check if the master org already exists
-	org, err := as.GetMasterOrganization(ctx)
-	if err != nil && !errors.Is(err, store.ErrOrganizationNotFound) {
+	org, err := as.GetMasterProject(ctx)
+	if err != nil && !errors.Is(err, store.ErrProjectNotFound) {
 		return nil, err
 	}
 
 	if org != nil {
-		return nil, x.ErrOrganizationExists
+		return nil, x.ErrProjectExists
 	}
 
 	user := model.User{
@@ -58,23 +58,23 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 		Member:    true,
 	}
 
-	org = &model.Organization{
+	org = &model.Project{
 		ID:      uuid.New().String(),
 		Name:    request.GetName(),
 		OwnerID: user.ID,
 		Master:  true,
 	}
-	user.OrganizationID = org.ID
+	user.ProjectID = org.ID
 
-	perm := model.Permission{
-		OrganizationID: org.ID,
-		UserID:         user.ID,
-		Permission:     uint32(v1.Permission_ADMIN),
+	perm := model.ProjectMember{
+		ProjectID:  org.ID,
+		UserID:     user.ID,
+		Permission: uint32(v1.Permission_ADMIN),
 	}
 
-	// Create organization and user in a transaction
+	// Create project and user in a transaction
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err := tx.CreateOrganization(ctx, org)
+		err := tx.CreateProject(ctx, org)
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 			return err
 		}
 
-		err = tx.CreatePermission(ctx, &perm)
+		err = tx.CreateProjectMember(ctx, &perm)
 		if err != nil {
 			return err
 		}
@@ -123,13 +123,13 @@ func (a *AdminOrganizationService) CreateAdminOrganization(ctx context.Context, 
 		return nil, err
 	}
 
-	return &v1.CreateAdminOrganizationResponse{
+	return &v1.CreateAdminProjectResponse{
 		Id: org.ID,
 	}, nil
 }
 
 // CreateMigration creates a new migration for the project
-func (a *AdminOrganizationService) CreateMigration(ctx context.Context, request *v1.CreateMigrationRequest) (*v1.CreateMigrationResponse, error) {
+func (a *AdminProjectService) CreateMigration(ctx context.Context, request *v1.CreateMigrationRequest) (*v1.CreateMigrationResponse, error) {
 	projectID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
