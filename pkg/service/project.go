@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/peer"
 	"time"
 
 	v1 "github.com/emrgen/authbase/apis/v1"
@@ -135,34 +134,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	}, nil
 }
 
-// GetProjectId gets the organization ID, given the name
-func (o *ProjectService) GetProjectId(ctx context.Context, request *v1.GetProjectIdRequest) (*v1.GetProjectIdResponse, error) {
-	p, ok := peer.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("failed to get peer")
-	}
-
-	// FIXME: rate limit the number of requests from the same IP
-	// use exponential backoff for retries to prevent abuse
-
-	logrus.Infof("peer: %v", p.Addr.String())
-
-	as, err := store.GetProjectStore(ctx, o.store)
-	if err != nil {
-		return nil, err
-	}
-
-	org, err := as.GetProjectByName(ctx, request.GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	return &v1.GetProjectIdResponse{
-		Id:   org.ID,
-		Name: org.Name,
-	}, nil
-}
-
+// GetProject gets the project information by ID
 func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectRequest) (*v1.GetProjectResponse, error) {
 	var err error
 
@@ -277,12 +249,11 @@ func (o *ProjectService) UpdateProject(ctx context.Context, request *v1.UpdatePr
 }
 
 func (o *ProjectService) DeleteProject(ctx context.Context, request *v1.DeleteProjectRequest) (*v1.DeleteProjectResponse, error) {
-
-	id, err := uuid.Parse(request.GetId())
+	projectID, err := uuid.Parse(request.GetId())
 	if err != nil {
 		return nil, err
 	}
-	err = o.perm.CheckProjectPermission(ctx, id, "write")
+	err = o.perm.CheckProjectPermission(ctx, projectID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +263,24 @@ func (o *ProjectService) DeleteProject(ctx context.Context, request *v1.DeletePr
 		return nil, err
 	}
 
-	err = as.DeleteProject(ctx, id)
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		// get the project
+		project, err := tx.GetProjectByID(ctx, projectID)
+		if err != nil {
+			return err
+		}
+
+		if project.Master {
+			return errors.New("cannot delete master project")
+		}
+
+		err = as.DeleteProject(ctx, projectID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}

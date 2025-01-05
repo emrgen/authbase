@@ -320,14 +320,20 @@ func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemb
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, memberID)
-	if err != nil {
-		return nil, err
-	}
-	user.Member = false
-
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err := tx.UpdateUser(ctx, user)
+		// get the user member
+		member, err := tx.GetProjectMemberByID(ctx, orgID, memberID)
+		if member.Permission == uint32(v1.Permission_OWNER) {
+			return errors.New("cannot remove an owner")
+		}
+
+		user, err := as.GetUserByID(ctx, memberID)
+		if err != nil {
+			return err
+		}
+		user.Member = false
+
+		err = tx.UpdateUser(ctx, user)
 		if err != nil {
 			return err
 		}

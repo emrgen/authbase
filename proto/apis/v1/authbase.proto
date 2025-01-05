@@ -554,7 +554,7 @@ message GetProjectResponse {
 }
 
 message GetProjectIdRequest {
-  string name = 1;
+  string id = 1 [(validate.rules).string.uuid = true];
 }
 
 message GetProjectIdResponse {
@@ -658,11 +658,6 @@ service ProjectService {
       post: "/v1/projects"
       body: "*"
     };
-  }
-
-  // GetProject
-  rpc GetProjectId(GetProjectIdRequest) returns (GetProjectIdResponse) {
-    option (google.api.http) = {get: "/v1/projects/-/name/{name}"};
   }
 
   // GetProject
@@ -881,11 +876,11 @@ service MemberService {
 }
 
 enum Permission {
-  UNKNOWN = 0;
-  NONE = 1;
-  READ = 2;
-  ADMIN = 4;
-  OWNER = 8;
+  UNKNOWN = 0;  // default
+  NONE = 1;     // no permission
+  READ = 2;     // read permission
+  ADMIN = 4;    // admin permission
+  OWNER = 8;    // owner permission, can do anything, including delete the project, can not be removed while the project exists
 }
 
 message CreatePermissionRequest {

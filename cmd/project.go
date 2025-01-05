@@ -20,7 +20,7 @@ func init() {
 	projectCommand.AddCommand(listProjectCommand())
 	projectCommand.AddCommand(updateProjectCommand())
 	projectCommand.AddCommand(deleteProjectCommand())
-	projectCommand.AddCommand(getProjectByNameCommand())
+	projectCommand.AddCommand(getProjectCommand())
 }
 
 func createProjectCommand() *cobra.Command {
@@ -108,21 +108,18 @@ func createProjectCommand() *cobra.Command {
 	return command
 }
 
-func getProjectByNameCommand() *cobra.Command {
-	var orgName string
-
+func getProjectCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "exists",
-		Short: "get project by name",
+		Use:   "get",
+		Short: "get project by id",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-
 			if Token == "" {
 				logrus.Errorf("missing required flags: --token")
 				return
 			}
 
-			if orgName == "" {
+			if ProjectId == "" {
 				logrus.Errorf("missing required flags: --orgName")
 			}
 
@@ -134,19 +131,23 @@ func getProjectByNameCommand() *cobra.Command {
 			defer client.Close()
 
 			ctx := tokenContext()
-			project, err := client.GetProjectId(ctx, &v1.GetProjectIdRequest{
-				Name: orgName,
+			res, err := client.GetProject(ctx, &v1.GetProjectRequest{
+				Id: ProjectId,
 			})
 			if err != nil {
 				logrus.Errorf("error getting project: %v", err)
 				return
 			}
 
-			logrus.Infof("project: %v", project)
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"ID", "Name", "Owner ID", "Master"})
+			table.Append([]string{res.Project.Id, res.Project.Name, res.Project.OwnerId, strconv.FormatBool(res.Project.Master)})
+			table.Render()
+
 		},
 	}
 
-	command.Flags().StringVarP(&orgName, "projectName", "p", "", "name of the project")
+	bindContextFlags(command)
 
 	return command
 }
