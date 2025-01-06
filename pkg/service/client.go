@@ -25,6 +25,11 @@ type ClientService struct {
 }
 
 func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClientRequest) (*v1.CreateClientResponse, error) {
+	as, err := store.GetProjectStore(ctx, c.store)
+	if err != nil {
+		return nil, err
+	}
+
 	userID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return nil, err
@@ -36,19 +41,11 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 		return nil, err
 	}
 
-	// create the client
-	as, err := store.GetProjectStore(ctx, c.store)
+	poolID, err := uuid.Parse(request.GetPoolId())
 	if err != nil {
 		return nil, err
 	}
-
-	projectID, err := uuid.Parse(request.GetProjectId())
-	if err != nil {
-		return nil, err
-	}
-	
-	// get the default pool
-	pool, err := as.GetMasterPool(ctx, projectID)
+	pool, err := as.GetPoolByID(ctx, poolID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +77,39 @@ func (c *ClientService) GetClient(ctx context.Context, request *v1.GetClientRequ
 }
 
 func (c *ClientService) ListClients(ctx context.Context, request *v1.ListClientsRequest) (*v1.ListClientsResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	as, err := store.GetProjectStore(ctx, c.store)
+	if err != nil {
+		return nil, err
+	}
+
+	poolID, err := uuid.Parse(request.GetPoolId())
+	if err != nil {
+		return nil, err
+	}
+
+	page := x.GetPageFromRequest(request)
+	clients, total, err := as.ListClients(ctx, poolID, int(page.Page), int(page.Size))
+	if err != nil {
+		return nil, err
+	}
+
+	var clientProtos []*v1.Client
+	for _, client := range clients {
+		clientProtos = append(clientProtos, &v1.Client{
+			Id:     client.ID,
+			PoolId: client.PoolID,
+			Name:   client.Name,
+		})
+	}
+
+	return &v1.ListClientsResponse{
+		Clients: clientProtos,
+		Meta: &v1.Meta{
+			Total: int32(total),
+			Page:  page.Page,
+			Size:  page.Size,
+		},
+	}, nil
 }
 
 func (c *ClientService) UpdateClient(ctx context.Context, request *v1.UpdateClientRequest) (*v1.UpdateClientResponse, error) {

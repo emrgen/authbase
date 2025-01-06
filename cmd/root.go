@@ -33,6 +33,8 @@ func init() {
 	rootCmd.AddCommand(strategyCommand)
 	rootCmd.AddCommand(contextCommand)
 	rootCmd.AddCommand(keygenCommand)
+	rootCmd.AddCommand(poolCommand)
+	rootCmd.AddCommand(clientCommand)
 
 	ctx := readContext()
 	if ctx.Token != "" {

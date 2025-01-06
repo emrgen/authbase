@@ -57,7 +57,7 @@ func createTokenCommand() *cobra.Command {
 				return
 			}
 
-			token, err := client.CreateAccessKey(context.Background(), &v1.CreateAccessKeyRequest{
+			token, err := client.CreateAccessKey(tokenContext(), &v1.CreateAccessKeyRequest{
 				ProjectId: projectID,
 				Email:     email,
 				Password:  password,

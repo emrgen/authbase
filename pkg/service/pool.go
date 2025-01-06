@@ -4,6 +4,9 @@ import (
 	"context"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/store"
+	"github.com/emrgen/authbase/x"
+	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // NewPoolService creates a new pool service.
@@ -31,8 +34,37 @@ func (p *PoolService) GetPool(ctx context.Context, request *v1.GetPoolRequest) (
 }
 
 func (p *PoolService) ListPools(ctx context.Context, request *v1.ListPoolsRequest) (*v1.ListPoolsResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	projectID := uuid.MustParse(request.GetProjectId())
+	as, err := store.GetProjectStore(ctx, p.store)
+	if err != nil {
+		return nil, err
+	}
+
+	page := x.GetPageFromRequest(request)
+
+	pools, total, err := as.ListPools(ctx, projectID, int(page.Page), int(page.Size))
+	if err != nil {
+		return nil, err
+	}
+
+	var poolProtos []*v1.Pool
+	for _, pool := range pools {
+		poolProtos = append(poolProtos, &v1.Pool{
+			Id:        pool.ID,
+			Name:      pool.Name,
+			CreatedAt: timestamppb.New(pool.CreatedAt),
+			UpdatedAt: timestamppb.New(pool.UpdatedAt),
+		})
+	}
+
+	return &v1.ListPoolsResponse{
+		Pools: poolProtos,
+		Meta: &v1.Meta{
+			Total: int32(total),
+			Page:  page.Page,
+			Size:  page.Size,
+		},
+	}, nil
 }
 
 func (p *PoolService) UpdatePool(ctx context.Context, request *v1.UpdatePoolRequest) (*v1.UpdatePoolResponse, error) {

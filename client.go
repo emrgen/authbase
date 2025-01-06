@@ -17,6 +17,9 @@ type Client interface {
 	v1.OAuth2ServiceClient
 	v1.AccessKeyServiceClient
 	v1.SessionServiceClient
+	v1.ClientServiceClient
+	v1.PoolServiceClient
+	v1.PoolMemberServiceClient
 	gopackv1.TokenServiceClient
 	io.Closer
 }
@@ -31,6 +34,9 @@ type client struct {
 	v1.SessionServiceClient
 	v1.AccessKeyServiceClient
 	v1.OAuth2ServiceClient
+	v1.ClientServiceClient
+	v1.PoolServiceClient
+	v1.PoolMemberServiceClient
 	gopackv1.TokenServiceClient
 }
 
@@ -40,15 +46,19 @@ func NewClient(port string) (Client, error) {
 		return nil, err
 	}
 	return &client{
-		conn:                      conn,
-		ProjectServiceClient:      v1.NewProjectServiceClient(conn),
-		AuthServiceClient:         v1.NewAuthServiceClient(conn),
-		TokenServiceClient:        gopackv1.NewTokenServiceClient(conn),
-		AdminProjectServiceClient: v1.NewAdminProjectServiceClient(conn),
-		SessionServiceClient:      v1.NewSessionServiceClient(conn),
-		AccountServiceClient:      v1.NewAccountServiceClient(conn),
-		OAuth2ServiceClient:       v1.NewOAuth2ServiceClient(conn),
-		AccessKeyServiceClient:    v1.NewAccessKeyServiceClient(conn),
+		conn:                       conn,
+		ProjectServiceClient:       v1.NewProjectServiceClient(conn),
+		AuthServiceClient:          v1.NewAuthServiceClient(conn),
+		TokenServiceClient:         gopackv1.NewTokenServiceClient(conn),
+		AdminProjectServiceClient:  v1.NewAdminProjectServiceClient(conn),
+		SessionServiceClient:       v1.NewSessionServiceClient(conn),
+		AccountServiceClient:       v1.NewAccountServiceClient(conn),
+		OAuth2ServiceClient:        v1.NewOAuth2ServiceClient(conn),
+		AccessKeyServiceClient:     v1.NewAccessKeyServiceClient(conn),
+		ClientServiceClient:        v1.NewClientServiceClient(conn),
+		ProjectMemberServiceClient: v1.NewProjectMemberServiceClient(conn),
+		PoolServiceClient:          v1.NewPoolServiceClient(conn),
+		PoolMemberServiceClient:    v1.NewPoolMemberServiceClient(conn),
 	}, nil
 }
 

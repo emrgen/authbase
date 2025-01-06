@@ -408,7 +408,7 @@ func loginUserCommand() *cobra.Command {
 	}
 
 	bindContextFlags(command)
-
+	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "w", "", "password")
 
