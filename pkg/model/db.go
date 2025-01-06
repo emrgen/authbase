@@ -50,7 +50,16 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(&Pool{}); err != nil {
 		return err
 	}
+
 	if err := db.AutoMigrate(&PoolMember{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&Group{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&GroupMember{}); err != nil {
 		return err
 	}
 

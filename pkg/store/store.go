@@ -27,6 +27,7 @@ type AuthBaseStore interface {
 	ClientStore
 	PoolStore
 	PoolMemberStore
+	GroupStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -205,4 +206,23 @@ type PoolMemberStore interface {
 	UpdatePoolMember(ctx context.Context, member *model.PoolMember) error
 	// RemovePoolMember deletes a pool member from the database.
 	RemovePoolMember(ctx context.Context, poolID, accountID uuid.UUID) error
+}
+
+type GroupStore interface {
+	// CreateGroup creates a new group in the database.
+	CreateGroup(ctx context.Context, group *model.Group) error
+	// GetGroup retrieves a group by its ID.
+	GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error)
+	// ListGroups retrieves a list of groups.
+	ListGroups(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Group, int, error)
+	// UpdateGroup updates a group in the database.
+	UpdateGroup(ctx context.Context, group *model.Group) error
+	// DeleteGroup deletes a group from the database.
+	DeleteGroup(ctx context.Context, id uuid.UUID) error
+	// AddGroupMember creates a new group member in the database.
+	AddGroupMember(ctx context.Context, member *model.GroupMember) error
+	// RemoveGroupMember deletes a group member from the database.
+	RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error
+	// ListGroupMembers retrieves a list of group members.
+	ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMember, int, error)
 }

@@ -21,6 +21,62 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) CreateGroup(ctx context.Context, group *model.Group) error {
+	return g.db.Create(group).Error
+}
+
+func (g *GormStore) GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error) {
+	var group model.Group
+	err := g.db.Where("id = ?", id).First(&group).Error
+	return &group, err
+}
+
+func (g *GormStore) ListGroups(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.Group, int, error) {
+	var groups []*model.Group
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Group{}).Where("pool_id = ?", poolID.String()).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Find(&groups, "pool_id = ?", poolID.String()).Error
+	})
+
+	return groups, int(total), err
+}
+
+func (g *GormStore) UpdateGroup(ctx context.Context, group *model.Group) error {
+	return g.db.Save(group).Error
+}
+
+func (g *GormStore) DeleteGroup(ctx context.Context, id uuid.UUID) error {
+	group := model.Group{ID: id.String()}
+	return g.db.Delete(&group).Error
+}
+
+func (g *GormStore) AddGroupMember(ctx context.Context, member *model.GroupMember) error {
+	return g.db.Create(member).Error
+}
+
+func (g *GormStore) RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error {
+	member := model.GroupMember{GroupID: groupID.String(), AccountID: accountID.String()}
+	return g.db.Delete(&member).Error
+}
+
+func (g *GormStore) ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMember, int, error) {
+	var members []*model.GroupMember
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.GroupMember{}).Preload("Account").Where("group_id = ?", groupID).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Preload("Account").Find(&members, "group_id = ?", groupID).Error
+	})
+
+	return members, int(total), err
+}
+
 func (g *GormStore) AddPoolMember(ctx context.Context, member *model.PoolMember) error {
 	return g.db.Create(member).Error
 }

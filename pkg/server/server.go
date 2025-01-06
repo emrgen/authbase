@@ -165,6 +165,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider))
 	v1.RegisterPoolMemberServiceServer(grpcServer, service.NewPoolMemberService(s.provider))
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(x.NewStoreBasedTokenVerifier(s.provider, redis)))
+	v1.RegisterGroupServiceServer(grpcServer, service.NewGroupService(s.provider))
 
 	// Register the rest gateway
 	if err = v1.RegisterAdminProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {

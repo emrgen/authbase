@@ -17,6 +17,7 @@ var poolCommand = &cobra.Command{
 func init() {
 	poolCommand.AddCommand(createPoolCommand())
 	poolCommand.AddCommand(listPoolCommand())
+	poolCommand.AddCommand(updatePoolCommand())
 	poolCommand.AddCommand(deletePoolCommand())
 }
 
@@ -105,6 +106,54 @@ func listPoolCommand() *cobra.Command {
 	command.Flags().StringVarP(&projectID, "project", "r", "", "project id")
 
 	return command
+}
+
+func updatePoolCommand() *cobra.Command {
+	var poolName string
+	var poolID string
+
+	command := &cobra.Command{
+		Use:   "update",
+		Short: "update pool",
+		Run: func(cmd *cobra.Command, args []string) {
+			if poolID == "" {
+				logrus.Error("missing required flags: --pool-id")
+				return
+			}
+
+			if poolName == "" {
+				logrus.Error("missing required flags: --name")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("error creating client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.UpdatePool(tokenContext(), &v1.UpdatePoolRequest{
+				PoolId: poolID,
+				Name:   poolName,
+			})
+			if err != nil {
+				logrus.Errorf("error updating pool: %v", err)
+				return
+			}
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"ID", "Name", "Created At", "Updated At"})
+			table.Append([]string{res.Pool.Id, res.Pool.Name, res.Pool.CreatedAt.AsTime().Format("2006-01-02 15:04:05"), res.Pool.UpdatedAt.AsTime().Format("2006-01-02 15:04:05")})
+			table.Render()
+		},
+	}
+
+	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "id of the pool")
+	command.Flags().StringVarP(&poolName, "name", "n", "", "name of the pool")
+
+	return command
+
 }
 
 func deletePoolCommand() *cobra.Command {

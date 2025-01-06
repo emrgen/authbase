@@ -391,6 +391,149 @@ service PoolMemberService {
   }
 }
 
+// PoolGroup service
+
+message Group {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string pool_id = 3 [(validate.rules).string.uuid = true];
+  repeated string scopes = 4;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreateGroupRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string name = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  repeated string scopes = 3;
+}
+
+message CreateGroupResponse {
+  Group group = 1;
+}
+
+message GetGroupRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string group_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetGroupResponse {
+  Group group = 1;
+}
+
+message ListGroupsRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListGroupsResponse {
+  repeated Group groups = 1;
+  Meta meta = 2;
+}
+
+message UpdateGroupRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string group_id = 2 [(validate.rules).string.uuid = true];
+  string name = 3;
+  repeated string scopes = 4;
+}
+
+message UpdateGroupResponse {
+  Group group = 1;
+}
+
+message DeleteGroupRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string group_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeleteGroupResponse {
+  string message = 1;
+}
+
+message AddGroupMemberRequest {
+  string group_id = 2 [(validate.rules).string.uuid = true];
+  string account_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message AddGroupMemberResponse {
+  string message = 1;
+}
+
+message RemoveGroupMemberRequest {
+  string group_id = 2 [(validate.rules).string.uuid = true];
+  string account_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message RemoveGroupMemberResponse {
+  string message = 1;
+}
+
+message ListGroupMembersRequest {
+  string group_id = 2 [(validate.rules).string.uuid = true];
+  Page page = 3;
+}
+
+message ListGroupMembersResponse {
+  repeated Account members = 1;
+  repeated string scopes = 2;
+  Meta meta = 3;
+}
+
+service GroupService {
+  // CreateGroup
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
+    option (google.api.http) = {
+      post: "/v1/pool-groups/pools/{pool_id}"
+      body: "*"
+    };
+  }
+
+  // GetGroup
+  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
+    option (google.api.http) = {get: "/v1/pool-groups/{pool_id}/{group_id}"};
+  }
+
+  // ListGroups
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
+    option (google.api.http) = {get: "/v1/pool-groups"};
+  }
+
+  // UpdateGroup
+  rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse) {
+    option (google.api.http) = {
+      put: "/v1/pool-groups/{pool_id}/{group_id}"
+      body: "*"
+    };
+  }
+
+  // DeleteGroup
+  rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse) {
+    option (google.api.http) = {delete: "/v1/pool-groups/{pool_id}/{group_id}"};
+  }
+
+  // AddGroupMember
+  rpc AddGroupMember(AddGroupMemberRequest) returns (AddGroupMemberResponse) {
+    option (google.api.http) = {
+      post: "/v1/pool-groups/{group_id}/members/{account_id}"
+      body: "*"
+    };
+  }
+
+  // RemoveGroupMember
+  rpc RemoveGroupMember(RemoveGroupMemberRequest) returns (RemoveGroupMemberResponse) {
+    option (google.api.http) = {delete: "/v1/pool-groups/{group_id}/members/{account_id}"};
+  }
+
+  // ListGroupMembers
+  rpc ListGroupMembers(ListGroupMembersRequest) returns (ListGroupMembersResponse) {
+    option (google.api.http) = {get: "/v1/pool-groups/{group_id}/members"};
+  }
+}
+
 // Client service
 
 message Client {
@@ -1251,6 +1394,7 @@ message VerifyTokenResponse {
   google.protobuf.Timestamp expires_at = 11;
 }
 
+
 service TokenService {
   rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {
     option (google.api.http) = {
@@ -1259,7 +1403,6 @@ service TokenService {
     };
   }
 }
-
 
 enum Permission {
   UNKNOWN = 0;  // default
