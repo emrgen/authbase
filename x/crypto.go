@@ -10,40 +10,30 @@ import (
 )
 
 func GenerateCode() string {
-	b := make([]byte, 6)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		panic(err.Error()) // rand should never fail
-	}
-
-	return base64EncodeStripped(string(b))
+	return base64EncodeStripped(randomString(6))
 }
 
-func GenerateToken() string {
-	b := make([]byte, 32)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		panic(err.Error()) // rand should never fail
-	}
-
-	return base64EncodeStripped(string(b))
+func accessKey() string {
+	return base64EncodeStripped(randomString(32))
 }
 
-// RefreshToken creates a new random token
-func RefreshToken() string {
-	b := make([]byte, 32)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		panic(err.Error()) // rand should never fail
-	}
-	return base64EncodeStripped(string(b))
+// VerificationToken creates a new random token
+func verificationToken() string {
+	return base64EncodeStripped(randomString(32))
 }
 
 // Keygen creates a new random key
 func Keygen() string {
-	b := make([]byte, 20)
+	return base64EncodeStripped(randomString(20))
+}
+
+func randomString(n int) string {
+	b := make([]byte, n)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		panic(err.Error()) // rand should never fail
 	}
 
-	return base64EncodeStripped(string(b))
+	return string(b)
 }
 
 func base64EncodeStripped(s string) string {

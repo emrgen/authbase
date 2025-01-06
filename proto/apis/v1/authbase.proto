@@ -97,7 +97,6 @@ message GetProjectConfigRequest {}
 message Client {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
-  string client_id = 3;
   string client_secret = 4;
   string project_id = 5 [(validate.rules).string.uuid = true];
   Permission permission = 6;
@@ -112,14 +111,11 @@ message CreateClientRequest {
 }
 
 message CreateClientResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string name = 2;
-  string client_id = 3;
-  string client_secret = 4;
+  Client client = 1;
 }
 
 message GetClientRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
+  string client_id = 1 [(validate.rules).string.uuid = true];
 }
 
 message GetClientResponse {
@@ -137,7 +133,7 @@ message ListClientsResponse {
 }
 
 message UpdateClientRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
+  string client_id = 1 [(validate.rules).string.uuid = true];
   optional string name = 2;
   optional string redirect_uri = 3;
   optional Permission permission = 4;
@@ -148,7 +144,7 @@ message UpdateClientResponse {
 }
 
 message DeleteClientRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
+  string client_id = 1 [(validate.rules).string.uuid = true];
 }
 
 message DeleteClientResponse {
@@ -166,7 +162,7 @@ service ClientService {
 
   // GetClient
   rpc GetClient(GetClientRequest) returns (GetClientResponse) {
-    option (google.api.http) = {get: "/v1/clients/{id}"};
+    option (google.api.http) = {get: "/v1/clients/{client_id}"};
   }
 
   // ListClients
@@ -177,14 +173,14 @@ service ClientService {
   // UpdateClient
   rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse) {
     option (google.api.http) = {
-      put: "/v1/clients/{id}"
+      put: "/v1/clients/{client_id}"
       body: "*"
     };
   }
 
   // DeleteClient
   rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse) {
-    option (google.api.http) = {delete: "/v1/clients/{id}"};
+    option (google.api.http) = {delete: "/v1/clients/{client_id}"};
   }
 }
 
@@ -585,6 +581,7 @@ message AccessKey {
   string access_key = 3;
   string client_id = 5;
   string project_id = 6;
+  repeated string scopes = 7;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp expires_at = 11;
 }
@@ -611,7 +608,7 @@ message CreateAccessKeyResponse {
   google.protobuf.Timestamp expires_at = 10;
 }
 
-message GetTokenRequest {
+message GetAccessKeyRequest {
   string id = 1 [(validate.rules).string.uuid = true];
 }
 
@@ -658,7 +655,7 @@ service AccessKeyService {
   }
 
   // GetAccessKey
-  rpc GetAccessKey(GetTokenRequest) returns (GetAccessKeyResponse) {
+  rpc GetAccessKey(GetAccessKeyRequest) returns (GetAccessKeyResponse) {
     option (google.api.http) = {get: "/v1/tokens/{id}"};
   }
 
@@ -670,11 +667,6 @@ service AccessKeyService {
   // DeleteAccessKey
   rpc DeleteAccessKey(DeleteAccessKeyRequest) returns (DeleteAccessKeyResponse) {
     option (google.api.http) = {delete: "/v1/tokens/{id}"};
-  }
-
-  // AccessKeyPermission
-  rpc AccessKeyPermission(AccessKeyPermissionRequest) returns (AccessKeyPermissionResponse) {
-    option (google.api.http) = {post: "/v1/tokens/-/verify"};
   }
 }
 

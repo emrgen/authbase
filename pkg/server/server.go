@@ -162,8 +162,8 @@ func (s *Server) registerServices() error {
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
 	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, perm, s.mailer, redis))
-	//v1.RegisterOAuth2ServiceServer(grpcServer, oauthService)
-	//v1.RegisterAccountServiceServer()
+	v1.RegisterAccountServiceServer(grpcServer, service.NewAccountService(perm, s.provider, redis))
+	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis))
 	//gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
 
 	// Register the rest gateway

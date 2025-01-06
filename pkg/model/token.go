@@ -6,19 +6,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// Token IssuedAt is same as gorm.Model.CreatedAt
-type Token struct {
+// AccessKey IssuedAt is same as gorm.Model.CreatedAt
+type AccessKey struct {
 	gorm.Model
 	ID        string `gorm:"primaryKey;type:uuid"`
 	Name      string
 	ProjectID string `gorm:"type:uuid"`
-	UserID    string `gorm:"type:uuid"`
+	AccountID string `gorm:"type:uuid"`
 	Token     string // hashed token
-	Hash      string // hashed token
+	Scopes    string
 	ExpireAt  time.Time
 }
 
 // TableName returns the table name of the model
-func (Token) TableName() string {
-	return tableName("tokens")
+func (AccessKey) TableName() string {
+	return tableName("access_keys")
 }

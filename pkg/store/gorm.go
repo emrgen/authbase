@@ -9,10 +9,40 @@ import (
 	"time"
 )
 
+// NewGormStore creates a new GormStore.
+func NewGormStore(db *gorm.DB) *GormStore {
+	return &GormStore{db: db}
+}
+
 var _ AuthBaseStore = new(GormStore)
 
+// GormStore is a Gorm implementation of the store.
 type GormStore struct {
 	db *gorm.DB
+}
+
+func (g *GormStore) CreateClient(ctx context.Context, client *model.Client) error {
+	return g.db.Create(client).Error
+}
+
+func (g *GormStore) GetClientByID(ctx context.Context, id uuid.UUID) (*model.Client, error) {
+	var client model.Client
+	err := g.db.Where("id = ?", id).First(&client).Error
+	return &client, err
+}
+
+func (g *GormStore) ListClients(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Client, int, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) UpdateClient(ctx context.Context, client *model.Client) error {
+	return g.db.Save(client).Error
+}
+
+func (g *GormStore) DeleteClient(ctx context.Context, id uuid.UUID) error {
+	client := model.Client{ID: id.String()}
+	return g.db.Delete(&client).Error
 }
 
 func (g *GormStore) GetAccountCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
@@ -89,25 +119,25 @@ func (g *GormStore) DeleteVerificationCode(ctx context.Context, code string) err
 	return g.db.Delete(&model.VerificationCode{Code: code}).Error
 }
 
-func (g *GormStore) CreateToken(ctx context.Context, token *model.Token) error {
+func (g *GormStore) CreateAccessKey(ctx context.Context, token *model.AccessKey) error {
 	return g.db.Create(token).Error
 }
 
-func (g *GormStore) GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Token, error) {
-	var token model.Token
+func (g *GormStore) GetAccessKeyByID(ctx context.Context, id uuid.UUID) (*model.AccessKey, error) {
+	var token model.AccessKey
 	err := g.db.Where("id = ?", id).First(&token).Error
 	return &token, err
 }
 
-func (g *GormStore) ListAccountTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error) {
-	var tokens []*model.Token
+func (g *GormStore) ListAccountAccessKeys(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.AccessKey, int, error) {
+	var tokens []*model.AccessKey
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Token{}).Count(&total).Error; err != nil {
+		if err := tx.Model(&model.AccessKey{}).Count(&total).Error; err != nil {
 			return err
 		}
-		err := tx.Limit(perPage).Offset(page*perPage).Find(&tokens, "project_id = ? AND user_id = ?", orgID, userID).Error
+		err := tx.Limit(perPage).Offset(page*perPage).Find(&tokens, "project_id = ? AND account_id = ?", orgID, userID).Error
 
 		return err
 	})
@@ -115,12 +145,8 @@ func (g *GormStore) ListAccountTokens(ctx context.Context, orgID, userID uuid.UU
 	return tokens, int(total), err
 }
 
-func (g *GormStore) DeleteToken(ctx context.Context, id uuid.UUID) error {
-	return g.db.Delete(&model.Token{ID: id.String()}).Error
-}
-
-func NewGormStore(db *gorm.DB) *GormStore {
-	return &GormStore{db: db}
+func (g *GormStore) DeleteAccessKey(ctx context.Context, id uuid.UUID) error {
+	return g.db.Delete(&model.AccessKey{ID: id.String()}).Error
 }
 
 func (g *GormStore) CreateAccount(ctx context.Context, user *model.Account) error {
@@ -277,7 +303,7 @@ func (g *GormStore) CreateProjectMember(ctx context.Context, permission *model.P
 
 func (g *GormStore) GetProjectMemberByID(ctx context.Context, orgID, userID uuid.UUID) (*model.ProjectMember, error) {
 	var permission model.ProjectMember
-	err := g.db.Where("project_id = ? AND user_id = ?", orgID.String(), userID.String()).First(&permission).Error
+	err := g.db.Where("project_id = ? AND account_id = ?", orgID.String(), userID.String()).First(&permission).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrPermissionNotFound
 	}

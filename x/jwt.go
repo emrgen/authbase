@@ -28,19 +28,17 @@ func jwtSecret() string {
 }
 
 type Claims struct {
-	Username   string            `json:"username"`
-	Email      string            `json:"email"`
-	ClientID   string            `json:"client_id"`
-	ProjectID  string            `json:"project_id"`
-	UserID     string            `json:"user_id"`
-	Permission uint32            `json:"permission"`
-	Audience   string            `json:"aud"`
-	Jti        string            `json:"jti"`
-	ExpireAt   time.Time         `json:"exp"`
-	IssuedAt   time.Time         `json:"iat"`
-	Provider   string            `json:"provider"` // google, github, etc
-	Scopes     []string          `json:"scopes"`
-	Data       map[string]string `json:"data"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	ClientID  string    `json:"client_id"`
+	ProjectID string    `json:"project_id"`
+	UserID    string    `json:"user_id"`
+	Audience  string    `json:"aud"`
+	Jti       string    `json:"jti"`
+	ExpireAt  time.Time `json:"exp"`
+	IssuedAt  time.Time `json:"iat"`
+	Provider  string    `json:"provider"` // google, github, etc
+	Scopes    []string  `json:"scopes"`
 }
 
 type JWTToken struct {
@@ -62,7 +60,6 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 		"iat":        time.Now().Unix(),
 		"jti":        claims.Jti,
 		"provider":   "authbase",
-		"data":       claims.Data,
 		"scopes":     claims.Scopes,
 	}
 
@@ -144,11 +141,6 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, fmt.Errorf("provider not found")
 	}
 
-	data, ok := claims["data"].(map[string]string)
-	if !ok {
-		data = make(map[string]string)
-	}
-
 	scopes, ok := claims["scopes"].([]string)
 	if !ok {
 		scopes = []string{}
@@ -163,6 +155,5 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		ExpireAt:  expireAt.Time,
 		IssuedAt:  issuedAt.Time,
 		Scopes:    scopes,
-		Data:      data,
 	}, nil
 }

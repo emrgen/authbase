@@ -22,8 +22,9 @@ type AuthBaseStore interface {
 	ProjectMemberStore
 	ProviderStore
 	RefreshTokenStore
-	TokenStore
+	AccessKeyStore
 	VerificationCodeStore
+	ClientStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -51,7 +52,6 @@ type ProjectStore interface {
 }
 
 // AccountStore is the interface for interacting with the user database.
-// Account can be a member or an end user.
 type AccountStore interface {
 	// CreateAccount creates a new user in the database.
 	CreateAccount(ctx context.Context, user *model.Account) error
@@ -77,6 +77,7 @@ type AccountStore interface {
 	GetAccountCount(ctx context.Context, projectID uuid.UUID) (uint32, error)
 }
 
+// SessionStore is the interface for interacting with the session database.
 type SessionStore interface {
 	// CreateSession creates a new session in the database.
 	CreateSession(ctx context.Context, session *model.Session) error
@@ -138,18 +139,19 @@ type RefreshTokenStore interface {
 	DeleteRefreshToken(ctx context.Context, token string) error
 }
 
-// TokenStore is the interface for interacting with the token database.
-type TokenStore interface {
-	// CreateToken creates a new token in the database.
-	CreateToken(ctx context.Context, token *model.Token) error
-	// GetTokenByID retrieves a token by its ID.
-	GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Token, error)
-	// ListAccountTokens retrieves a list of tokens by user.
-	ListAccountTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error)
-	// DeleteToken updates a token in the database.
-	DeleteToken(ctx context.Context, id uuid.UUID) error
+// AccessKeyStore is the interface for interacting with the token database.
+type AccessKeyStore interface {
+	// CreateAccessKey creates a new token in the database.
+	CreateAccessKey(ctx context.Context, token *model.AccessKey) error
+	// GetAccessKeyByID retrieves a token by its ID.
+	GetAccessKeyByID(ctx context.Context, id uuid.UUID) (*model.AccessKey, error)
+	// ListAccountAccessKeys retrieves a list of tokens by user.
+	ListAccountAccessKeys(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.AccessKey, int, error)
+	// DeleteAccessKey updates a token in the database.
+	DeleteAccessKey(ctx context.Context, id uuid.UUID) error
 }
 
+// VerificationCodeStore is the interface for interacting with the verification code database.
 type VerificationCodeStore interface {
 	// CreateVerificationCode creates a new code
 	CreateVerificationCode(ctx context.Context, code *model.VerificationCode) error
@@ -157,4 +159,18 @@ type VerificationCodeStore interface {
 	GetVerificationCode(ctx context.Context, code string) (*model.VerificationCode, error)
 	// DeleteVerificationCode deletes the code
 	DeleteVerificationCode(ctx context.Context, code string) error
+}
+
+// ClientStore is the interface for interacting with the client database.
+type ClientStore interface {
+	// CreateClient creates a new client in the database.
+	CreateClient(ctx context.Context, client *model.Client) error
+	// GetClientByID retrieves a client by its ID.
+	GetClientByID(ctx context.Context, id uuid.UUID) (*model.Client, error)
+	// ListClients retrieves a list of clients.
+	ListClients(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Client, int, error)
+	// UpdateClient updates a client in the database.
+	UpdateClient(ctx context.Context, client *model.Client) error
+	// DeleteClient deletes a client from the database.
+	DeleteClient(ctx context.Context, id uuid.UUID) error
 }

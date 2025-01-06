@@ -169,43 +169,42 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, err
 	}
 
-	user, err := as.GetAccountByEmail(ctx, orgID, email)
+	account, err := as.GetAccountByEmail(ctx, orgID, email)
 	if err != nil {
 		return nil, err
 	}
 
-	if user == nil {
-		return nil, errors.New("user not found")
+	if account == nil {
+		return nil, errors.New("account not found")
 	}
 
-	ok := x.CompareHashAndPassword(user.Password, password, user.Salt)
+	ok := x.CompareHashAndPassword(account.Password, password, account.Salt)
 	if !ok {
 		return nil, errors.New("incorrect password")
 	}
 
-	perm := &model.ProjectMember{}
+	scopes := []string{"account"}
 
-	if user.ProjectMember {
-		perm, err = as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(user.ID))
-		if err != nil {
-			return nil, err
-		}
-	}
+	//if account.ProjectMember {
+	//	perm, err = as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(account.ID))
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 
 	// generate tokens
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		Username:   user.Username,
-		Email:      user.Email,
-		ProjectID:  user.ProjectID,
-		UserID:     user.ID,
-		Permission: perm.Permission,
-		Audience:   "", // the target website or app that will use the token
-		Jti:        jti,
-		ExpireAt:   time.Now().Add(x.AccessTokenDuration),
-		IssuedAt:   time.Now(),
-		Provider:   "authbase",
-		Data:       nil,
+		Username:  account.Username,
+		Email:     account.Email,
+		ProjectID: account.ProjectID,
+		UserID:    account.ID,
+		Audience:  "", // the target website or app that will use the token
+		Jti:       jti,
+		ExpireAt:  time.Now().Add(x.AccessTokenDuration),
+		IssuedAt:  time.Now(),
+		Provider:  "authbase",
+		Scopes:    scopes,
 	})
 	if err != nil {
 		return nil, err
@@ -213,7 +212,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	refreshExpireAt := time.Now().Add(x.RefreshTokenDuration)
 	// save refresh token to cache, it will be used to validate the refresh token request
-	err = a.cache.Set(jti, user.ID, x.RefreshTokenDuration)
+	err = a.cache.Set(jti, account.ID, x.RefreshTokenDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -223,8 +222,8 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		err = as.CreateRefreshToken(ctx, &model.RefreshToken{
 			Token:     token.RefreshToken,
-			ProjectID: user.ProjectID,
-			UserID:    user.ID,
+			ProjectID: account.ProjectID,
+			AccountID: account.ID,
 			ExpireAt:  refreshExpireAt,
 			IssuedAt:  token.IssuedAt,
 		})
@@ -233,12 +232,12 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		}
 
 		// create a new session
-		// user the jti as the session id
-		// this will allow multiple sessions for a user at the same time
+		// account the jti as the session id
+		// this will allow multiple sessions for a account at the same time
 		err = as.CreateSession(ctx, &model.Session{
 			ID:        jti,
-			AccountID: user.ID,
-			ProjectID: user.ProjectID,
+			AccountID: account.ID,
+			ProjectID: account.ProjectID,
 		})
 		if err != nil {
 			return err
@@ -253,11 +252,11 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	// return tokens
 	return &v1.LoginUsingPasswordResponse{
 		User: &v1.Account{
-			Id:        user.ID,
-			Username:  user.Username,
-			Email:     user.Email,
-			CreatedAt: timestamppb.New(user.CreatedAt),
-			UpdatedAt: timestamppb.New(user.UpdatedAt),
+			Id:        account.ID,
+			Username:  account.Username,
+			Email:     account.Email,
+			CreatedAt: timestamppb.New(account.CreatedAt),
+			UpdatedAt: timestamppb.New(account.UpdatedAt),
 		},
 		Token: &v1.AuthToken{
 			AccessToken:      token.AccessToken,
@@ -301,7 +300,7 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 // Refresh generates a new access token using the refresh token
 func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (*v1.RefreshResponse, error) {
 	var foundToken bool
-	var userID string
+	var accountID string
 	var projectID string
 
 	// check if the refresh token is still valid
@@ -318,19 +317,18 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		return nil, err
 	}
 
-	orgID := uuid.MustParse(request.GetProjectId())
 	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
 
 	if tokenStr != "" {
-		var token model.Token
+		var token model.RefreshToken
 		err := json.Unmarshal([]byte(tokenStr), &token)
 		if err != nil {
 			return nil, err
 		}
-		userID = token.UserID
+		accountID = token.AccountID
 		projectID = token.ProjectID
 		foundToken = true
 	}
@@ -347,34 +345,27 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		}
 
 		foundToken = true
-		userID = token.UserID
+		accountID = token.AccountID
 		projectID = token.ProjectID
 	}
 
-	user, err := as.GetAccountByID(ctx, uuid.MustParse(userID))
-	if err != nil {
-		return nil, err
-	}
-
-	perm, err := as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(userID))
+	user, err := as.GetAccountByID(ctx, uuid.MustParse(accountID))
 	if err != nil {
 		return nil, err
 	}
 
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		ProjectID:  projectID,
-		UserID:     user.ID,
-		Username:   claims.Username,
-		Email:      claims.Email,
-		Permission: perm.Permission,
-		Audience:   claims.Audience,
-		Jti:        jti,
-		ExpireAt:   time.Now().Add(15 * time.Minute),
-		IssuedAt:   time.Now(),
-		Provider:   "authbase",
-		Data:       claims.Data,
-		Scopes:     claims.Scopes,
+		ProjectID: projectID,
+		UserID:    user.ID,
+		Username:  claims.Username,
+		Email:     claims.Email,
+		Audience:  claims.Audience,
+		Jti:       jti,
+		ExpireAt:  time.Now().Add(15 * time.Minute),
+		IssuedAt:  time.Now(),
+		Provider:  "authbase",
+		Scopes:    claims.Scopes,
 	})
 	if err != nil {
 		return nil, err

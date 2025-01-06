@@ -87,7 +87,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		// if password is provided, email verification is not strictly required
 		// FIXME: if the mail server config is provider the email verification will fail with error
 		if password == "" || verifyEmail {
-			verificationCode := x.RefreshToken()
+			verificationCode := x.GenerateVerificationCode()
 			// save the code to the db
 			err := o.cache.Set("email:"+user.Email, verificationCode, time.Hour)
 			if err != nil {

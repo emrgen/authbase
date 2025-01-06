@@ -23,8 +23,8 @@ type AccountService struct {
 	v1.UnimplementedAccountServiceServer
 }
 
-// NewUserService creates a new user service.
-func NewUserService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) v1.AccountServiceServer {
+// NewAccountService creates a new user service.
+func NewAccountService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) v1.AccountServiceServer {
 	return &AccountService{perm: perm, store: store, cache: cache}
 }
 

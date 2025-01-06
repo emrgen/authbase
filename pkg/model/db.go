@@ -27,7 +27,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	if err := db.AutoMigrate(&Token{}); err != nil {
+	if err := db.AutoMigrate(&AccessKey{}); err != nil {
 		return err
 	}
 
@@ -40,6 +40,10 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(&Keypair{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(&Client{}); err != nil {
 		return err
 	}
 

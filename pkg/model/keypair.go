@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Keypair represents a keypair used for token generation and verification
 type Keypair struct {
 	gorm.Model
 	ProjectID  string    `gorm:"uuid;primaryKey"`
