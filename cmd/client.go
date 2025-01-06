@@ -60,13 +60,39 @@ func clientCreateCmd() *cobra.Command {
 }
 
 func clientGetCmd() *cobra.Command {
+	var clientID string
 	command := &cobra.Command{
 		Use:   "get",
 		Short: "Get a client",
 		Run: func(cmd *cobra.Command, args []string) {
-			//TODO implement me
+			if clientID == "" {
+				logrus.Error("missing required flags: --client-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.GetClient(tokenContext(), &v1.GetClientRequest{
+				ClientId: clientID,
+			})
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+
+			table := tablewriter.NewWriter(cmd.OutOrStdout())
+			table.SetHeader([]string{"ID", "Pool ID", "Name"})
+			table.Append([]string{res.Client.Id, res.Client.PoolId, res.Client.Name})
+			table.Render()
 		},
 	}
+
+	command.Flags().StringVarP(&clientID, "client-id", "c", "", "Client ID")
 
 	return command
 }

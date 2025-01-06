@@ -236,6 +236,9 @@ message GetPoolRequest {
 
 message GetPoolResponse {
   Pool pool = 1;
+  uint32 users = 2;
+  uint32 members = 4;
+  uint32 clients = 3;
 }
 
 message ListPoolsRequest {

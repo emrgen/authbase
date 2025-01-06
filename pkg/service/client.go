@@ -72,8 +72,29 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 }
 
 func (c *ClientService) GetClient(ctx context.Context, request *v1.GetClientRequest) (*v1.GetClientResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	as, err := store.GetProjectStore(ctx, c.store)
+	if err != nil {
+		return nil, err
+	}
+
+	clientID, err := uuid.Parse(request.GetClientId())
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := as.GetClientByID(ctx, clientID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetClientResponse{
+		Client: &v1.Client{
+			Id:     client.ID,
+			PoolId: client.PoolID,
+			Name:   client.Name,
+		},
+	}, nil
+
 }
 
 func (c *ClientService) ListClients(ctx context.Context, request *v1.ListClientsRequest) (*v1.ListClientsResponse, error) {

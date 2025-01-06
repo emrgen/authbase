@@ -43,7 +43,7 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 		Name:      name,
 		ProjectID: projectID.String(),
 	}
- 
+
 	member := &model.PoolMember{
 		PoolID:     pool.ID,
 		AccountID:  accountID.String(),
@@ -76,8 +76,26 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 }
 
 func (p *PoolService) GetPool(ctx context.Context, request *v1.GetPoolRequest) (*v1.GetPoolResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	poolID := uuid.MustParse(request.GetPoolId())
+	as, err := store.GetProjectStore(ctx, p.store)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := as.GetPoolByID(ctx, poolID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetPoolResponse{
+		Pool: &v1.Pool{
+			Id:        pool.ID,
+			Name:      pool.Name,
+			CreatedAt: timestamppb.New(pool.CreatedAt),
+			UpdatedAt: timestamppb.New(pool.UpdatedAt),
+		},
+	}, nil
+
 }
 
 func (p *PoolService) ListPools(ctx context.Context, request *v1.ListPoolsRequest) (*v1.ListPoolsResponse, error) {
