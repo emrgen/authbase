@@ -1,11 +1,13 @@
 package cmd
 
 import (
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/emrgen/authbase"
+	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
+	"strconv"
 )
 
 func init() {
@@ -17,26 +19,23 @@ func whoamiCommand() *cobra.Command {
 		Use:   "whoami",
 		Short: "config information",
 		Run: func(cmd *cobra.Command, args []string) {
-			loadToken()
 
-			if Token == "" {
-				logrus.Errorf("token is not configured")
-				return
-			}
-
-			// decode token
-			token, _, err := jwt.NewParser().ParseUnverified(Token, jwt.MapClaims{})
+			client, err := authbase.NewClient("4000")
 			if err != nil {
-				logrus.Errorf("failed to parse token: %v", err)
+				panic(err)
+			}
+			defer client.Close()
+
+			res, err := client.GetAccessKeyAccount(tokenContext(), &v1.GetAccessKeyAccountRequest{})
+			if err != nil {
+				logrus.Errorf("failed to get account from token: %s", err)
 				return
 			}
-
-			claim := token.Claims.(jwt.MapClaims)
 
 			// print claims
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Project ID", "User ID", "Email", "Username"})
-			table.Append([]string{claim["project_id"].(string), claim["user_id"].(string), claim["email"].(string), claim["username"].(string)})
+			table.SetHeader([]string{"Project ID", "User ID", "Email", "Username", "Member"})
+			table.Append([]string{res.Account.ProjectId, res.Account.VisibleName, res.Account.Email, res.Account.Username, strconv.FormatBool(res.Account.Member)})
 			table.Render()
 		},
 	}

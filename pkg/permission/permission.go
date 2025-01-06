@@ -9,49 +9,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type ObjectType string
-
-type Permission interface {
-	CreatePermission(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) error
-	DeletePermission(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) error
-	DeleteSubjectPermissions(ctx context.Context, subjectID uuid.UUID, subjectType string) error
-	DeleteObjectPermissions(ctx context.Context, objectID uuid.UUID, objectType string) error
-	Check(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) (bool, error)
+type Definition struct {
+	Name   string
+	Scopes []string
 }
 
-type AuthZed struct {
-}
-
-func (a *AuthZed) CreatePermission(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthZed) DeletePermission(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthZed) DeleteSubjectPermissions(ctx context.Context, subjectID uuid.UUID, subjectType string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthZed) DeleteObjectPermissions(ctx context.Context, objectID uuid.UUID, objectType string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthZed) Check(ctx context.Context, objectID uuid.UUID, objectType string, subjectID uuid.UUID, subjectType string, relation string) (bool, error) {
-	//TODO implement me
-	panic("implement me")
-}
+type Definitions []Definition
 
 // MemberPermission is an interface representing the member permissions that are used in the service layer
 type MemberPermission interface {
-	//CreateProjectMember(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
-	//DeleteProjectMember(ctx context.Context, objectType ObjectType, memberID uuid.UUID, relation string) error
-
 	// CheckMasterProjectPermission checks if the user has the permission to perform
 	CheckMasterProjectPermission(ctx context.Context, relation string) error
 	// CheckProjectPermission checks if the user has the permission to perform the action on the project
@@ -103,9 +69,9 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 		return errors.New("user account is disabled")
 	}
 
-	//if !user.Member {
-	//	return x.ErrNotProjectMember
-	//}
+	if !user.ProjectMember {
+		return x.ErrNotProjectMember
+	}
 
 	// if the user is a member of the master project
 	if user.Project.Master {

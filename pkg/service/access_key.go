@@ -260,6 +260,8 @@ func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.
 			Id:          account.ID,
 			Email:       account.Email,
 			VisibleName: account.VisibleName,
+			Member:      account.ProjectMember,
+			ProjectId:   account.ProjectID,
 		},
 	}, nil
 }

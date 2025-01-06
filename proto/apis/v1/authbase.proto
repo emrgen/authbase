@@ -194,6 +194,7 @@ message Account {
   bool disabled = 5;
   bool member = 6;
   string kind = 7;
+  string project_id = 8 [(validate.rules).string.uuid = true];
 
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
