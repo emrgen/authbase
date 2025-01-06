@@ -58,7 +58,7 @@ type AccountStore interface {
 	// CreateAccount creates a new user in the database.
 	CreateAccount(ctx context.Context, user *model.Account) error
 	// GetAccountByEmail retrieves a user by their email address.
-	GetAccountByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.Account, error)
+	GetAccountByEmail(ctx context.Context, poolID uuid.UUID, email string) (*model.Account, error)
 	// GetAccountByID retrieves a user by their ID.
 	GetAccountByID(ctx context.Context, id uuid.UUID) (*model.Account, error)
 	// UpdateAccount updates a user in the database.

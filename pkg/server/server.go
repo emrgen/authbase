@@ -119,7 +119,7 @@ func (s *Server) init(grpcPort, httpPort string) error {
 // register the services with the grpc server
 func (s *Server) registerServices() error {
 	var err error
-	verifier := x.NewStoreBasedUserVerifier(s.provider, s.redis)
+	verifier := x.NewStoreBasedTokenVerifier(s.provider, s.redis)
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),

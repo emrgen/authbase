@@ -53,6 +53,12 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 		return nil, err
 	}
 
+	visibleName := request.GetVisibleName()
+	userName := request.GetUsername()
+	if visibleName == "" && userName != "" {
+		visibleName = userName
+	}
+
 	err = u.perm.CheckProjectPermission(ctx, projectID, "write")
 	if err != nil {
 		return nil, err
@@ -275,6 +281,7 @@ func (u *AccountService) ListActiveAccounts(ctx context.Context, request *v1.Lis
 	return &v1.ListActiveAccountsResponse{Accounts: userProtos}, nil
 }
 
+// ListInactiveAccounts lists inactive users.
 func (u *AccountService) ListInactiveAccounts(ctx context.Context, request *v1.ListInactiveAccountsRequest) (*v1.ListInactiveAccountsResponse, error) {
 	//as, err := store.GetProjectStore(ctx, u.store)
 	//if err != nil {

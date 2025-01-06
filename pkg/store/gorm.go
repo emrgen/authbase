@@ -234,9 +234,9 @@ func (g *GormStore) CreateAccount(ctx context.Context, user *model.Account) erro
 	return g.db.Create(user).Error
 }
 
-func (g *GormStore) GetAccountByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.Account, error) {
+func (g *GormStore) GetAccountByEmail(ctx context.Context, poolID uuid.UUID, email string) (*model.Account, error) {
 	var user model.Account
-	err := g.db.Find(&user, "project_id = ? AND email = ?", orgID, email).Error
+	err := g.db.Find(&user, "pool_id = ? AND email = ?", poolID, email).Error
 	return &user, err
 }
 

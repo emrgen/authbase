@@ -81,18 +81,22 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		scopes = request.GetScopes()
 	}
 
+	// custom permissions from the downstream service
+	permissions := request.GetPermissions()
+
 	expireAt := time.Now().Add(expireAfter)
 	token := x.NewAccessKey()
 
 	// create a new token
 	accessKey := &model.AccessKey{
-		ID:        token.ID.String(),
-		AccountID: accountID.String(),
-		ProjectID: request.GetProjectId(),
-		Name:      request.GetName(),
-		Token:     token.Value,
-		Scopes:    strings.Join(scopes, ","),
-		ExpireAt:  expireAt,
+		ID:          token.ID.String(),
+		AccountID:   accountID.String(),
+		ProjectID:   request.GetProjectId(),
+		Name:        request.GetName(),
+		Token:       token.Value,
+		Scopes:      strings.Join(scopes, ","),
+		Permissions: strings.Join(permissions, ","),
+		ExpireAt:    expireAt,
 	}
 
 	// save the token into the database

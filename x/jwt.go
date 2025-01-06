@@ -28,17 +28,19 @@ func jwtSecret() string {
 }
 
 type Claims struct {
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	ClientID  string    `json:"client_id"`
-	ProjectID string    `json:"project_id"`
-	AccountID string    `json:"account_id"`
-	Audience  string    `json:"aud"`
-	Jti       string    `json:"jti"`
-	ExpireAt  time.Time `json:"exp"`
-	IssuedAt  time.Time `json:"iat"`
-	Provider  string    `json:"provider"` // google, github, etc
-	Scopes    []string  `json:"scopes"`
+	Username    string    `json:"username"`
+	Email       string    `json:"email"`
+	ProjectID   string    `json:"project_id"`
+	ClientID    string    `json:"client_id"`
+	PoolID      string    `json:"pool_id"`
+	AccountID   string    `json:"account_id"`
+	Audience    string    `json:"aud"`
+	Jti         string    `json:"jti"`
+	ExpireAt    time.Time `json:"exp"`
+	IssuedAt    time.Time `json:"iat"`
+	Provider    string    `json:"provider"` // google, github, etc
+	Scopes      []string  `json:"scopes"`
+	Permissions []string  `json:"permissions"`
 }
 
 type JWTToken struct {
@@ -51,16 +53,18 @@ type JWTToken struct {
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	claim := jwt.MapClaims{
-		"username":   claims.Username,
-		"email":      claims.Email,
-		"account_id": claims.AccountID,
-		"project_id": claims.ProjectID,
-		"client_id":  claims.ClientID,
-		"exp":        claims.ExpireAt.Unix(),
-		"iat":        time.Now().Unix(),
-		"jti":        claims.Jti,
-		"provider":   "authbase",
-		"scopes":     claims.Scopes,
+		"username":    claims.Username,
+		"email":       claims.Email,
+		"account_id":  claims.AccountID,
+		"project_id":  claims.ProjectID,
+		"client_id":   claims.ClientID,
+		"pool_id":     claims.PoolID,
+		"exp":         claims.ExpireAt.Unix(),
+		"iat":         time.Now().Unix(),
+		"jti":         claims.Jti,
+		"provider":    "authbase",
+		"scopes":      claims.Scopes,
+		"permissions": claims.Permissions,
 	}
 
 	// Generate the access token
@@ -136,6 +140,11 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, fmt.Errorf("client_id not found")
 	}
 
+	poolID, ok := claims["pool_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("pool_id not found")
+	}
+
 	provider, ok := claims["provider"].(string)
 	if !ok {
 		return nil, fmt.Errorf("provider not found")
@@ -146,14 +155,21 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		scopes = []string{}
 	}
 
+	permissions, ok := claims["permissions"].([]string)
+	if !ok {
+		permissions = []string{}
+	}
+
 	return &Claims{
-		AccountID: userID,
-		ProjectID: projectID,
-		ClientID:  clientID,
-		Jti:       jti,
-		Provider:  provider,
-		ExpireAt:  expireAt.Time,
-		IssuedAt:  issuedAt.Time,
-		Scopes:    scopes,
+		AccountID:   userID,
+		ProjectID:   projectID,
+		ClientID:    clientID,
+		PoolID:      poolID,
+		Jti:         jti,
+		Provider:    provider,
+		ExpireAt:    expireAt.Time,
+		IssuedAt:    issuedAt.Time,
+		Scopes:      scopes,
+		Permissions: permissions,
 	}, nil
 }

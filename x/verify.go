@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-// UserVerifier is an interface to verify the user.
-type UserVerifier interface {
+// TokenVerifier is an interface to verify the token.
+type TokenVerifier interface {
 	// VerifyEmailPassword verifies the email and password of a user.
 	VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.Account, error)
 	// VerifyToken verifies the token.
@@ -26,8 +26,8 @@ type StoreBasedUserVerifier struct {
 	redis *cache.Redis
 }
 
-// NewStoreBasedUserVerifier creates a new StoreBasedUserVerifier.
-func NewStoreBasedUserVerifier(store store.Provider, redis *cache.Redis) *StoreBasedUserVerifier {
+// NewStoreBasedTokenVerifier creates a new StoreBasedUserVerifier.
+func NewStoreBasedTokenVerifier(store store.Provider, redis *cache.Redis) *StoreBasedUserVerifier {
 	return &StoreBasedUserVerifier{
 		store: store,
 		redis: redis,

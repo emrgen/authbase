@@ -159,17 +159,24 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 }
 
 // LoginUsingPassword logs in a user and returns an access token and a refresh token
+// TODO: should be rate limited to prevent brute force attacks
 func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	password := request.GetPassword()
 
-	orgID := uuid.MustParse(request.GetProjectId())
+	clientID := uuid.MustParse(request.GetClientId())
 	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
 		return nil, err
 	}
+	client, err := as.GetClientByID(ctx, clientID)
+	if err != nil {
+		return nil, err
+	}
 
-	account, err := as.GetAccountByEmail(ctx, orgID, email)
+	poolID := uuid.MustParse(client.PoolID)
+
+	account, err := as.GetAccountByEmail(ctx, poolID, email)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +193,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	scopes := []string{"account"}
 
 	//if account.ProjectMember {
-	//	perm, err = as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(account.ID))
+	//	perm, err = as.GetProjectMemberByID(ctx, clientID, uuid.MustParse(account.ID))
 	//	if err != nil {
 	//		return nil, err
 	//	}
@@ -195,16 +202,17 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	// generate tokens
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		Username:  account.Username,
-		Email:     account.Email,
-		ProjectID: account.ProjectID,
-		AccountID: account.ID,
-		Audience:  "", // the target website or app that will use the token
-		Jti:       jti,
-		ExpireAt:  time.Now().Add(x.AccessTokenDuration),
-		IssuedAt:  time.Now(),
-		Provider:  "authbase",
-		Scopes:    scopes,
+		Username:    account.Username,
+		Email:       account.Email,
+		ProjectID:   account.ProjectID,
+		AccountID:   account.ID,
+		Audience:    "", // the target website or app that will use the token
+		Jti:         jti,
+		ExpireAt:    time.Now().Add(x.AccessTokenDuration),
+		IssuedAt:    time.Now(),
+		Provider:    "authbase",
+		Scopes:      scopes,
+		Permissions: []string{},
 	})
 	if err != nil {
 		return nil, err
@@ -268,6 +276,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	}, nil
 }
 
+// Logout logs out a user by deleting the session from the db, and the refresh tokens from the cache
 func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v1.LogoutResponse, error) {
 	// check if the token is still valid
 	accessToken := request.GetAccessToken()

@@ -354,7 +354,7 @@ func registerUserCommand() *cobra.Command {
 }
 
 func loginUserCommand() *cobra.Command {
-	var projectID string
+	var clientID string
 	var email string
 	var password string
 
@@ -362,8 +362,8 @@ func loginUserCommand() *cobra.Command {
 		Use:   "login",
 		Short: "login user",
 		Run: func(cmd *cobra.Command, args []string) {
-			if projectID == "" {
-				logrus.Errorf("missing required flag: --project-id")
+			if clientID == "" {
+				logrus.Errorf("missing required flag: --client-id")
 				return
 			}
 
@@ -385,33 +385,26 @@ func loginUserCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.LoginUsingPassword(context.Background(), &v1.LoginUsingPasswordRequest{
-				Email:     email,
-				Password:  password,
-				ProjectId: projectID,
+				Email:    email,
+				Password: password,
+				ClientId: clientID,
 			})
 			if err != nil {
 				logrus.Errorf("failed to login user: %v", err)
 				return
 			}
 
-			// print response in table
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "UpdatedAt", "Token"})
-			table.Append([]string{
-				"1", res.User.Id, res.User.Email, res.User.Username,
-				res.User.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
-				res.User.UpdatedAt.AsTime().Format("2006-01-02 15:04:05"),
-				res.Token.AccessToken,
-			})
-
-			table.Render()
+			cmd.Printf("Name: %v\n", res.User.VisibleName)
+			cmd.Printf("Email: %v\n", res.User.Email)
+			cmd.Printf("AccessToken: %v\n", res.Token.AccessToken)
+			cmd.Printf("RefreshToken: %v\n", res.Token.RefreshToken)
 		},
 	}
 
 	bindContextFlags(command)
-	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
+	command.Flags().StringVarP(&clientID, "client-id", "c", "", "client id")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
-	command.Flags().StringVarP(&password, "password", "w", "", "password")
+	command.Flags().StringVarP(&password, "password", "p", "", "password")
 
 	return command
 }

@@ -20,6 +20,10 @@ func NewAccessKey() AccessKey {
 	}
 }
 
+func IsAccessKey(key string) bool {
+	return strings.HasPrefix(key, AccessTokenPrefix)
+}
+
 // ParseAccessKey parses an access key
 func ParseAccessKey(key string) (*AccessKey, error) {
 	token := ParseToken(key)

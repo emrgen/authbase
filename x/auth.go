@@ -13,7 +13,7 @@ import (
 
 // AuthInterceptor authenticates the request using the provided verifier.
 // on success, it sets the accountID and projectID and account permission in the context.
-func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
+func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		switch info.FullMethod {
 		case
