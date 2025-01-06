@@ -10,6 +10,24 @@ import (
 
 // ref: https://gist.github.com/goliatone/e9c13e5f046e34cef6e150d06f20a34c
 
+// GenerateKeyPair generates a new key pair of specified byte size
+// returns private key and public key in PEM format
+func GenerateKeyPair(bitSize int) ([]byte, []byte, error) {
+	privateKey, err := GeneratePrivateKey(bitSize)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	publicKeyBytes, err := GeneratePublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	privateKeyBytes := EncodePrivateKeyToPEM(privateKey)
+
+	return privateKeyBytes, publicKeyBytes, nil
+}
+
 // GeneratePrivateKey creates a RSA Private Key of specified byte size
 func GeneratePrivateKey(bitSize int) (*rsa.PrivateKey, error) {
 	// Private Key generation

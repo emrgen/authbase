@@ -146,7 +146,7 @@ func (s *Server) registerServices() error {
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
+		//grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
 	}
 	endpoint := "localhost" + s.grpcPort
 

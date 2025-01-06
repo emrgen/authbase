@@ -32,7 +32,7 @@ type Claims struct {
 	Email     string    `json:"email"`
 	ClientID  string    `json:"client_id"`
 	ProjectID string    `json:"project_id"`
-	UserID    string    `json:"user_id"`
+	AccountID string    `json:"account_id"`
 	Audience  string    `json:"aud"`
 	Jti       string    `json:"jti"`
 	ExpireAt  time.Time `json:"exp"`
@@ -53,7 +53,7 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	claim := jwt.MapClaims{
 		"username":   claims.Username,
 		"email":      claims.Email,
-		"user_id":    claims.UserID,
+		"account_id": claims.AccountID,
 		"project_id": claims.ProjectID,
 		"client_id":  claims.ClientID,
 		"exp":        claims.ExpireAt.Unix(),
@@ -147,7 +147,7 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	}
 
 	return &Claims{
-		UserID:    userID,
+		AccountID: userID,
 		ProjectID: projectID,
 		ClientID:  clientID,
 		Jti:       jti,

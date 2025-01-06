@@ -110,17 +110,19 @@ func createProjectCommand() *cobra.Command {
 }
 
 func getProjectCommand() *cobra.Command {
+	var projectID string
 	command := &cobra.Command{
 		Use:   "get",
 		Short: "get project by id",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
+
 			if Token == "" {
 				logrus.Errorf("missing required flags: --token")
 				return
 			}
 
-			if ProjectId == "" {
+			if projectID == "" {
 				logrus.Errorf("missing required flags: --orgName")
 			}
 
@@ -133,7 +135,7 @@ func getProjectCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			res, err := client.GetProject(ctx, &v1.GetProjectRequest{
-				Id: ProjectId,
+				Id: projectID,
 			})
 			if err != nil {
 				logrus.Errorf("error getting project: %v", err)
@@ -152,7 +154,7 @@ func getProjectCommand() *cobra.Command {
 		},
 	}
 
-	bindContextFlags(command)
+	command.Flags().StringVarP(&projectID, "project", "r", "", "project id")
 
 	return command
 }

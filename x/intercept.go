@@ -17,8 +17,10 @@ const (
 	ProjectPermissionKey = "authbase_project_permission"
 	// ProjectIDKey is the key to store the project id in the context
 	ProjectIDKey = "authbase_project_id"
-	// UserIDKey is the key to store the user id in the context
-	UserIDKey = "authbase_user_id"
+	// AccountIDKey is the key to store the user id in the context
+	AccountIDKey = "authbase_account_id"
+	// ScopesKey is the key to store the scopes in the context
+	ScopesKey = "authbase_scopes"
 )
 
 type ProjectID interface {
@@ -28,7 +30,7 @@ type ProjectID interface {
 func InjectPermissionInterceptor(member v1.ProjectMemberServiceClient) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		// check if the projectPermission are in the context
-		_, err = GetProjectPermission(ctx)
+		_, err = GetAuthbaseProjectPermission(ctx)
 		if err == nil {
 			return nil, status.Errorf(codes.InvalidArgument, "missing project permission")
 		}
@@ -49,7 +51,7 @@ func InjectPermissionInterceptor(member v1.ProjectMemberServiceClient) grpc.Unar
 			return nil, err
 		}
 
-		userID, ok := ctx.Value(UserIDKey).(uuid.UUID)
+		userID, ok := ctx.Value(AccountIDKey).(uuid.UUID)
 		if !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "missing user id")
 		}
@@ -84,20 +86,29 @@ func GetAuthbaseProjectID(ctx context.Context) (uuid.UUID, error) {
 	return pid, nil
 }
 
-func GetAuthbaseUserID(ctx context.Context) (uuid.UUID, error) {
-	userID, ok := ctx.Value(UserIDKey).(uuid.UUID)
+func GetAuthbaseAccountID(ctx context.Context) (uuid.UUID, error) {
+	accountID, ok := ctx.Value(AccountIDKey).(uuid.UUID)
 	if !ok {
-		return uuid.UUID{}, errors.New("userID not found in context")
+		return uuid.UUID{}, errors.New("accountID not found in context")
 	}
 
-	return userID, nil
+	return accountID, nil
 }
 
-func GetProjectPermission(ctx context.Context) (v1.Permission, error) {
+func GetAuthbaseProjectPermission(ctx context.Context) (v1.Permission, error) {
 	permission, ok := ctx.Value(ProjectPermissionKey).(v1.Permission)
 	if !ok {
 		return v1.Permission_NONE, status.Errorf(codes.InvalidArgument, "missing project permission")
 	}
 
 	return permission, nil
+}
+
+func GetAuthbaseScopes(ctx context.Context) ([]string, error) {
+	scopes, ok := ctx.Value(ScopesKey).([]string)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "missing scopes")
+	}
+
+	return scopes, nil
 }

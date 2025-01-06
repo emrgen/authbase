@@ -198,7 +198,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		Username:  account.Username,
 		Email:     account.Email,
 		ProjectID: account.ProjectID,
-		UserID:    account.ID,
+		AccountID: account.ID,
 		Audience:  "", // the target website or app that will use the token
 		Jti:       jti,
 		ExpireAt:  time.Now().Add(x.AccessTokenDuration),
@@ -357,7 +357,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
 		ProjectID: projectID,
-		UserID:    user.ID,
+		AccountID: user.ID,
 		Username:  claims.Username,
 		Email:     claims.Email,
 		Audience:  claims.Audience,

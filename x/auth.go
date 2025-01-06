@@ -12,7 +12,7 @@ import (
 )
 
 // AuthInterceptor authenticates the request using the provided verifier.
-// on success, it sets the userID and projectID in the context.
+// on success, it sets the accountID and projectID and account permission in the context.
 func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		switch info.FullMethod {
@@ -20,46 +20,51 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 			v1.AuthService_LoginUsingPassword_FullMethodName,
 			gopackv1.TokenService_VerifyToken_FullMethodName:
 			break
-		//case v1.AuthService_Login_FullMethodName:
-		//	request := req.(*v1.LoginRequest)
-		//	orgID, err := uuid.Parse(request.GetProjectId())
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//	user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//
-		//	ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
-		//	ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
-		//case v1.OfflineTokenService_CreateToken_FullMethodName:
-		//	request := req.(*v1.CreateTokenRequest)
-		//	orgID, err := uuid.Parse(request.GetProjectId())
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//	user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//
-		//	ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
-		//	ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
-		default:
-			// TODO: if http cookie is present use that
-			// user Bearer token for authentication
-			token, err := tokenFromHeader(ctx, "Bearer")
+		case v1.AccessKeyService_CreateAccessKey_FullMethodName:
+			request := req.(*v1.CreateAccessKeyRequest)
+			orgID, err := uuid.Parse(request.GetProjectId())
 			if err != nil {
 				return nil, err
 			}
-			claims, err := VerifyJWTToken(token)
+			user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
 			if err != nil {
 				return nil, err
 			}
 
-			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(claims.UserID))
-			ctx = context.WithValue(ctx, "project_id", uuid.MustParse(claims.ProjectID))
+			ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(user.ID))
+			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(request.GetProjectId()))
+		default:
+			// TODO: if http cookie is present use that
+			// user Bearer token for authentication
+			token, err := tokenFromHeader(ctx, "Bearer")
+
+			accessKey, err := ParseAccessKey(token)
+			if !errors.Is(err, ErrInvalidToken) && err != nil {
+				return nil, err
+			}
+
+			if accessKey != nil {
+				claims, err := verifier.VerifyAccessKey(ctx, accessKey.ID, accessKey.Value)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
+				ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
+				ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
+			} else {
+				if err != nil {
+					return nil, err
+				}
+				claims, err := VerifyJWTToken(token)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
+				ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
+				ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
+			}
 		}
 
 		return handler(ctx, req)

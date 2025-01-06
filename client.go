@@ -48,6 +48,7 @@ func NewClient(port string) (Client, error) {
 		SessionServiceClient:      v1.NewSessionServiceClient(conn),
 		AccountServiceClient:      v1.NewAccountServiceClient(conn),
 		OAuth2ServiceClient:       v1.NewOAuth2ServiceClient(conn),
+		AccessKeyServiceClient:    v1.NewAccessKeyServiceClient(conn),
 	}, nil
 }
 

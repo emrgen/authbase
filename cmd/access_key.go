@@ -12,8 +12,8 @@ import (
 )
 
 var tokenCommand = &cobra.Command{
-	Use:   "token",
-	Short: "token commands",
+	Use:   "key",
+	Short: "key commands",
 }
 
 func init() {
@@ -23,20 +23,20 @@ func init() {
 }
 
 func createTokenCommand() *cobra.Command {
-	var projectId string
+	var projectID string
 	var email string
 	var password string
 	var save bool
 
 	command := &cobra.Command{
 		Use:   "create",
-		Short: "create token",
+		Short: "create access key",
 		Run: func(cmd *cobra.Command, args []string) {
-			if projectId == "" {
+			if projectID == "" {
 				logrus.Error("missing required flags: --project")
 				return
 			}
-			_, err := uuid.Parse(projectId)
+			_, err := uuid.Parse(projectID)
 			if err != nil {
 				logrus.Error("project id must be a valid uuid")
 				return
@@ -59,7 +59,7 @@ func createTokenCommand() *cobra.Command {
 			}
 
 			token, err := client.CreateAccessKey(context.Background(), &v1.CreateAccessKeyRequest{
-				ProjectId: projectId,
+				ProjectId: projectID,
 				Email:     email,
 				Password:  password,
 				ExpiresIn: nil,
@@ -76,18 +76,15 @@ func createTokenCommand() *cobra.Command {
 			if save {
 				logrus.Infof("context updated with token")
 				writeContext(Context{
-					ProjectId: projectId,
-					Token:     token.Token,
-					Username:  email,
-					Password:  password,
+					Token: token.Token,
 				})
 			}
 		},
 	}
 
-	command.Flags().StringVarP(&projectId, "project-id", "p", "", "project id")
+	command.Flags().StringVarP(&projectID, "project", "r", "", "project id")
 	command.Flags().StringVarP(&email, "email", "e", "", "user name")
-	command.Flags().StringVarP(&password, "password", "w", "", "password")
+	command.Flags().StringVarP(&password, "password", "p", "", "password")
 	command.Flags().BoolVarP(&save, "save", "s", false, "set context")
 
 	return command

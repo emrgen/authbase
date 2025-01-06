@@ -7,6 +7,7 @@ import (
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/google/uuid"
+	"strings"
 )
 
 // UserVerifier is an interface to verify the user.
@@ -15,6 +16,8 @@ type UserVerifier interface {
 	VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.Account, error)
 	// VerifyToken verifies the token.
 	VerifyToken(ctx context.Context, token string) (*Claims, error)
+	// VerifyAccessKey verifies the access key.
+	VerifyAccessKey(ctx context.Context, id uuid.UUID, accessKey string) (*Claims, error)
 }
 
 // StoreBasedUserVerifier is a user verifier that uses the store to verify the user.
@@ -61,6 +64,34 @@ func (v *StoreBasedUserVerifier) VerifyToken(ctx context.Context, token string) 
 	claims, err := VerifyJWTToken(token)
 	if err != nil {
 		return nil, err
+	}
+
+	return claims, nil
+}
+
+// VerifyAccessKey verifies the access key.
+func (v *StoreBasedUserVerifier) VerifyAccessKey(ctx context.Context, id uuid.UUID, key string) (*Claims, error) {
+	as, err := store.GetProjectStore(ctx, v.store)
+	if err != nil {
+		return nil, err
+	}
+
+	accessKey, err := as.GetAccessKeyByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if accessKey.Token != key {
+		return nil, errors.New("invalid access key")
+	}
+
+	claims := &Claims{
+		ProjectID: accessKey.ProjectID,
+		AccountID: accessKey.AccountID,
+	}
+
+	if accessKey.Scopes != "" {
+		claims.Scopes = strings.Split(accessKey.Scopes, ",")
 	}
 
 	return claims, nil

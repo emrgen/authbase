@@ -33,7 +33,7 @@ func createMemberCommand() *cobra.Command {
 		Short: "create member",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-			verifyToken()
+			assertToken()
 
 			if username == "" {
 				logrus.Errorf("missing required flag: --username")
@@ -64,6 +64,7 @@ func createMemberCommand() *cobra.Command {
 }
 
 func addMemberCommand() *cobra.Command {
+	var projectID string
 	var userID string
 	var permission uint32
 
@@ -73,7 +74,7 @@ func addMemberCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
-			if ProjectId == "" {
+			if projectID == "" {
 				logrus.Errorf("missing required flag: --project")
 				return
 			}
@@ -102,7 +103,7 @@ func addMemberCommand() *cobra.Command {
 			ctx := tokenContext()
 			res, err := client.AddProjectMember(ctx, &v1.AddProjectMemberRequest{
 				MemberId:   userID,
-				ProjectId:  ProjectId,
+				ProjectId:  projectID,
 				Permission: v1.Permission(permission),
 			})
 			if err != nil {
@@ -122,12 +123,14 @@ func addMemberCommand() *cobra.Command {
 }
 
 func listMemberCommand() *cobra.Command {
+	var projectID string
+
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "list user",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-			verifyToken()
+			assertToken()
 
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
@@ -137,14 +140,14 @@ func listMemberCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.ListProjectMember(tokenContext(), &v1.ListProjectMemberRequest{
-				ProjectId: ProjectId,
+				ProjectId: projectID,
 			})
 			if err != nil {
 				logrus.Errorf("failed to list member: %v", err)
 				return
 			}
 
-			logrus.Infof("member list for project: %v", ProjectId)
+			logrus.Infof("member list for project: %v", projectID)
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Username", "Email", "Permission"})
 			for i, member := range res.Members {
@@ -154,7 +157,6 @@ func listMemberCommand() *cobra.Command {
 					perm = "ERROR"
 				}
 
-				v1.Permission_NONE.String()
 				table.Append([]string{
 					strconv.Itoa(i + 1),
 					member.Id, member.Username, member.Email, perm,
@@ -164,7 +166,8 @@ func listMemberCommand() *cobra.Command {
 		},
 	}
 
-	bindContextFlags(command)
+	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
+
 	return command
 }
 
@@ -224,6 +227,7 @@ func updateMemberCommand() *cobra.Command {
 }
 
 func deleteMemberCommand() *cobra.Command {
+	var projectID string
 	var userID string
 
 	command := &cobra.Command{
@@ -231,7 +235,11 @@ func deleteMemberCommand() *cobra.Command {
 		Short: "delete user",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-			verifyToken()
+
+			if projectID == "" {
+				logrus.Errorf("missing required flag: --project")
+				return
+			}
 
 			if userID == "" {
 				logrus.Errorf("missing required flag: --username")
@@ -246,7 +254,7 @@ func deleteMemberCommand() *cobra.Command {
 			defer client.Close()
 
 			_, err = client.RemoveProjectMember(tokenContext(), &v1.RemoveProjectMemberRequest{
-				ProjectId: ProjectId,
+				ProjectId: projectID,
 				MemberId:  userID,
 			})
 
@@ -261,6 +269,7 @@ func deleteMemberCommand() *cobra.Command {
 }
 
 func removeMemberCommand() *cobra.Command {
+	var projectID string
 	var userID string
 
 	command := &cobra.Command{
@@ -269,7 +278,7 @@ func removeMemberCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
-			if ProjectId == "" {
+			if projectID == "" {
 				logrus.Errorf("missing required flag: --project")
 				return
 			}
@@ -286,7 +295,7 @@ func removeMemberCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			res, err := client.RemoveProjectMember(ctx, &v1.RemoveProjectMemberRequest{MemberId: userID, ProjectId: ProjectId})
+			res, err := client.RemoveProjectMember(ctx, &v1.RemoveProjectMemberRequest{MemberId: userID, ProjectId: projectID})
 			if err != nil {
 				logrus.Errorf("failed to remove member: %v", err)
 				return

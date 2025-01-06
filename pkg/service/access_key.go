@@ -87,7 +87,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 
 	// create a new token
 	accessKey := &model.AccessKey{
-		ID:        uuid.New().String(),
+		ID:        token.ID.String(),
 		AccountID: userID.String(),
 		ProjectID: request.GetProjectId(),
 		Name:      request.GetName(),
@@ -98,7 +98,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err = t.cache.Set(token.ID, accessKey.ProjectID, defaultAccessKeyExpireIn)
+		err = t.cache.Set(token.ID.String(), accessKey.ProjectID, defaultAccessKeyExpireIn)
 		if err != nil {
 			return err
 		}
@@ -116,7 +116,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 
 	return &v1.CreateAccessKeyResponse{
 		Id:    accessKey.ID,
-		Token: accessKey.Token,
+		Token: token.String(),
 	}, nil
 }
 
@@ -236,4 +236,30 @@ func (t *AccessKeyService) DeleteAccessKey(ctx context.Context, request *v1.Dele
 
 	logrus.Errorf("delete token %v", request)
 	return &v1.DeleteAccessKeyResponse{}, nil
+}
+
+// GetAccessKeyAccount get the account from the token
+func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.GetAccessKeyAccountRequest) (*v1.GetAccessKeyAccountResponse, error) {
+	as, err := store.GetProjectStore(ctx, t.store)
+	if err != nil {
+		return nil, err
+	}
+
+	accountID, err := x.GetAuthbaseAccountID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := as.GetAccountByID(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetAccessKeyAccountResponse{
+		Account: &v1.Account{
+			Id:          account.ID,
+			Email:       account.Email,
+			VisibleName: account.VisibleName,
+		},
+	}, nil
 }

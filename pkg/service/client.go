@@ -25,7 +25,7 @@ type ClientService struct {
 }
 
 func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClientRequest) (*v1.CreateClientResponse, error) {
-	userID, err := x.GetAuthbaseUserID(ctx)
+	userID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,11 +21,7 @@ func init() {
 }
 
 type Context struct {
-	ProjectId string `json:"project_id"`
-	Token     string `json:"token"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	ExpireAt  int64  `json:"expire_at"`
+	Token string `json:"token"`
 }
 
 func loadToken() {
@@ -80,8 +75,7 @@ func setContextCommand() *cobra.Command {
 			viper.AddConfigPath("./.tmp")
 			viper.SetConfigType("yml")
 			viper.Set("context", Context{
-				ProjectId: project,
-				Token:     token,
+				Token: token,
 			})
 
 			if err := viper.WriteConfig(); err != nil {
@@ -121,14 +115,9 @@ func verifyContext() {
 		logrus.Error("missing required flags: --token")
 		return
 	}
-
-	if ProjectId == "" {
-		logrus.Error("missing required flags: --organization")
-		return
-	}
 }
 
-func verifyToken() {
+func assertToken() {
 	if Token == "" {
 		logrus.Error("missing required flags: --token")
 		return
@@ -137,26 +126,22 @@ func verifyToken() {
 
 func bindContextFlags(command *cobra.Command) {
 	command.Flags().StringVarP(&Token, "token", "t", "", "token")
-	command.Flags().StringVarP(&ProjectId, "project", "r", "", "project")
 }
 
 func tokenContext() context.Context {
 	cfg := readContext()
-	Token = cfg.Token
 
-	md := metadata.New(map[string]string{"Authorization": "Bearer " + Token})
+	if Token != "" {
+		cfg.Token = Token
+	}
+
+	md := metadata.New(map[string]string{"Authorization": "Bearer " + cfg.Token})
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	return ctx
 }
 
 func tokenProjectID() string {
-	// decode token
-	token, _, err := jwt.NewParser().ParseUnverified(Token, jwt.MapClaims{})
-	if err != nil {
-		panic(err)
-	}
-
-	claim := token.Claims.(jwt.MapClaims)
-	return claim["project_id"].(string)
+	// get the project id from the token
+	return ""
 }

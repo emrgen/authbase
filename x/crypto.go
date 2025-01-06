@@ -5,6 +5,7 @@ package x
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"io"
 	"strings"
 )
@@ -34,6 +35,15 @@ func randomString(n int) string {
 	}
 
 	return string(b)
+}
+
+func generateSecureToken(length int) (string, int) {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return "", 0
+	}
+	token := hex.EncodeToString(b)
+	return token, len(token)
 }
 
 func base64EncodeStripped(s string) string {

@@ -21,9 +21,6 @@ func Execute() {
 }
 
 var Token string
-var ProjectId string
-var Username string
-var Password string
 
 func init() {
 	rootCmd.AddCommand(dbCmd)
@@ -38,19 +35,7 @@ func init() {
 	rootCmd.AddCommand(keygenCommand)
 
 	ctx := readContext()
-	if ctx.ProjectId != "" {
-		rootCmd.PersistentFlags().StringVarP(&ProjectId, "project-id", "p", ctx.ProjectId, "project id")
-	}
-
 	if ctx.Token != "" {
 		rootCmd.PersistentFlags().StringVarP(&Token, "token", "t", ctx.Token, "token")
-	}
-
-	if ctx.Username != "" {
-		rootCmd.PersistentFlags().StringVarP(&Username, "username", "u", ctx.Username, "username")
-	}
-
-	if ctx.Password != "" {
-		rootCmd.PersistentFlags().StringVarP(&Password, "password", "p", ctx.Password, "password")
 	}
 }

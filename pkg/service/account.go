@@ -116,18 +116,18 @@ func (u *AccountService) ListAccounts(ctx context.Context, request *v1.ListAccou
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetProjectId())
+	projectID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = u.perm.CheckProjectPermission(ctx, orgID, "read")
+	err = u.perm.CheckProjectPermission(ctx, projectID, "read")
 	if err != nil {
 		return nil, status.Error(codes.PermissionDenied, err.Error())
 	}
 
 	page := x.GetPageFromRequest(request)
-	users, total, err := as.ListAccountsByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
+	users, total, err := as.ListAccountsByOrg(ctx, false, projectID, int(page.Page), int(page.Size))
 
 	var userProtoList []*v1.Account
 	for _, user := range users {

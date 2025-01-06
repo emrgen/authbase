@@ -7,41 +7,50 @@ import (
 )
 
 type AccessKey struct {
-	ID    string
+	ID    uuid.UUID
 	Value string
 }
 
 // NewAccessKey creates a new access key
 func NewAccessKey() AccessKey {
+	token, _ := generateSecureToken(32)
 	return AccessKey{
-		ID:    uuid.New().String(),
-		Value: randomString(32),
+		ID:    uuid.New(),
+		Value: token,
 	}
 }
 
+// ParseAccessKey parses an access key
 func ParseAccessKey(key string) (*AccessKey, error) {
 	token := ParseToken(key)
 	if !token.IsAccessToken() {
-		return nil, fmt.Errorf("invalid access key")
+		return nil, ErrInvalidToken
 	}
 
-	decoded, err := base64DecodeStripped(token.Value)
+	accessKey := token.Value[33:]
+	accessKeyID := token.Value[1:33]
+
+	id, err := uuidFromStripped(accessKeyID)
 	if err != nil {
 		return nil, err
 	}
 
-	parts := strings.Split(decoded, "-")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid access key")
-	}
-
 	return &AccessKey{
-		ID:    parts[0],
-		Value: parts[1],
+		ID:    id,
+		Value: accessKey,
 	}, nil
 }
 
+// String returns the string representation of the access key
 func (a AccessKey) String() string {
-	token := base64EncodeStripped(fmt.Sprintf("%s-%s", a.ID, a.Value))
+	token := fmt.Sprintf("%s%s", uuidStripped(a.ID), a.Value)
 	return NewToken(AccessTokenPrefix, token).String()
+}
+
+func uuidStripped(id uuid.UUID) string {
+	return strings.ReplaceAll(id.String(), "-", "")
+}
+
+func uuidFromStripped(uuidStr string) (uuid.UUID, error) {
+	return uuid.Parse(strings.Join([]string{uuidStr[:8], uuidStr[8:12], uuidStr[12:16], uuidStr[16:20], uuidStr[20:]}, "-"))
 }

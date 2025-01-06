@@ -21,30 +21,6 @@ type GormStore struct {
 	db *gorm.DB
 }
 
-func (g *GormStore) CreateClient(ctx context.Context, client *model.Client) error {
-	return g.db.Create(client).Error
-}
-
-func (g *GormStore) GetClientByID(ctx context.Context, id uuid.UUID) (*model.Client, error) {
-	var client model.Client
-	err := g.db.Where("id = ?", id).First(&client).Error
-	return &client, err
-}
-
-func (g *GormStore) ListClients(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Client, int, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g *GormStore) UpdateClient(ctx context.Context, client *model.Client) error {
-	return g.db.Save(client).Error
-}
-
-func (g *GormStore) DeleteClient(ctx context.Context, id uuid.UUID) error {
-	client := model.Client{ID: id.String()}
-	return g.db.Delete(&client).Error
-}
-
 func (g *GormStore) GetAccountCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
 	var count int64
 	g.db.Model(&model.Account{}).Where("project_id = ?", projectID).Count(&count)
@@ -73,6 +49,30 @@ func (g *GormStore) GetMasterProject(ctx context.Context) (*model.Project, error
 	}
 
 	return &org, err
+}
+
+func (g *GormStore) CreateClient(ctx context.Context, client *model.Client) error {
+	return g.db.Create(client).Error
+}
+
+func (g *GormStore) GetClientByID(ctx context.Context, id uuid.UUID) (*model.Client, error) {
+	var client model.Client
+	err := g.db.Where("id = ?", id).First(&client).Error
+	return &client, err
+}
+
+func (g *GormStore) ListClients(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Client, int, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) UpdateClient(ctx context.Context, client *model.Client) error {
+	return g.db.Save(client).Error
+}
+
+func (g *GormStore) DeleteClient(ctx context.Context, id uuid.UUID) error {
+	client := model.Client{ID: id.String()}
+	return g.db.Delete(&client).Error
 }
 
 // DeleteSessionByAccountID expire and delete all sessions for a user which not deleted or expired already
@@ -281,7 +281,7 @@ func (g *GormStore) CreateKeypair(ctx context.Context, keypair *model.Keypair) e
 	// NOTE: we should only have one keypair per project, so we can safely delete all existing keypairs and create a new one
 	// this will cause all the existing tokens to be invalidated and the users will have to re-authenticate
 	err := g.Transaction(func(tx AuthBaseStore) error {
-		if err := tx.(*GormStore).db.Where("project_id = ?", keypair.ProjectID).Delete(&model.Keypair{}).Error; err != nil {
+		if err := tx.(*GormStore).db.Where("client_id = ?", keypair.ClientID).Delete(&model.Keypair{}).Error; err != nil {
 			return err
 		}
 

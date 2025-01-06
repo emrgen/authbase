@@ -6,7 +6,6 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
-	gox "github.com/emrgen/gopack/x"
 	"github.com/google/uuid"
 )
 
@@ -86,7 +85,7 @@ func NewStoreBasedPermission(store store.Provider) *StoreBasedPermission {
 
 // CheckMasterProjectPermission checks if the user has the permission to perform the action on the master project
 func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context, relation string) error {
-	userID, err := gox.GetUserID(ctx)
+	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return err
 	}
@@ -95,7 +94,7 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	user, err := as.GetAccountByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, accountID)
 	if err != nil {
 		return err
 	}
@@ -110,7 +109,7 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 
 	// if the user is a member of the master project
 	if user.Project.Master {
-		permission, err := as.GetProjectMemberByID(ctx, uuid.MustParse(user.ProjectID), userID)
+		permission, err := as.GetProjectMemberByID(ctx, uuid.MustParse(user.ProjectID), accountID)
 		if err != nil {
 			return err
 		}
@@ -133,55 +132,13 @@ var permissionMap = map[string]uint32{
 }
 
 // CheckProjectPermission checks if the user has the permission to perform the action on the project
-func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
-	userID, err := gox.GetUserID(ctx)
-	if err != nil {
-		return err
-	}
+func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, projectID uuid.UUID, relation string) error {
+	//scopes, err := x.GetAuthbaseScopes(ctx)
+	//if err != nil {
+	//	return err
+	//}
 
-	as, err := store.GetProjectStore(ctx, s.store)
-	if err != nil {
-		return err
-	}
-
-	user, err := as.GetAccountByID(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	if user.Disabled {
-		return errors.New("user account is disabled")
-	}
-
-	if !user.ProjectMember {
-		return x.ErrNotProjectMember
-	}
-
-	err = s.CheckMasterProjectPermission(ctx, relation)
-	if errors.Is(err, x.ErrUnauthorized) {
-		_, err := gox.GetUserID(ctx)
-		if err != nil {
-			return err
-		}
-
-		permission, err := as.GetProjectMemberByID(ctx, orgID, userID)
-		if err != nil {
-			return err
-		}
-
-		perm := permissionMap[relation]
-
-		// check if the user has the write permission
-		if permission.Permission >= perm {
-			return nil
-		}
-
-		// as the user does not have the permission on the master org and target org
-		// return unauthorized
-		return x.ErrUnauthorized
-	}
-
-	return err
+	return nil
 }
 
 // NullAuthbasePermission is a struct that implements the AuthBasePermission interface

@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// RefreshToken represents a refresh token.
+// It is used to generate new access tokens when the access token expires.
 type RefreshToken struct {
 	gorm.Model
 	Token     string    `gorm:"primaryKey;not null"`

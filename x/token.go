@@ -8,6 +8,8 @@ const (
 	AccessKeyPrefix    = "abk"
 )
 
+var ErrInvalidToken = fmt.Errorf("not a valid access token")
+
 type Token struct {
 	Kind  string
 	Value string
