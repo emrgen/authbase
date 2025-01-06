@@ -402,6 +402,7 @@ message Client {
   Permission permission = 6;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
+  Account CreatedByUser = 12;
 }
 
 message CreateClientRequest {

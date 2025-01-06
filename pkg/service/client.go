@@ -52,12 +52,18 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 
 	secret := x.Keygen()
 	client := model.Client{
-		ID:     uuid.New().String(),
-		PoolID: pool.ID,
-		Name:   request.GetName(),
-		Secret: secret,
+		ID:          uuid.New().String(),
+		PoolID:      pool.ID,
+		Name:        request.GetName(),
+		Secret:      secret,
+		CreatedByID: userID.String(),
 	}
 	err = as.CreateClient(ctx, &client)
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +73,11 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 			Id:           client.ID,
 			PoolId:       request.GetPoolId(),
 			ClientSecret: secret,
+			Name:         client.Name,
+			CreatedByUser: &v1.Account{
+				Id:          userID.String(),
+				VisibleName: account.VisibleName,
+			},
 		},
 	}, nil
 }
@@ -92,6 +103,10 @@ func (c *ClientService) GetClient(ctx context.Context, request *v1.GetClientRequ
 			Id:     client.ID,
 			PoolId: client.PoolID,
 			Name:   client.Name,
+			CreatedByUser: &v1.Account{
+				Id:          client.CreatedByID,
+				VisibleName: client.CreatedByAccount.VisibleName,
+			},
 		},
 	}, nil
 

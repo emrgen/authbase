@@ -4,10 +4,12 @@ import "gorm.io/gorm"
 
 type Client struct {
 	gorm.Model
-	ID     string `gorm:"uuid;primaryKey"`
-	PoolID string `gorm:"uuid"`
-	Name   string
-	Secret string
+	ID               string `gorm:"uuid;primaryKey"`
+	PoolID           string `gorm:"uuid;index:idx_client_pool_id_name,unique"`
+	Name             string `gorm:"index:idx_client_pool_id_name,unique"`
+	Secret           string
+	CreatedByID      string   `gorm:"uuid"`
+	CreatedByAccount *Account `gorm:"foreignKey:CreatedByID"`
 }
 
 func (c *Client) TableName() string {

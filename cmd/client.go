@@ -45,10 +45,19 @@ func clientCreateCmd() *cobra.Command {
 			}
 			defer client.Close()
 
-			client.CreateClient(tokenContext(), &v1.CreateClientRequest{
+			res, err := client.CreateClient(tokenContext(), &v1.CreateClientRequest{
 				PoolId: poolID,
 				Name:   name,
 			})
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+
+			table := tablewriter.NewWriter(cmd.OutOrStdout())
+			table.SetHeader([]string{"ID", "Pool ID", "Name", "Created By"})
+			table.Append([]string{res.Client.Id, res.Client.PoolId, res.Client.Name, res.Client.CreatedByUser.VisibleName})
+			table.Render()
 
 		},
 	}
@@ -86,8 +95,8 @@ func clientGetCmd() *cobra.Command {
 			}
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
-			table.SetHeader([]string{"ID", "Pool ID", "Name"})
-			table.Append([]string{res.Client.Id, res.Client.PoolId, res.Client.Name})
+			table.SetHeader([]string{"ID", "Pool ID", "Name", "Created By"})
+			table.Append([]string{res.Client.Id, res.Client.PoolId, res.Client.Name, res.Client.CreatedByUser.VisibleName})
 			table.Render()
 		},
 	}

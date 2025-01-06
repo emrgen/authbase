@@ -129,7 +129,7 @@ func (g *GormStore) CreateClient(ctx context.Context, client *model.Client) erro
 
 func (g *GormStore) GetClientByID(ctx context.Context, id uuid.UUID) (*model.Client, error) {
 	var client model.Client
-	err := g.db.Where("id = ?", id).First(&client).Error
+	err := g.db.Where("id = ?", id).Preload("CreatedByAccount").First(&client).Error
 	return &client, err
 }
 
