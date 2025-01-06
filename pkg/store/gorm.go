@@ -134,8 +134,17 @@ func (g *GormStore) GetClientByID(ctx context.Context, id uuid.UUID) (*model.Cli
 }
 
 func (g *GormStore) ListClients(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Client, int, error) {
-	//TODO implement me
-	panic("implement me")
+	var clients []*model.Client
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Client{}).Where("pool_id = ?", projectID).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Find(&clients, "pool_id = ?", projectID).Error
+	})
+
+	return clients, int(total), err
 }
 
 func (g *GormStore) UpdateClient(ctx context.Context, client *model.Client) error {

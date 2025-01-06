@@ -45,7 +45,10 @@ func createPoolCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.CreatePool(tokenContext(), &v1.CreatePoolRequest{})
+			res, err := client.CreatePool(tokenContext(), &v1.CreatePoolRequest{
+				ProjectId: projectID,
+				Name:      name,
+			})
 			if err != nil {
 				logrus.Errorf("error creating pool: %v", err)
 				return

@@ -11,14 +11,14 @@ import (
 type Account struct {
 	gorm.Model
 	ID            string `gorm:"primaryKey;uuid;not null;"`
-	Username      string `gorm:"not null;uniqueIndex:userProjectIndex;"`
+	Username      string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Email         string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	VisibleName   string
 	Password      string // hash of the password
 	Salt          string
 	SassAdmin     bool   `gorm:"not null;default:false"`
 	ProjectMember bool   `gorm:"not null;default:false"`
-	ProjectID     string `gorm:"not null;uniqueIndex:compositeIndex;uniqueIndex:userProjectIndex;"`
+	ProjectID     string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Project       *Project
 	Verified      bool      `gorm:"not null;default:false"`
 	VerifiedAt    time.Time `gorm:"default:null"`

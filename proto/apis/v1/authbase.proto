@@ -219,7 +219,10 @@ message Pool {
 
 message CreatePoolRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
-  string name = 2;
+  string name = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
   repeated PoolMember members = 3;
 }
 

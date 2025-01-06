@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -71,14 +72,42 @@ func clientGetCmd() *cobra.Command {
 }
 
 func clientListCmd() *cobra.Command {
+	var poolID string
+
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "List clients",
 		Run: func(cmd *cobra.Command, args []string) {
-			//TODO implement me
+			if poolID == "" {
+				logrus.Error("missing required flags: --pool-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.ListClients(tokenContext(), &v1.ListClientsRequest{
+				PoolId: poolID,
+			})
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+
+			table := tablewriter.NewWriter(cmd.OutOrStdout())
+			table.SetHeader([]string{"Pool ID", "ID", "Name"})
+			for _, client := range res.Clients {
+				table.Append([]string{client.PoolId, client.Id, client.Name})
+			}
+			table.Render()
 		},
 	}
 
+	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "Pool ID")
 	return command
 }
 
