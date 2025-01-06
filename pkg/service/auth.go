@@ -125,7 +125,7 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 		}
 
 		// generate a verification code
-		code := x.GenerateCode()
+		code := x.GenerateVerificationCode()
 		expireAt := time.Now().Add(24 * time.Hour)
 
 		err = as.CreateVerificationCode(ctx, &model.VerificationCode{

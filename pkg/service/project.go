@@ -64,10 +64,25 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	}
 	user.ProjectID = org.ID
 
-	// create owner member permission
-	perm := model.ProjectMember{
+	// create project member permission
+	projectMember := model.ProjectMember{
 		ProjectID:  org.ID,
 		AccountID:  user.ID,
+		Permission: uint32(v1.Permission_OWNER),
+	}
+
+	pool := model.Pool{
+		ID:        uuid.New().String(),
+		Name:      "default",
+		ProjectID: org.ID,
+		Default:   true,
+	}
+	user.PoolID = pool.ID
+
+	// create pool member permission
+	poolMember := model.PoolMember{
+		AccountID:  user.ID,
+		PoolID:     pool.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
@@ -117,7 +132,17 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 			return err
 		}
 
-		err = tx.CreateProjectMember(ctx, &perm)
+		err = tx.CreateProjectMember(ctx, &projectMember)
+		if err != nil {
+			return err
+		}
+
+		err = tx.CreatePool(ctx, &pool)
+		if err != nil {
+			return err
+		}
+
+		err = tx.AddPoolMember(ctx, &poolMember)
 		if err != nil {
 			return err
 		}

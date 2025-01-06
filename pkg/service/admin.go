@@ -78,6 +78,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		Name:      "default",
 		Default:   true,
 	}
+	user.PoolID = pool.ID
 
 	poolMember := model.PoolMember{
 		AccountID:  user.ID,
@@ -95,7 +96,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		// if the mail server is configured, send a verification email anyway
 		// verification email will be sent if the user is created successfully
 		if request.GetVerifyEmail() {
-			verificationCode := x.GenerateCode()
+			verificationCode := x.GenerateVerificationCode()
 			err := a.cache.Set("email:"+user.Email, verificationCode, time.Hour)
 			if err != nil {
 				return err
@@ -147,7 +148,10 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 	}
 
 	return &v1.CreateAdminProjectResponse{
-		Id: org.ID,
+		Project: &v1.Project{
+			Id:   org.ID,
+			Name: org.Name,
+		},
 	}, nil
 }
 

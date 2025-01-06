@@ -580,7 +580,7 @@ service AccountService {
   // CreateAccount
   rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {
     option (google.api.http) = {
-      post: "/v1/users/projects/{project_id}"
+      post: "/v1/clients/{client_id}/accounts"
       body: "*"
     };
   }
@@ -905,9 +905,7 @@ message CreateAccessKeyRequest {
 }
 
 message CreateAccessKeyResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string token = 2;
-  google.protobuf.Timestamp expires_at = 10;
+  AccessKey token = 1;
 }
 
 message GetAccessKeyRequest {
@@ -1109,11 +1107,12 @@ service OAuth2Service {
 }
 
 message CreateAccountRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string username = 3;
-  string visible_name = 4;
-  string password = 5 [
+  string client_id = 1 [(validate.rules).string.uuid = true];
+  string client_secret = 2;
+  string email = 3 [(validate.rules).string.email = true];
+  string username = 4;
+  string visible_name = 5;
+  string password = 6 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 11
   ];
@@ -1207,8 +1206,7 @@ message CreateAdminProjectRequest {
 }
 
 message CreateAdminProjectResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string name = 2;
+  Project project = 1;
 }
 
 message CreateMigrationRequest {

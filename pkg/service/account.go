@@ -31,18 +31,29 @@ func NewAccountService(perm permission.AuthBasePermission, store store.Provider,
 // CreateAccount creates a new user.
 func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAccountRequest) (*v1.CreateAccountResponse, error) {
 	var err error
-	orgID, err := uuid.Parse(request.GetProjectId())
-	if err != nil {
-		return nil, err
-	}
-
-	err = u.perm.CheckProjectPermission(ctx, orgID, "write")
-	if err != nil {
-		return nil, err
-	}
 
 	// create a new user
 	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
+	clientID, err := uuid.Parse(request.GetClientId())
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := as.GetClientByID(ctx, clientID)
+	if err != nil {
+		return nil, err
+	}
+
+	projectID, err := uuid.Parse(client.Pool.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = u.perm.CheckProjectPermission(ctx, projectID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -52,12 +63,13 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 		Username:    request.GetUsername(),
 		Email:       request.GetEmail(),
 		VisibleName: request.GetVisibleName(),
-		ProjectID:   orgID.String(),
+		ProjectID:   projectID.String(),
+		PoolID:      client.PoolID,
 	}
 
 	password := request.GetPassword()
 	if password != "" {
-		salt := x.Keygen()
+		salt := x.GenerateSalt()
 		hashedPassword, err := x.HashPassword(password, salt)
 		if err != nil {
 			return nil, err

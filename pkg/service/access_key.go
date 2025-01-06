@@ -114,8 +114,13 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 	}
 
 	return &v1.CreateAccessKeyResponse{
-		Id:    accessKey.ID,
-		Token: token.String(),
+		Token: &v1.AccessKey{
+			Id:        accessKey.ID,
+			AccessKey: token.Value,
+			ProjectId: accessKey.ProjectID,
+			CreatedAt: timestamppb.New(time.Now()),
+			ExpiresAt: timestamppb.New(expireAt),
+		},
 	}, nil
 }
 

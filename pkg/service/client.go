@@ -50,7 +50,7 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 		return nil, err
 	}
 
-	secret := x.Keygen()
+	secret := x.GenerateClientSecret()
 	client := model.Client{
 		ID:          uuid.New().String(),
 		PoolID:      pool.ID,

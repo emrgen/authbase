@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var userCommand = &cobra.Command{
@@ -32,7 +33,8 @@ func init() {
 }
 
 func createUserCommand() *cobra.Command {
-	var projectID string
+	var clientID string
+	var clientSecret string
 	var username string
 	var password string
 	var email string
@@ -41,21 +43,18 @@ func createUserCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create account",
 		Run: func(cmd *cobra.Command, args []string) {
-			loadToken()
-
-			if Token == "" {
-				logrus.Errorf("missing required flags: --token")
+			if clientID == "" {
+				logrus.Errorf("missing required flag: --client-id")
 				return
 			}
 
-			if projectID == "" {
-				logrus.Errorf("missing required flag: --project-id")
+			if clientSecret == "" {
+				logrus.Errorf("missing required flag: --client-secret")
 				return
 			}
 
 			if username == "" {
-				logrus.Errorf("missing required flag: --username")
-				return
+				username = strings.Split(email, "@")[0]
 			}
 
 			if email == "" {
@@ -77,10 +76,11 @@ func createUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			user, err := client.CreateAccount(ctx, &v1.CreateAccountRequest{
-				ProjectId: projectID,
-				Email:     email,
-				Username:  username,
-				Password:  password,
+				ClientId:     clientID,
+				ClientSecret: clientSecret,
+				Email:        email,
+				Username:     username,
+				Password:     password,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create user: %v", err)
@@ -99,7 +99,8 @@ func createUserCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
+	command.Flags().StringVarP(&clientID, "client-id", "c", "", "client id")
+	command.Flags().StringVarP(&clientSecret, "client-secret", "s", "", "client secret")
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")

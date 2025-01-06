@@ -75,7 +75,7 @@ func createTokenCommand() *cobra.Command {
 			if save {
 				logrus.Infof("context updated with token")
 				writeContext(Context{
-					Token: token.Token,
+					Token: token.Token.AccessKey,
 				})
 			}
 		},

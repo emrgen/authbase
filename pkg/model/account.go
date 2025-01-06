@@ -18,7 +18,8 @@ type Account struct {
 	Salt          string
 	SassAdmin     bool   `gorm:"not null;default:false"`
 	ProjectMember bool   `gorm:"not null;default:false"`
-	ProjectID     string `gorm:"not null;uniqueIndex:compositeIndex;"`
+	PoolID        string `gorm:"not null;uniqueIndex:compositeIndex;"`
+	ProjectID     string `gorm:"uuid"`
 	Project       *Project
 	Verified      bool      `gorm:"not null;default:false"`
 	VerifiedAt    time.Time `gorm:"default:null"`

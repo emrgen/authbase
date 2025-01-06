@@ -13,7 +13,7 @@ type AccessKey struct {
 
 // NewAccessKey creates a new access key
 func NewAccessKey() AccessKey {
-	token, _ := generateSecureToken(32)
+	token := generateSecureToken(32)
 	return AccessKey{
 		ID:    uuid.New(),
 		Value: token,
@@ -48,7 +48,7 @@ func (a AccessKey) String() string {
 }
 
 func uuidStripped(id uuid.UUID) string {
-	return strings.ReplaceAll(id.String(), "-", "")
+	return strings.ReplaceAll(id.String(), "_", "")
 }
 
 func uuidFromStripped(uuidStr string) (uuid.UUID, error) {

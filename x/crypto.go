@@ -6,44 +6,33 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
-	"io"
 	"strings"
 )
 
-func GenerateCode() string {
-	return base64EncodeStripped(randomString(6))
-}
-
-func accessKey() string {
-	return base64EncodeStripped(randomString(32))
-}
-
-// VerificationToken creates a new random token
-func verificationToken() string {
-	return base64EncodeStripped(randomString(32))
-}
-
 // Keygen creates a new random key
 func Keygen() string {
-	return base64EncodeStripped(randomString(20))
+	return generateSecureToken(64)
 }
 
-func randomString(n int) string {
-	b := make([]byte, n)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		panic(err.Error()) // rand should never fail
-	}
-
-	return string(b)
+func GenerateSalt() string {
+	return generateSecureToken(32)
 }
 
-func generateSecureToken(length int) (string, int) {
+func GenerateClientSecret() string {
+	return generateSecureToken(40)
+}
+
+func verificationToken() string {
+	return generateSecureToken(32)
+}
+
+func generateSecureToken(length int) string {
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
-		return "", 0
+		return ""
 	}
 	token := hex.EncodeToString(b)
-	return token, len(token)
+	return token
 }
 
 func base64EncodeStripped(s string) string {

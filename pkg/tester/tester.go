@@ -1,6 +1,7 @@
 package tester
 
 import (
+	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -46,9 +47,17 @@ func RemoveDBFile() {
 }
 
 func CleanUp() {
-	DropUsers()
+	db.Exec("DELETE FROM accounts")
+	db.Exec("DELETE FROM projects")
+	db.Exec("DELETE FROM project_members")
+	db.Exec("DELETE FROM pools")
+	db.Exec("DELETE FROM pool_members")
+	db.Exec("DELETE FROM clients")
+	db.Exec("DELETE FROM access_keys")
+	db.Exec("DELETE FROM refresh_tokens")
+	db.Exec("DELETE FROM sessions")
 }
 
-func DropUsers() {
-	db.Exec("DELETE FROM users")
+func TestRedis() *cache.Redis {
+	return cache.NewRedisClient()
 }
