@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	gox "github.com/emrgen/gopack/x"
 	"strings"
 	"time"
 
@@ -44,7 +43,7 @@ type AccessKeyService struct {
 // CreateAccessKey creates an offline access key
 // 1. user authentication is already done by the middleware
 // 2. get project store
-// 3. check if the user has the permission to create a token in the project
+// 3. check if the user includes the scopes
 func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.CreateAccessKeyRequest) (*v1.CreateAccessKeyResponse, error) {
 	as, err := store.GetProjectStore(ctx, t.store)
 	if err != nil {
@@ -61,7 +60,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		return nil, err
 	}
 
-	userID, err := gox.GetUserID(ctx)
+	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +70,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		expireAfter = time.Second * time.Duration(request.GetExpiresIn())
 	}
 
-	//perm, err := as.GetProjectMemberByID(ctx, orgID, userID)
+	//perm, err := as.GetProjectMemberByID(ctx, orgID, accountID)
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -88,7 +87,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 	// create a new token
 	accessKey := &model.AccessKey{
 		ID:        token.ID.String(),
-		AccountID: userID.String(),
+		AccountID: accountID.String(),
 		ProjectID: request.GetProjectId(),
 		Name:      request.GetName(),
 		Token:     token.Value,

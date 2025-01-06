@@ -25,6 +25,8 @@ type AuthBaseStore interface {
 	AccessKeyStore
 	VerificationCodeStore
 	ClientStore
+	PoolStore
+	PoolMemberStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -173,4 +175,32 @@ type ClientStore interface {
 	UpdateClient(ctx context.Context, client *model.Client) error
 	// DeleteClient deletes a client from the database.
 	DeleteClient(ctx context.Context, id uuid.UUID) error
+}
+
+type PoolStore interface {
+	// CreatePool creates a new pool in the database.
+	CreatePool(ctx context.Context, pool *model.Pool) error
+	//GetMasterPool retrieves the master pool.
+	GetMasterPool(ctx context.Context, projectID uuid.UUID) (*model.Pool, error)
+	// GetPoolByID retrieves a pool by its name.
+	GetPoolByID(ctx context.Context, id uuid.UUID) (*model.Pool, error)
+	// ListPools retrieves a list of pools.
+	ListPools(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Pool, int, error)
+	// UpdatePool updates a pool in the database.
+	UpdatePool(ctx context.Context, pool *model.Pool) error
+	// DeletePool deletes a pool from the database.
+	DeletePool(ctx context.Context, id uuid.UUID) error
+}
+
+type PoolMemberStore interface {
+	// AddPoolMember creates a new pool member in the database.
+	AddPoolMember(ctx context.Context, member *model.PoolMember) error
+	// GetPoolMember retrieves a pool member by its ID.
+	GetPoolMember(ctx context.Context, poolID, accountID uuid.UUID) (*model.PoolMember, error)
+	// ListPoolMembers retrieves a list of pool members.
+	ListPoolMembers(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.PoolMember, int, error)
+	// UpdatePoolMember updates a pool member in the database.
+	UpdatePoolMember(ctx context.Context, member *model.PoolMember) error
+	// RemovePoolMember deletes a pool member from the database.
+	RemovePoolMember(ctx context.Context, poolID, accountID uuid.UUID) error
 }

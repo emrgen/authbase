@@ -11,8 +11,8 @@ type AccessKey struct {
 	gorm.Model
 	ID        string `gorm:"primaryKey;type:uuid"`
 	Name      string
-	ProjectID string `gorm:"type:uuid"`
-	AccountID string `gorm:"type:uuid"`
+	ProjectID string `gorm:"uuid;foreignKey:ProjectID;OnDelete:CASCADE"`
+	AccountID string `gorm:"uuid;foreignKey:AccountID;OnDelete:CASCADE"`
 	Token     string // hashed token
 	Scopes    string
 	ExpireAt  time.Time

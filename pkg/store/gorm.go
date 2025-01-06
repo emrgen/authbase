@@ -21,6 +21,78 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) AddPoolMember(ctx context.Context, member *model.PoolMember) error {
+	return g.db.Create(member).Error
+}
+
+func (g *GormStore) GetPoolMember(ctx context.Context, poolID, accountID uuid.UUID) (*model.PoolMember, error) {
+	var member model.PoolMember
+	err := g.db.Where("pool_id = ? AND account_id = ?", poolID, accountID).First(&member).Error
+	return &member, err
+}
+
+func (g *GormStore) ListPoolMembers(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.PoolMember, int, error) {
+	var members []*model.PoolMember
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.PoolMember{}).Where("pool_id = ?", poolID).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Find(&members, "pool_id = ?", poolID).Error
+	})
+
+	return members, int(total), err
+}
+
+func (g *GormStore) UpdatePoolMember(ctx context.Context, member *model.PoolMember) error {
+	return g.db.Save(member).Error
+}
+
+func (g *GormStore) RemovePoolMember(ctx context.Context, poolID, accountID uuid.UUID) error {
+	member := model.PoolMember{PoolID: poolID.String(), AccountID: accountID.String()}
+	return g.db.Delete(&member).Error
+}
+
+func (g *GormStore) CreatePool(ctx context.Context, pool *model.Pool) error {
+	return g.db.Create(pool).Error
+}
+
+func (g *GormStore) GetMasterPool(ctx context.Context, projectID uuid.UUID) (*model.Pool, error) {
+	var pool model.Pool
+	err := g.db.Where("project_id = ? AND master = ?", projectID, true).First(&pool).Error
+	return &pool, err
+}
+
+func (g *GormStore) GetPoolByID(ctx context.Context, id uuid.UUID) (*model.Pool, error) {
+	var pool model.Pool
+	err := g.db.Where("id = ?", id).First(&pool).Error
+	return &pool, err
+}
+
+func (g *GormStore) ListPools(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Pool, int, error) {
+	var pools []*model.Pool
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Pool{}).Where("project_id = ?", projectID).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Find(&pools, "project_id = ?", projectID).Error
+	})
+
+	return pools, int(total), err
+}
+
+func (g *GormStore) UpdatePool(ctx context.Context, pool *model.Pool) error {
+	return g.db.Save(pool).Error
+}
+
+func (g *GormStore) DeletePool(ctx context.Context, id uuid.UUID) error {
+	pool := model.Pool{ID: id.String()}
+	return g.db.Delete(&pool).Error
+}
+
 func (g *GormStore) GetAccountCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
 	var count int64
 	g.db.Model(&model.Account{}).Where("project_id = ?", projectID).Count(&count)

@@ -33,6 +33,7 @@ import (
 	"sync"
 )
 
+// Server is the main server struct
 type Server struct {
 	config          *config.Config
 	provider        store.Provider
@@ -63,6 +64,7 @@ func NewServer(config *config.Config) *Server {
 	return &Server{config: config}
 }
 
+// Start the server
 func (s *Server) Start(grpcPort, httpPort string) error {
 	logrus.Infof("APP_MODE: %v", s.config.Mode)
 
@@ -114,6 +116,7 @@ func (s *Server) init(grpcPort, httpPort string) error {
 	return nil
 }
 
+// register the services with the grpc server
 func (s *Server) registerServices() error {
 	var err error
 	verifier := x.NewStoreBasedUserVerifier(s.provider, s.redis)
@@ -156,7 +159,6 @@ func (s *Server) registerServices() error {
 	// Register the grpc services
 
 	//oauthService := service.NewOAuth2Service(s.provider, redis)
-	//offlineTokenService := service.NewOfflineTokenService(perm, s.provider, redis)
 
 	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
@@ -164,6 +166,9 @@ func (s *Server) registerServices() error {
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, perm, s.mailer, redis))
 	v1.RegisterAccountServiceServer(grpcServer, service.NewAccountService(perm, s.provider, redis))
 	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis))
+	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider))
+	v1.RegisterPoolMemberServiceServer(grpcServer, service.NewPoolMemberService(s.provider))
+
 	//gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
 
 	// Register the rest gateway

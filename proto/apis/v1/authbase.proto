@@ -92,13 +92,306 @@ message DeleteProjectResponse {
 
 message GetProjectConfigRequest {}
 
+
+// Project member service
+
+message ProjectMember {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3;
+  string visible_name = 4;
+  Permission permission = 5;
+}
+
+message CreateProjectMemberRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string username = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  string email = 3 [(validate.rules).string.email = true];
+  string visible_name = 4;
+  Permission permission = 5;
+}
+
+message CreateProjectMemberResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetProjectMemberRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetProjectMemberResponse {
+  ProjectMember project_member = 1;
+}
+
+message ListProjectMemberRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListProjectMemberResponse {
+  repeated ProjectMember members = 1;
+  Meta meta = 2;
+}
+
+message UpdateProjectMemberRequest {
+  string member_id = 2 [(validate.rules).string.uuid = true];
+  Permission permission = 5;
+}
+
+message UpdateProjectMemberResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string message = 2;
+}
+
+message AddProjectMemberRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+  Permission permission = 3;
+}
+
+message AddProjectMemberResponse {
+  string message = 1;
+}
+
+message RemoveProjectMemberRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string member_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message RemoveProjectMemberResponse {
+  string message = 1;
+}
+
+service ProjectMemberService {
+  // CreateMember
+  rpc CreateProjectMember(CreateProjectMemberRequest) returns (CreateProjectMemberResponse) {
+    option (google.api.http) = {
+      post: "/v1/members/-/projects/{project_id}"
+      body: "*"
+    };
+  }
+
+  // GetMember
+  rpc GetProjectMember(GetProjectMemberRequest) returns (GetProjectMemberResponse) {
+    option (google.api.http) = {get: "/v1/members/{member_id}/projects/{project_id}"};
+  }
+
+  // ListMember
+  rpc ListProjectMember(ListProjectMemberRequest) returns (ListProjectMemberResponse) {
+    option (google.api.http) = {get: "/v1/members/-/project/{project_id}"};
+  }
+
+  // UpdateMember
+  rpc UpdateProjectMember(UpdateProjectMemberRequest) returns (UpdateProjectMemberResponse) {
+    option (google.api.http) = {
+      put: "/v1/members/{member_id}"
+      body: "*"
+    };
+  }
+
+  // AddMember
+  rpc AddProjectMember(AddProjectMemberRequest) returns (AddProjectMemberResponse) {
+    option (google.api.http) = {
+      post: "/v1/members/projects/{project_id}/members/{member_id}"
+      body: "*"
+    };
+  }
+
+  // RemoveMember
+  rpc RemoveProjectMember(RemoveProjectMemberRequest) returns (RemoveProjectMemberResponse) {
+    option (google.api.http) = {delete: "/v1/members/projects/{project_id}/members/{member_id}"};
+  }
+}
+
+// Pool service
+
+message Pool {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string project_id = 3 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreatePoolRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+}
+
+message CreatePoolResponse {
+  Pool pool = 1;
+}
+
+message GetPoolRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetPoolResponse {
+  Pool pool = 1;
+}
+
+message ListPoolsRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListPoolsResponse {
+  repeated Pool pools = 1;
+  Meta meta = 2;
+}
+
+message UpdatePoolRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+}
+
+message UpdatePoolResponse {
+  Pool pool = 1;
+}
+
+message DeletePoolRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeletePoolResponse {
+  string message = 1;
+}
+
+service PoolService {
+  // CreatePool
+  rpc CreatePool(CreatePoolRequest) returns (CreatePoolResponse) {
+    option (google.api.http) = {
+      post: "/v1/pools/projects/{project_id}"
+      body: "*"
+    };
+  }
+
+  // GetPool
+  rpc GetPool(GetPoolRequest) returns (GetPoolResponse) {
+    option (google.api.http) = {get: "/v1/pools/{pool_id}"};
+  }
+
+  // ListPools
+  rpc ListPools(ListPoolsRequest) returns (ListPoolsResponse) {
+    option (google.api.http) = {get: "/v1/pools"};
+  }
+
+  // UpdatePool
+  rpc UpdatePool(UpdatePoolRequest) returns (UpdatePoolResponse) {
+    option (google.api.http) = {
+      put: "/v1/pools/{pool_id}"
+      body: "*"
+    };
+  }
+
+  // DeletePool
+  rpc DeletePool(DeletePoolRequest) returns (DeletePoolResponse) {
+    option (google.api.http) = {delete: "/v1/pools/{pool_id}"};
+  }
+}
+
+// PoolMember service
+
+message PoolMember {
+  string pool_id = 2 [(validate.rules).string.uuid = true];
+  string account_id = 3 [(validate.rules).string.uuid = true];
+  Permission permission = 4;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreatePoolMemberRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+  Permission permission = 3;
+}
+
+message CreatePoolMemberResponse {
+  PoolMember pool_member = 1;
+}
+
+message GetPoolMemberRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetPoolMemberResponse {
+  PoolMember pool_member = 1;
+}
+
+message ListPoolMembersRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListPoolMembersResponse {
+  repeated PoolMember pool_members = 1;
+  Meta meta = 2;
+}
+
+message UpdatePoolMemberRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+  Permission permission = 3;
+}
+
+message UpdatePoolMemberResponse {
+  PoolMember pool_member = 1;
+}
+
+message DeletePoolMemberRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeletePoolMemberResponse {
+  string message = 1;
+}
+
+service PoolMemberService {
+  // CreatePoolMember
+  rpc CreatePoolMember(CreatePoolMemberRequest) returns (CreatePoolMemberResponse) {
+    option (google.api.http) = {
+      post: "/v1/pool-members/pools/{pool_id}"
+      body: "*"
+    };
+  }
+
+  // GetPoolMember
+  rpc GetPoolMember(GetPoolMemberRequest) returns (GetPoolMemberResponse) {
+    option (google.api.http) = {get: "/v1/pool-members/{pool_id}/{account_id}"};
+  }
+
+  // ListPoolMembers
+  rpc ListPoolMembers(ListPoolMembersRequest) returns (ListPoolMembersResponse) {
+    option (google.api.http) = {get: "/v1/pool-members"};
+  }
+
+  // UpdatePoolMember
+  rpc UpdatePoolMember(UpdatePoolMemberRequest) returns (UpdatePoolMemberResponse) {
+    option (google.api.http) = {
+      put: "/v1/pool-members/{pool_id}/{account_id}"
+      body: "*"
+    };
+  }
+
+  // DeletePoolMember
+  rpc DeletePoolMember(DeletePoolMemberRequest) returns (DeletePoolMemberResponse) {
+    option (google.api.http) = {delete: "/v1/pool-members/{pool_id}/{account_id}"};
+  }
+}
+
 // Client service
 
 message Client {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   string client_secret = 4;
-  string project_id = 5 [(validate.rules).string.uuid = true];
+  string pool_id = 5 [(validate.rules).string.uuid = true];
   Permission permission = 6;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
@@ -106,8 +399,9 @@ message Client {
 
 message CreateClientRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
-  string name = 2;
-  string redirect_uri = 3;
+  optional string pool_id = 2 [(validate.rules).string.uuid = true];
+  string name = 3;
+  string redirect_uri = 4;
 }
 
 message CreateClientResponse {
@@ -124,7 +418,8 @@ message GetClientResponse {
 
 message ListClientsRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
-  Page page = 2;
+  optional string pool_id = 2 [(validate.rules).string.uuid = true];
+  Page page = 3;
 }
 
 message ListClientsResponse {
@@ -576,6 +871,7 @@ service AuthService {
 
 // AccessKey
 
+// AccessKey is a token that can be used to interact with the API server
 message AccessKey {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
@@ -599,8 +895,7 @@ message CreateAccessKeyRequest {
   ];
   optional int64 expires_in = 4; // in seconds
   optional string name = 5;
-  map<string, string> data = 6; // additional data
-  repeated string scopes = 7;
+  repeated string scopes = 6;
 }
 
 message CreateAccessKeyResponse {
@@ -933,120 +1228,6 @@ service AdminProjectService {
       post: "/v1/admin/migrations"
       body: "*"
     };
-  }
-}
-
-// Project member service
-
-message ProjectMember {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string username = 3;
-  string visible_name = 4;
-  Permission permission = 5;
-}
-
-message CreateProjectMemberRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string username = 2 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
-  string email = 3 [(validate.rules).string.email = true];
-  string visible_name = 4;
-  Permission permission = 5;
-}
-
-message CreateProjectMemberResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-}
-
-message GetProjectMemberRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message GetProjectMemberResponse {
-  ProjectMember project_member = 1;
-}
-
-message ListProjectMemberRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  Page page = 2;
-}
-
-message ListProjectMemberResponse {
-  repeated ProjectMember members = 1;
-  Meta meta = 2;
-}
-
-message UpdateProjectMemberRequest {
-  string member_id = 2 [(validate.rules).string.uuid = true];
-  Permission permission = 5;
-}
-
-message UpdateProjectMemberResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string message = 2;
-}
-
-message AddProjectMemberRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-  Permission permission = 3;
-}
-
-message AddProjectMemberResponse {
-  string message = 1;
-}
-
-message RemoveProjectMemberRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message RemoveProjectMemberResponse {
-  string message = 1;
-}
-
-service ProjectMemberService {
-  // CreateMember
-  rpc CreateProjectMember(CreateProjectMemberRequest) returns (CreateProjectMemberResponse) {
-    option (google.api.http) = {
-      post: "/v1/members/-/projects/{project_id}"
-      body: "*"
-    };
-  }
-
-  // GetMember
-  rpc GetProjectMember(GetProjectMemberRequest) returns (GetProjectMemberResponse) {
-    option (google.api.http) = {get: "/v1/members/{member_id}/projects/{project_id}"};
-  }
-
-  // ListMember
-  rpc ListProjectMember(ListProjectMemberRequest) returns (ListProjectMemberResponse) {
-    option (google.api.http) = {get: "/v1/members/-/project/{project_id}"};
-  }
-
-  // UpdateMember
-  rpc UpdateProjectMember(UpdateProjectMemberRequest) returns (UpdateProjectMemberResponse) {
-    option (google.api.http) = {
-      put: "/v1/members/{member_id}"
-      body: "*"
-    };
-  }
-
-  // AddMember
-  rpc AddProjectMember(AddProjectMemberRequest) returns (AddProjectMemberResponse) {
-    option (google.api.http) = {
-      post: "/v1/members/projects/{project_id}/members/{member_id}"
-      body: "*"
-    };
-  }
-
-  // RemoveMember
-  rpc RemoveProjectMember(RemoveProjectMemberRequest) returns (RemoveProjectMemberResponse) {
-    option (google.api.http) = {delete: "/v1/members/projects/{project_id}/members/{member_id}"};
   }
 }
 

@@ -72,6 +72,19 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
+	pool := model.Pool{
+		ID:        uuid.New().String(),
+		ProjectID: org.ID,
+		Name:      "default",
+		Default:   true,
+	}
+
+	poolMember := model.PoolMember{
+		AccountID:  user.ID,
+		PoolID:     pool.ID,
+		Permission: uint32(v1.Permission_OWNER),
+	}
+
 	// Create project and user in a transaction
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		err := tx.CreateProject(ctx, org)
@@ -113,6 +126,16 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		}
 
 		err = tx.CreateProjectMember(ctx, &perm)
+		if err != nil {
+			return err
+		}
+
+		err = tx.CreatePool(ctx, &pool)
+		if err != nil {
+			return err
+		}
+
+		err = tx.AddPoolMember(ctx, &poolMember)
 		if err != nil {
 			return err
 		}

@@ -42,13 +42,23 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 		return nil, err
 	}
 
-	secret := x.Keygen()
+	projectID, err := uuid.Parse(request.GetProjectId())
+	if err != nil {
+		return nil, err
+	}
+	
+	// get the default pool
+	pool, err := as.GetMasterPool(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
 
+	secret := x.Keygen()
 	client := model.Client{
-		ID:        uuid.New().String(),
-		ProjectID: request.GetProjectId(),
-		Name:      request.GetName(),
-		Secret:    secret,
+		ID:     uuid.New().String(),
+		PoolID: pool.ID,
+		Name:   request.GetName(),
+		Secret: secret,
 	}
 	err = as.CreateClient(ctx, &client)
 	if err != nil {
@@ -58,7 +68,7 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 	return &v1.CreateClientResponse{
 		Client: &v1.Client{
 			Id:           client.ID,
-			ProjectId:    request.GetProjectId(),
+			PoolId:       request.GetPoolId(),
 			ClientSecret: secret,
 		},
 	}, nil
