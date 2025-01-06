@@ -17,6 +17,8 @@ const (
 	ProjectPermissionKey = "authbase_project_permission"
 	// ProjectIDKey is the key to store the project id in the context
 	ProjectIDKey = "authbase_project_id"
+	// PoolIDKey is the key to store the pool id in the context
+	PoolIDKey = "authbase_pool_id"
 	// AccountIDKey is the key to store the user id in the context
 	AccountIDKey = "authbase_account_id"
 	// ScopesKey is the key to store the scopes in the context
@@ -81,6 +83,15 @@ func GetAuthbaseProjectID(ctx context.Context) (uuid.UUID, error) {
 	pid, ok := ctx.Value(ProjectIDKey).(uuid.UUID)
 	if !ok {
 		return uuid.UUID{}, status.Errorf(codes.InvalidArgument, "missing project id")
+	}
+
+	return pid, nil
+}
+
+func GetAuthbasePoolID(ctx context.Context) (uuid.UUID, error) {
+	pid, ok := ctx.Value(PoolIDKey).(uuid.UUID)
+	if !ok {
+		return uuid.UUID{}, status.Errorf(codes.InvalidArgument, "missing pool id")
 	}
 
 	return pid, nil

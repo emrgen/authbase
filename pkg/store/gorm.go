@@ -255,17 +255,17 @@ func (g *GormStore) DeleteAccount(ctx context.Context, id uuid.UUID) error {
 	return g.db.Delete(&user).Error
 }
 
-func (g *GormStore) ListAccountsByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.Account, int, error) {
+func (g *GormStore) ListProjectAccounts(ctx context.Context, member bool, projectID uuid.UUID, page, perPage int) ([]*model.Account, int, error) {
 	var users []*model.Account
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
 		if member {
-			if err := tx.Model(&model.Account{}).Where("project_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.Account{}).Where("project_id = ? AND member = ?", projectID.String(), member).Count(&total).Error; err != nil {
 				return err
 			}
 
-			members, err := g.ListProjectMembers(ctx, orgID, page, perPage)
+			members, err := g.ListProjectMembers(ctx, projectID, page, perPage)
 			if err != nil {
 				return err
 			}
@@ -276,10 +276,41 @@ func (g *GormStore) ListAccountsByOrg(ctx context.Context, member bool, orgID uu
 
 			return nil
 		} else {
-			if err := tx.Model(&model.Account{}).Where("project_id = ?", orgID.String()).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.Account{}).Where("project_id = ?", projectID.String()).Count(&total).Error; err != nil {
 				return err
 			}
-			return g.db.Where("project_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
+			return g.db.Where("project_id = ?", projectID).Limit(perPage).Offset(page * perPage).Find(&users).Error
+		}
+	})
+
+	return users, int(total), err
+}
+
+func (g *GormStore) ListPoolAccounts(ctx context.Context, member bool, poolID uuid.UUID, page, perPage int) ([]*model.Account, int, error) {
+	var users []*model.Account
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if member {
+			if err := tx.Model(&model.Account{}).Where("pool_id = ? AND member = ?", poolID.String(), member).Count(&total).Error; err != nil {
+				return err
+			}
+
+			members, err := g.ListProjectMembers(ctx, poolID, page, perPage)
+			if err != nil {
+				return err
+			}
+
+			for _, member := range members {
+				users = append(users, member.Account)
+			}
+
+			return nil
+		} else {
+			if err := tx.Model(&model.Account{}).Where("pool_id = ?", poolID.String()).Count(&total).Error; err != nil {
+				return err
+			}
+			return g.db.Where("pool_id = ?", poolID).Limit(perPage).Offset(page * perPage).Find(&users).Error
 		}
 	})
 

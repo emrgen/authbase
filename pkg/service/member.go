@@ -126,7 +126,7 @@ func (m *ProjectMemberService) ListProjectMember(ctx context.Context, request *v
 	}
 
 	page := x.GetPageFromRequest(request)
-	members, total, err := as.ListAccountsByOrg(ctx, true, orgID, int(page.Page), int(page.Size))
+	members, total, err := as.ListProjectAccounts(ctx, true, orgID, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}

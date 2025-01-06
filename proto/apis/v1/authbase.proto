@@ -512,7 +512,8 @@ message GetAccountResponse {
 }
 
 message ListAccountsRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
+  optional string project_id = 1 [(validate.rules).string.uuid = true];
+  optional string pool_id = 3 [(validate.rules).string.uuid = true];
   Page page = 2;
 }
 
@@ -593,7 +594,7 @@ service AccountService {
 
   // ListAccounts
   rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse) {
-    option (google.api.http) = {get: "/v1/projects/{project_id}/users"};
+    option (google.api.http) = {get: "/v1/accounts"};
   }
 
   // UpdateAccount

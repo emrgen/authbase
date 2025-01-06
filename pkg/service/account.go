@@ -130,14 +130,33 @@ func (u *AccountService) GetAccount(ctx context.Context, request *v1.GetAccountR
 
 // ListAccounts lists users.
 func (u *AccountService) ListAccounts(ctx context.Context, request *v1.ListAccountsRequest) (*v1.ListAccountsResponse, error) {
+	var err error
+
+	if request.GetProjectId() == "" && request.GetPoolId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "project_id or pool_id is required")
+	}
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
 	}
 
-	projectID, err := uuid.Parse(request.GetProjectId())
-	if err != nil {
-		return nil, err
+	var projectID uuid.UUID
+	var poolID uuid.UUID
+	if request.GetPoolId() != "" {
+		poolID, err := uuid.Parse(request.GetPoolId())
+		if err != nil {
+			return nil, err
+		}
+		pool, err := as.GetPoolByID(ctx, poolID)
+		if err != nil {
+			return nil, err
+		}
+		projectID = uuid.MustParse(pool.ProjectID)
+	} else {
+		projectID, err = uuid.Parse(request.GetProjectId())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = u.perm.CheckProjectPermission(ctx, projectID, "read")
@@ -146,7 +165,13 @@ func (u *AccountService) ListAccounts(ctx context.Context, request *v1.ListAccou
 	}
 
 	page := x.GetPageFromRequest(request)
-	users, total, err := as.ListAccountsByOrg(ctx, false, projectID, int(page.Page), int(page.Size))
+	var users []*model.Account
+	var total int
+	if poolID != uuid.Nil {
+		users, total, err = as.ListPoolAccounts(ctx, false, poolID, int(page.Page), int(page.Size))
+	} else {
+		users, total, err = as.ListProjectAccounts(ctx, false, projectID, int(page.Page), int(page.Size))
+	}
 
 	var userProtoList []*v1.Account
 	for _, user := range users {

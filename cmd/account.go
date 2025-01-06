@@ -171,6 +171,7 @@ func checkEmailUsedCommand() *cobra.Command {
 
 func listUserCommand() *cobra.Command {
 	var projectID string
+	var poolID string
 
 	command := &cobra.Command{
 		Use:   "list",
@@ -178,8 +179,10 @@ func listUserCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 
-			if projectID == "" {
-				logrus.Errorf("missing required flag: --project-id")
+			logrus.Info("list users ", projectID, poolID)
+
+			if projectID == "" && poolID == "" {
+				logrus.Errorf("missing required flags: --project-id or --pool-id")
 				return
 			}
 
@@ -190,9 +193,17 @@ func listUserCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.ListAccounts(tokenContext(), &v1.ListAccountsRequest{
-				ProjectId: projectID,
-			})
+			req := &v1.ListAccountsRequest{}
+
+			if projectID != "" {
+				req.ProjectId = &projectID
+			}
+
+			if poolID != "" {
+				req.PoolId = &poolID
+			}
+
+			res, err := client.ListAccounts(tokenContext(), req)
 			if err != nil {
 				logrus.Errorf("failed to list users: %v", err)
 				return
@@ -222,6 +233,7 @@ func listUserCommand() *cobra.Command {
 	}
 
 	bindContextFlags(command)
+	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "pool id")
 	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
 
 	return command

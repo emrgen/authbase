@@ -65,8 +65,10 @@ type AccountStore interface {
 	UpdateAccount(ctx context.Context, user *model.Account) error
 	// DeleteAccount deletes a user from the database.
 	DeleteAccount(ctx context.Context, id uuid.UUID) error
-	// ListAccountsByOrg retrieves a list of users by project.
-	ListAccountsByOrg(ctx context.Context, member bool, projectID uuid.UUID, page, perPage int) ([]*model.Account, int, error)
+	// ListProjectAccounts retrieves a list of users by project.
+	ListProjectAccounts(ctx context.Context, member bool, projectID uuid.UUID, page, perPage int) ([]*model.Account, int, error)
+	// ListPoolAccounts retrieves a list of users by pool.
+	ListPoolAccounts(ctx context.Context, member bool, poolID uuid.UUID, page, perPage int) ([]*model.Account, int, error)
 	// DisableAccount disables a user in the database.
 	DisableAccount(ctx context.Context, id uuid.UUID) error
 	// EnableAccount enables a user in the database.

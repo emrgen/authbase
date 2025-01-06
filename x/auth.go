@@ -50,6 +50,7 @@ func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 
 				ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
 				ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
+				ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))
 				ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
 			} else {
 				if err != nil {
@@ -62,6 +63,7 @@ func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 
 				ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
 				ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
+				ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))
 				ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
 			}
 		}

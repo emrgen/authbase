@@ -13,7 +13,7 @@ import (
 // TokenVerifier is an interface to verify the token.
 type TokenVerifier interface {
 	// VerifyEmailPassword verifies the email and password of a user.
-	VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.Account, error)
+	VerifyEmailPassword(ctx context.Context, poolID uuid.UUID, email, password string) (*model.Account, error)
 	// VerifyToken verifies the token.
 	VerifyToken(ctx context.Context, token string) (*Claims, error)
 	// VerifyAccessKey verifies the access key.
@@ -36,13 +36,13 @@ func NewStoreBasedTokenVerifier(store store.Provider, redis *cache.Redis) *Store
 
 // VerifyEmailPassword verifies the email and password of a user.
 // It returns the user if the email and password are correct.
-func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, projectID uuid.UUID, email, password string) (*model.Account, error) {
+func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, poolID uuid.UUID, email, password string) (*model.Account, error) {
 	as, err := store.GetProjectStore(ctx, v.store)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := as.GetAccountByEmail(ctx, projectID, email)
+	user, err := as.GetAccountByEmail(ctx, poolID, email)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +88,7 @@ func (v *StoreBasedUserVerifier) VerifyAccessKey(ctx context.Context, id uuid.UU
 	claims := &Claims{
 		ProjectID: accessKey.ProjectID,
 		AccountID: accessKey.AccountID,
+		PoolID:    accessKey.PoolID,
 	}
 
 	if accessKey.Scopes != "" {

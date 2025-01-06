@@ -15,6 +15,8 @@ type AccessKey struct {
 	Project     *Project `gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE"`
 	AccountID   string   `gorm:"uuid"`
 	Account     *Account `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
+	PoolID      string   `gorm:"uuid"`
+	Pool        *Pool    `gorm:"foreignKey:PoolID;constraint:OnDelete:CASCADE"`
 	Token       string   // hashed token
 	Scopes      string   `gorm:"default:[]"`
 	Permissions string   `gorm:"default:[]"`
