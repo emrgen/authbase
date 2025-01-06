@@ -11,6 +11,8 @@ type Session struct {
 	ID        string `gorm:"primaryKey"`
 	AccountID string
 	Account   *Account `gorm:"foreignKey:AccountID;OnDelete:CASCADE;"`
+	PoolID    string   `gorm:"not null;index"`
+	Pool      *Pool    `gorm:"foreignKey:PoolID;OnDelete:CASCADE;"`
 	ProjectID string
 	ExpiredAt time.Time `gorm:"default:null"`
 }

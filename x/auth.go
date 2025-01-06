@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
-	gopackv1 "github.com/emrgen/gopack/apis/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -18,7 +17,7 @@ func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 		switch info.FullMethod {
 		case
 			v1.AuthService_LoginUsingPassword_FullMethodName,
-			gopackv1.TokenService_VerifyToken_FullMethodName:
+			v1.TokenService_VerifyToken_FullMethodName:
 			break
 		case v1.AccessKeyService_CreateAccessKey_FullMethodName:
 			request := req.(*v1.CreateAccessKeyRequest)

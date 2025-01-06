@@ -92,7 +92,6 @@ message DeleteProjectResponse {
 
 message GetProjectConfigRequest {}
 
-
 // Project member service
 
 message ProjectMember {
@@ -495,11 +494,13 @@ message Account {
   bool disabled = 5;
   bool member = 6;
   string kind = 7;
-  string project_id = 8 [(validate.rules).string.uuid = true];
+  string pool_id = 8 [(validate.rules).string.uuid = true];
+  string project_id = 9 [(validate.rules).string.uuid = true];
 
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
-  optional google.protobuf.Timestamp verified_at = 12;
+  google.protobuf.Timestamp last_used_at = 13;
+  optional google.protobuf.Timestamp verified_at = 14;
 }
 
 message GetAccountRequest {
@@ -540,7 +541,7 @@ message DeleteAccountResponse {
 }
 
 message ListActiveAccountsRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
+  string pool_id = 1 [(validate.rules).string.uuid = true];
   optional Page page = 2;
 }
 
@@ -610,7 +611,7 @@ service AccountService {
 
   // ActivateAccounts
   rpc ListActiveAccounts(ListActiveAccountsRequest) returns (ListActiveAccountsResponse) {
-    option (google.api.http) = {get: "/v1/projects/{project_id}/users/active"};
+    option (google.api.http) = {get: "/v1/pool/{pool_id}/users/active"};
   }
 
   // InactiveAccounts
@@ -655,7 +656,7 @@ message Session {
 
 message ListAccountSessionRequest {
   string account_id = 1 [(validate.rules).string.uuid = true];
-  string project_id = 2 [(validate.rules).string.uuid = true];
+  string pool_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message ListAccountSessionResponse {

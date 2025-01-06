@@ -13,7 +13,6 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
-	gopackv1 "github.com/emrgen/gopack/apis/v1"
 	"github.com/gobuffalo/packr"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcvalidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
@@ -149,7 +148,7 @@ func (s *Server) registerServices() error {
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		//grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
+		grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
 	}
 	endpoint := "localhost" + s.grpcPort
 
@@ -157,9 +156,6 @@ func (s *Server) registerServices() error {
 	perm := s.permission
 
 	// Register the grpc services
-
-	//oauthService := service.NewOAuth2Service(s.provider, redis)
-
 	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
 	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, redis))
@@ -168,20 +164,34 @@ func (s *Server) registerServices() error {
 	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis))
 	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider))
 	v1.RegisterPoolMemberServiceServer(grpcServer, service.NewPoolMemberService(s.provider))
-
-	//gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
+	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(x.NewStoreBasedTokenVerifier(s.provider, redis)))
 
 	// Register the rest gateway
-	if err = v1.RegisterProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+	if err = v1.RegisterAdminProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 	if err = v1.RegisterProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterClientServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 	if err = v1.RegisterAuthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = gopackv1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+	if err = v1.RegisterAccountServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterAccessKeyServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterPoolServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterPoolMemberServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -246,19 +247,26 @@ func (u *AccountService) ListActiveAccounts(ctx context.Context, request *v1.Lis
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetProjectId())
+	poolID, err := uuid.Parse(request.GetPoolId())
 	if err != nil {
 		return nil, err
 	}
+	pool, err := as.GetPoolByID(ctx, poolID)
+	if err != nil {
+		return nil, err
+	}
+	projectID := uuid.MustParse(pool.ProjectID)
 
-	err = u.perm.CheckProjectPermission(ctx, orgID, "read")
+	err = u.perm.CheckProjectPermission(ctx, projectID, "read")
 	if err != nil {
 		return nil, err
 	}
 
 	page := x.GetPageFromRequest(request)
 
-	sessions, err := as.ListSessions(ctx, orgID, int(page.Page), int(page.Size))
+	logrus.Infof("pool id: %s", poolID.String())
+
+	sessions, err := as.ListActiveAccounts(ctx, poolID, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}
@@ -270,15 +278,18 @@ func (u *AccountService) ListActiveAccounts(ctx context.Context, request *v1.Lis
 			continue
 		}
 		userProtos = append(userProtos, &v1.Account{
-			Id:        session.AccountID,
-			Username:  user.Username,
-			Email:     user.Email,
-			CreatedAt: timestamppb.New(user.CreatedAt),
-			UpdatedAt: timestamppb.New(user.UpdatedAt),
+			Id:          session.AccountID,
+			PoolId:      user.PoolID,
+			ProjectId:   user.ProjectID,
+			Username:    user.Username,
+			VisibleName: user.VisibleName,
+			Email:       user.Email,
+			CreatedAt:   timestamppb.New(user.CreatedAt),
+			UpdatedAt:   timestamppb.New(user.UpdatedAt),
 		})
 	}
 
-	return &v1.ListActiveAccountsResponse{Accounts: userProtos}, nil
+	return &v1.ListActiveAccountsResponse{Accounts: userProtos, Meta: &v1.Meta{Total: 0, Page: 0, Size: 0}}, nil
 }
 
 // ListInactiveAccounts lists inactive users.

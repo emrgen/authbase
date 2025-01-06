@@ -2,12 +2,8 @@ module github.com/emrgen/authbase
 
 go 1.23.4
 
-//local
-replace github.com/emrgen/gopack => ../gopack
-
 require (
 	github.com/black-06/grpc-gateway-file v0.1.2
-	github.com/emrgen/gopack v0.0.0-00010101000000-000000000000
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gobuffalo/packr v1.30.1
@@ -36,7 +32,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect

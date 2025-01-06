@@ -164,9 +164,9 @@ func (g *GormStore) DeleteSessionByAccountID(ctx context.Context, userID uuid.UU
 		Error
 }
 
-func (g *GormStore) ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error) {
+func (g *GormStore) ListActiveAccounts(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.Session, error) {
 	var sessions []*model.Session
-	err := g.db.Limit(perPage).Offset(page*perPage).Preload("Account").Find(&sessions, "project_id = ?", orgID).Error
+	err := g.db.Limit(perPage).Offset(page*perPage).Select("DISTINCT account_id").Preload("Account").Find(&sessions, "pool_id = ?", poolID.String()).Error
 	return sessions, err
 }
 

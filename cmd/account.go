@@ -30,6 +30,8 @@ func init() {
 	userCommand.AddCommand(deleteUserCommand())
 	userCommand.AddCommand(enableUserCommand())
 	userCommand.AddCommand(disableUserCommand())
+	userCommand.AddCommand(listUserSessionsCommand())
+	userCommand.AddCommand(listActiveSessionsCommand())
 }
 
 func createUserCommand() *cobra.Command {
@@ -483,6 +485,101 @@ func revokeUserSessionsCommand() *cobra.Command {
 	bindContextFlags(command)
 
 	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+
+	return command
+}
+
+func listUserSessionsCommand() *cobra.Command {
+	var userID string
+
+	command := &cobra.Command{
+		Use:   "sessions",
+		Short: "list active user sessions",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if userID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+
+	return command
+}
+
+func listActiveSessionsCommand() *cobra.Command {
+	var poolID string
+
+	command := &cobra.Command{
+		Use:   "list-active",
+		Short: "list active sessions",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if poolID == "" {
+				logrus.Errorf("missing required flag: --pool-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.ListActiveAccounts(tokenContext(), &v1.ListActiveAccountsRequest{
+				PoolId: poolID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to list active sessions: %v", err)
+				return
+			}
+
+			// print response in table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "Pool ID", "User ID", "Name", "Last Used At"})
+			for i, account := range res.Accounts {
+				table.Append([]string{
+					strconv.Itoa(i + 1),
+					account.PoolId,
+					account.Id,
+					account.VisibleName,
+					account.LastUsedAt.AsTime().Format("2006-01-02 15:04:05"),
+				})
+			}
+
+			table.Render()
+
+			fmt.Printf("Sessions: page: %v, showing: %v, total: %v\n", res.Meta.Page, len(res.Accounts), res.Meta.Total)
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "pool id")
 
 	return command
 }

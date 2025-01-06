@@ -83,8 +83,8 @@ type AccountStore interface {
 type SessionStore interface {
 	// CreateSession creates a new session in the database.
 	CreateSession(ctx context.Context, session *model.Session) error
-	// ListSessions retrieves a list of sessions.
-	ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error)
+	// ListActiveAccounts retrieves a list of sessions.
+	ListActiveAccounts(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.Session, error)
 	// ListActiveSessions retrieves a list of active sessions.
 	ListActiveSessions(ctx context.Context, userID uuid.UUID) ([]*model.Session, error)
 	// DeleteSession deletes a session from the database.
