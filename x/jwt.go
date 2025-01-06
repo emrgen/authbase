@@ -8,6 +8,15 @@ import (
 	"time"
 )
 
+const (
+	// RefreshTokenDuration is the duration for the refresh token
+	// TODO: this should be configurable in the future
+	RefreshTokenDuration = 7 * 24 * time.Hour
+	// AccessTokenDuration is the duration for the access token
+	// TODO: this should be configurable in the future
+	AccessTokenDuration = 15 * time.Minute
+)
+
 func jwtSecret() string {
 	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
@@ -21,6 +30,7 @@ func jwtSecret() string {
 type Claims struct {
 	Username   string            `json:"username"`
 	Email      string            `json:"email"`
+	ClientID   string            `json:"client_id"`
 	ProjectID  string            `json:"project_id"`
 	UserID     string            `json:"user_id"`
 	Permission uint32            `json:"permission"`
@@ -42,26 +52,40 @@ type JWTToken struct {
 
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(claims Claims) (*JWTToken, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	claim := jwt.MapClaims{
 		"username":   claims.Username,
 		"email":      claims.Email,
 		"user_id":    claims.UserID,
 		"project_id": claims.ProjectID,
+		"client_id":  claims.ClientID,
 		"exp":        claims.ExpireAt.Unix(),
 		"iat":        time.Now().Unix(),
 		"jti":        claims.Jti,
 		"provider":   "authbase",
 		"data":       claims.Data,
 		"scopes":     claims.Scopes,
-	})
+	}
+
+	// Generate the access token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	tokenString, err := token.SignedString([]byte(jwtSecret()))
 	if err != nil {
 		return nil, err
 	}
 
+	// Generate the refresh token
+	claim["exp"] = time.Now().Add(RefreshTokenDuration).Unix()
+	claim["iat"] = time.Now().Unix()
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	refreshToken, err := token.SignedString([]byte(jwtSecret()))
+	if err != nil {
+		return nil, err
+	}
+
 	return &JWTToken{
-		AccessToken: tokenString,
-		ExpireAt:    claims.ExpireAt,
+		AccessToken:  tokenString,
+		RefreshToken: refreshToken,
+		ExpireAt:     claims.ExpireAt,
 	}, nil
 }
 
@@ -110,6 +134,11 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, fmt.Errorf("project_id not found")
 	}
 
+	clientID, ok := claims["client_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("client_id not found")
+	}
+
 	provider, ok := claims["provider"].(string)
 	if !ok {
 		return nil, fmt.Errorf("provider not found")
@@ -128,6 +157,7 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	return &Claims{
 		UserID:    userID,
 		ProjectID: projectID,
+		ClientID:  clientID,
 		Jti:       jti,
 		Provider:  provider,
 		ExpireAt:  expireAt.Time,

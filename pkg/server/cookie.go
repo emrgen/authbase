@@ -2,12 +2,7 @@ package server
 
 import (
 	"context"
-	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
-	"github.com/emrgen/authbase/x"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 	"net/http"
@@ -16,51 +11,51 @@ import (
 // InjectCookie injects a cookie into the response based on the message type
 func InjectCookie(store CookieStore) func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
 	return func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
-		m = m.ProtoReflect().Interface()
-		switch m.(type) {
-		case *v1.LoginResponse:
-			loginResponse := m.(*v1.LoginResponse)
-			// marshal the token
-			token := loginResponse.Token.String()
-			logrus.Info("Token: ", token)
-			cookie := http.Cookie{
-				Name:     "session",
-				HttpOnly: true,
-				Value:    token,
-				SameSite: http.SameSiteStrictMode, // Strict mode is the most secure option
-			}
-			http.SetCookie(w, &cookie)
-		case *v1.OAuthLoginResponse:
-			state := x.GenerateCode()
-			// create the redirection URL
-			cookie := http.Cookie{
-				Name:     "oauthstate",
-				HttpOnly: true,
-				Value:    state,
-				SameSite: http.SameSiteStrictMode, // Strict mode is the most secure option
-			}
-			http.SetCookie(w, &cookie)
-
-			res := m.(*v1.OAuthLoginResponse)
-			provider := res.Provider
-
-			var googleOauthConfig = &oauth2.Config{
-				RedirectURL:  res.CallbackUrl,
-				ClientID:     provider.ClientId,
-				ClientSecret: provider.ClientSecret,
-				Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-				Endpoint:     google.Endpoint,
-			}
-
-			err := store.Set(ctx, state)
-			if err != nil {
-				return err
-			}
-
-			redirectURL := googleOauthConfig.AuthCodeURL(state)
-			w.Header().Set("Location", redirectURL)
-			w.WriteHeader(http.StatusFound)
-		}
+		//m = m.ProtoReflect().Interface()
+		//switch m.(type) {
+		//case *v1.LoginResponse:
+		//	loginResponse := m.(*v1.LoginResponse)
+		//	// marshal the token
+		//	token := loginResponse.Token.String()
+		//	logrus.Info("Token: ", token)
+		//	cookie := http.Cookie{
+		//		Name:     "session",
+		//		HttpOnly: true,
+		//		Value:    token,
+		//		SameSite: http.SameSiteStrictMode, // Strict mode is the most secure option
+		//	}
+		//	http.SetCookie(w, &cookie)
+		//case *v1.OAuthLoginResponse:
+		//	state := x.GenerateCode()
+		//	// create the redirection URL
+		//	cookie := http.Cookie{
+		//		Name:     "oauthstate",
+		//		HttpOnly: true,
+		//		Value:    state,
+		//		SameSite: http.SameSiteStrictMode, // Strict mode is the most secure option
+		//	}
+		//	http.SetCookie(w, &cookie)
+		//
+		//	res := m.(*v1.OAuthLoginResponse)
+		//	provider := res.Provider
+		//
+		//	var googleOauthConfig = &oauth2.Config{
+		//		RedirectURL:  res.CallbackUrl,
+		//		ClientID:     provider.ClientId,
+		//		ClientSecret: provider.ClientSecret,
+		//		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		//		Endpoint:     google.Endpoint,
+		//	}
+		//
+		//	err := store.Set(ctx, state)
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	redirectURL := googleOauthConfig.AuthCodeURL(state)
+		//	w.Header().Set("Location", redirectURL)
+		//	w.WriteHeader(http.StatusFound)
+		//}
 
 		return nil
 	}

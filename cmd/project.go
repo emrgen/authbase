@@ -74,10 +74,10 @@ func createProjectCommand() *cobra.Command {
 			if master {
 				logrus.Infof("creating master project")
 				project, err := client.CreateAdminProject(ctx, &v1.CreateAdminProjectRequest{
-					Name:     project,
-					Username: username,
-					Email:    email,
-					Password: &password,
+					Name:        project,
+					VisibleName: username,
+					Email:       email,
+					Password:    &password,
 				})
 				if err != nil {
 					logrus.Errorf("error creating master project: %v", err)
@@ -86,10 +86,10 @@ func createProjectCommand() *cobra.Command {
 				logrus.Infof("master project created: %v", project)
 			} else {
 				project, err := client.CreateProject(ctx, &v1.CreateProjectRequest{
-					Name:     project,
-					Username: username,
-					Email:    email,
-					Password: &password,
+					Name:        project,
+					VisibleName: username,
+					Email:       email,
+					Password:    &password,
 				})
 				if err != nil {
 					logrus.Errorf("error creating project: %v", err)
@@ -145,7 +145,7 @@ func getProjectCommand() *cobra.Command {
 			table.Append([]string{res.Project.Id, res.Project.Name, res.Project.OwnerId,
 				strconv.FormatBool(res.Project.Master),
 				strconv.FormatInt(int64(res.Members), 10),
-				strconv.FormatInt(int64(res.Users), 10),
+				strconv.FormatInt(int64(res.Accounts), 10),
 			})
 			table.Render()
 

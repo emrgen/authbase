@@ -16,7 +16,7 @@ var (
 
 // AuthBaseStore is the interface for interacting with the database.
 type AuthBaseStore interface {
-	UserStore
+	AccountStore
 	SessionStore
 	ProjectStore
 	ProjectMemberStore
@@ -50,31 +50,31 @@ type ProjectStore interface {
 	GetKeypair(ctx context.Context, id uuid.UUID) (*model.Keypair, error)
 }
 
-// UserStore is the interface for interacting with the user database.
-// User can be a member or an end user.
-type UserStore interface {
-	// CreateUser creates a new user in the database.
-	CreateUser(ctx context.Context, user *model.User) error
-	// GetUserByEmail retrieves a user by their email address.
-	GetUserByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.User, error)
-	// GetUserByID retrieves a user by their ID.
-	GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error)
-	// UpdateUser updates a user in the database.
-	UpdateUser(ctx context.Context, user *model.User) error
-	// DeleteUser deletes a user from the database.
-	DeleteUser(ctx context.Context, id uuid.UUID) error
-	// ListUsersByOrg retrieves a list of users by project.
-	ListUsersByOrg(ctx context.Context, member bool, projectID uuid.UUID, page, perPage int) ([]*model.User, int, error)
-	// DisableUser disables a user in the database.
-	DisableUser(ctx context.Context, id uuid.UUID) error
-	// EnableUser enables a user in the database.
-	EnableUser(ctx context.Context, id uuid.UUID) error
-	// VerifyUser verifies a user in the database.
-	VerifyUser(ctx context.Context, id uuid.UUID) error
-	// UserExists checks if a user exists in the database.
-	UserExists(ctx context.Context, projectID uuid.UUID, username, email string) ([]*model.User, error)
-	// GetUserCount retrieves the number of users in a project.
-	GetUserCount(ctx context.Context, projectID uuid.UUID) (uint32, error)
+// AccountStore is the interface for interacting with the user database.
+// Account can be a member or an end user.
+type AccountStore interface {
+	// CreateAccount creates a new user in the database.
+	CreateAccount(ctx context.Context, user *model.Account) error
+	// GetAccountByEmail retrieves a user by their email address.
+	GetAccountByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.Account, error)
+	// GetAccountByID retrieves a user by their ID.
+	GetAccountByID(ctx context.Context, id uuid.UUID) (*model.Account, error)
+	// UpdateAccount updates a user in the database.
+	UpdateAccount(ctx context.Context, user *model.Account) error
+	// DeleteAccount deletes a user from the database.
+	DeleteAccount(ctx context.Context, id uuid.UUID) error
+	// ListAccountsByOrg retrieves a list of users by project.
+	ListAccountsByOrg(ctx context.Context, member bool, projectID uuid.UUID, page, perPage int) ([]*model.Account, int, error)
+	// DisableAccount disables a user in the database.
+	DisableAccount(ctx context.Context, id uuid.UUID) error
+	// EnableAccount enables a user in the database.
+	EnableAccount(ctx context.Context, id uuid.UUID) error
+	// VerifyAccount verifies a user in the database.
+	VerifyAccount(ctx context.Context, id uuid.UUID) error
+	// AccountExists checks if a user exists in the database.
+	AccountExists(ctx context.Context, projectID uuid.UUID, username, email string) ([]*model.Account, error)
+	// GetAccountCount retrieves the number of users in a project.
+	GetAccountCount(ctx context.Context, projectID uuid.UUID) (uint32, error)
 }
 
 type SessionStore interface {
@@ -86,8 +86,8 @@ type SessionStore interface {
 	ListActiveSessions(ctx context.Context, userID uuid.UUID) ([]*model.Session, error)
 	// DeleteSession deletes a session from the database.
 	DeleteSession(ctx context.Context, sessionID uuid.UUID) error
-	// DeleteSessionByUserID deletes a session from the database by user ID.
-	DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error
+	// DeleteSessionByAccountID deletes a session from the database by user ID.
+	DeleteSessionByAccountID(ctx context.Context, userID uuid.UUID) error
 }
 
 // ProjectMemberStore is the interface for interacting with the permission database.
@@ -98,8 +98,8 @@ type ProjectMemberStore interface {
 	GetProjectMemberByID(ctx context.Context, orgID, userID uuid.UUID) (*model.ProjectMember, error)
 	// ListProjectMembers retrieves a list of permissions.
 	ListProjectMembers(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.ProjectMember, error)
-	// ListProjectMembersUsers retrieves a list of permissions by project.
-	ListProjectMembersUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error)
+	// ListProjectMembersByAccountIDs retrieves a list of permissions by project.
+	ListProjectMembersByAccountIDs(ctx context.Context, projectID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error)
 	// UpdateProjectMember updates a permission in the database.
 	UpdateProjectMember(ctx context.Context, permission *model.ProjectMember) error
 	// DeleteProjectMember deletes a permission from the database.
@@ -144,8 +144,8 @@ type TokenStore interface {
 	CreateToken(ctx context.Context, token *model.Token) error
 	// GetTokenByID retrieves a token by its ID.
 	GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Token, error)
-	// ListUserTokens retrieves a list of tokens by user.
-	ListUserTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error)
+	// ListAccountTokens retrieves a list of tokens by user.
+	ListAccountTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error)
 	// DeleteToken updates a token in the database.
 	DeleteToken(ctx context.Context, id uuid.UUID) error
 }

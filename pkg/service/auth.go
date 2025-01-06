@@ -17,6 +17,11 @@ import (
 	"time"
 )
 
+// NewAuthService creates a new AuthService
+func NewAuthService(store store.Provider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
+	return &AuthService{store: store, perm: perm, mailer: mailer, cache: cache}
+}
+
 var _ v1.AuthServiceServer = new(AuthService)
 
 // AuthService is a service that implements the AuthServiceServer interface
@@ -28,14 +33,23 @@ type AuthService struct {
 	v1.UnimplementedAuthServiceServer
 }
 
-// NewAuthService creates a new AuthService
-func NewAuthService(store store.Provider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
-	return &AuthService{store: store, perm: perm, mailer: mailer, cache: cache}
+func (a *AuthService) AccountEmailExists(ctx context.Context, request *v1.AccountEmailExistsRequest) (*v1.AccountEmailExistsResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-// UserEmailExists checks if a user with the given email or username already exists in an project
-// NOTE: should be rate limited by ip address
-func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.UserEmailExistsRequest) (*v1.UserEmailExistsResponse, error) {
+// LoginUsingIdp redirects the user to the identity provider for login
+func (a *AuthService) LoginUsingIdp(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AuthService) GetIdpToken(ctx context.Context, request *v1.GetIdpTokenRequest) (*v1.GetIdpTokenResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.AccountEmailExistsRequest) (*v1.AccountEmailExistsResponse, error) {
 	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
@@ -45,7 +59,7 @@ func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.UserEmail
 	if err != nil {
 		return nil, err
 	}
-	users, err := as.UserExists(ctx, orgID, request.GetUsername(), request.GetEmail())
+	users, err := as.AccountExists(ctx, orgID, request.GetUsername(), request.GetEmail())
 	var emailExists bool
 	var usernameExists bool
 	for _, user := range users {
@@ -58,15 +72,14 @@ func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.UserEmail
 		}
 	}
 
-	return &v1.UserEmailExistsResponse{
+	return &v1.AccountEmailExistsResponse{
 		EmailExists:    emailExists,
 		UsernameExists: usernameExists,
 	}, nil
 
 }
 
-// Register creates a new user if the username and email are unique
-func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest) (*v1.RegisterResponse, error) {
+func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.RegisterUsingPasswordRequest) (*v1.RegisterUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	username := request.GetUsername()
 	password := request.GetPassword()
@@ -77,7 +90,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 		return nil, err
 	}
 
-	users, err := as.UserExists(ctx, orgID, username, email)
+	users, err := as.AccountExists(ctx, orgID, username, email)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +108,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	salt := x.Keygen()
 	hashedPassword, _ := x.HashPassword(password, salt)
 
-	user := &model.User{
+	user := &model.Account{
 		ID:        uuid.New().String(),
 		ProjectID: orgID.String(),
 		Username:  username,
@@ -106,7 +119,7 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err = as.CreateUser(ctx, user)
+		err = as.CreateAccount(ctx, user)
 		if err != nil {
 			return err
 		}
@@ -140,13 +153,13 @@ func (a *AuthService) Register(ctx context.Context, request *v1.RegisterRequest)
 		}
 	}()
 
-	return &v1.RegisterResponse{
+	return &v1.RegisterUsingPasswordResponse{
 		Message: "user registered",
 	}, nil
 }
 
-// Login logs in a user and returns an access token and a refresh token
-func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.LoginResponse, error) {
+// LoginUsingPassword logs in a user and returns an access token and a refresh token
+func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	password := request.GetPassword()
 
@@ -156,7 +169,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		return nil, err
 	}
 
-	user, err := as.GetUserByEmail(ctx, orgID, email)
+	user, err := as.GetAccountByEmail(ctx, orgID, email)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +185,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 
 	perm := &model.ProjectMember{}
 
-	if user.Member {
+	if user.ProjectMember {
 		perm, err = as.GetProjectMemberByID(ctx, orgID, uuid.MustParse(user.ID))
 		if err != nil {
 			return nil, err
@@ -187,9 +200,9 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		ProjectID:  user.ProjectID,
 		UserID:     user.ID,
 		Permission: perm.Permission,
-		Audience:   "",
+		Audience:   "", // the target website or app that will use the token
 		Jti:        jti,
-		ExpireAt:   time.Now().Add(5 * time.Hour),
+		ExpireAt:   time.Now().Add(x.AccessTokenDuration),
 		IssuedAt:   time.Now(),
 		Provider:   "authbase",
 		Data:       nil,
@@ -198,9 +211,9 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		return nil, err
 	}
 
-	refreshExpireAt := time.Now().Add(5 * 24 * time.Hour)
+	refreshExpireAt := time.Now().Add(x.RefreshTokenDuration)
 	// save refresh token to cache, it will be used to validate the refresh token request
-	err = a.cache.Set(jti, user.ID, 5*24*time.Hour)
+	err = a.cache.Set(jti, user.ID, x.RefreshTokenDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +237,7 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 		// this will allow multiple sessions for a user at the same time
 		err = as.CreateSession(ctx, &model.Session{
 			ID:        jti,
-			UserID:    user.ID,
+			AccountID: user.ID,
 			ProjectID: user.ProjectID,
 		})
 		if err != nil {
@@ -238,8 +251,8 @@ func (a *AuthService) Login(ctx context.Context, request *v1.LoginRequest) (*v1.
 	}
 
 	// return tokens
-	return &v1.LoginResponse{
-		User: &v1.User{
+	return &v1.LoginUsingPasswordResponse{
+		User: &v1.Account{
 			Id:        user.ID,
 			Username:  user.Username,
 			Email:     user.Email,
@@ -338,7 +351,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		projectID = token.ProjectID
 	}
 
-	user, err := as.GetUserByID(ctx, uuid.MustParse(userID))
+	user, err := as.GetAccountByID(ctx, uuid.MustParse(userID))
 	if err != nil {
 		return nil, err
 	}
@@ -357,10 +370,11 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		Permission: perm.Permission,
 		Audience:   claims.Audience,
 		Jti:        jti,
-		ExpireAt:   time.Now().Add(5 * time.Hour),
+		ExpireAt:   time.Now().Add(15 * time.Minute),
 		IssuedAt:   time.Now(),
 		Provider:   "authbase",
-		Data:       nil,
+		Data:       claims.Data,
+		Scopes:     claims.Scopes,
 	})
 	if err != nil {
 		return nil, err
@@ -393,7 +407,7 @@ func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRe
 			return errors.New("verification code has expired")
 		}
 
-		user, err := tx.GetUserByID(ctx, uuid.MustParse(code.UserID))
+		user, err := tx.GetAccountByID(ctx, uuid.MustParse(code.UserID))
 		if err != nil {
 			return err
 		}
@@ -401,7 +415,7 @@ func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRe
 		user.Verified = true
 		user.VerifiedAt = time.Now().UTC()
 
-		err = tx.UpdateUser(ctx, user)
+		err = tx.UpdateAccount(ctx, user)
 		if err != nil {
 			return err
 		}

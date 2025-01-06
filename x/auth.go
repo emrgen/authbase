@@ -17,35 +17,35 @@ func AuthInterceptor(verifier UserVerifier) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		switch info.FullMethod {
 		case
-			v1.AuthService_Register_FullMethodName,
+			v1.AuthService_LoginUsingPassword_FullMethodName,
 			gopackv1.TokenService_VerifyToken_FullMethodName:
 			break
-		case v1.AuthService_Login_FullMethodName:
-			request := req.(*v1.LoginRequest)
-			orgID, err := uuid.Parse(request.GetProjectId())
-			if err != nil {
-				return nil, err
-			}
-			user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
-			if err != nil {
-				return nil, err
-			}
-
-			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
-		case v1.OfflineTokenService_CreateToken_FullMethodName:
-			request := req.(*v1.CreateTokenRequest)
-			orgID, err := uuid.Parse(request.GetProjectId())
-			if err != nil {
-				return nil, err
-			}
-			user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
-			if err != nil {
-				return nil, err
-			}
-
-			ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
+		//case v1.AuthService_Login_FullMethodName:
+		//	request := req.(*v1.LoginRequest)
+		//	orgID, err := uuid.Parse(request.GetProjectId())
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//	user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//
+		//	ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
+		//	ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
+		//case v1.OfflineTokenService_CreateToken_FullMethodName:
+		//	request := req.(*v1.CreateTokenRequest)
+		//	orgID, err := uuid.Parse(request.GetProjectId())
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//	user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//
+		//	ctx = context.WithValue(ctx, "user_id", uuid.MustParse(user.ID))
+		//	ctx = context.WithValue(ctx, "project_id", uuid.MustParse(request.GetProjectId()))
 		default:
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication

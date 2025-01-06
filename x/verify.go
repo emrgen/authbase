@@ -12,7 +12,7 @@ import (
 // UserVerifier is an interface to verify the user.
 type UserVerifier interface {
 	// VerifyEmailPassword verifies the email and password of a user.
-	VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.User, error)
+	VerifyEmailPassword(ctx context.Context, orgID uuid.UUID, email, password string) (*model.Account, error)
 	// VerifyToken verifies the token.
 	VerifyToken(ctx context.Context, token string) (*Claims, error)
 }
@@ -33,13 +33,13 @@ func NewStoreBasedUserVerifier(store store.Provider, redis *cache.Redis) *StoreB
 
 // VerifyEmailPassword verifies the email and password of a user.
 // It returns the user if the email and password are correct.
-func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, projectID uuid.UUID, email, password string) (*model.User, error) {
+func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, projectID uuid.UUID, email, password string) (*model.Account, error) {
 	as, err := store.GetProjectStore(ctx, v.store)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := as.GetUserByEmail(ctx, projectID, email)
+	user, err := as.GetAccountByEmail(ctx, projectID, email)
 	if err != nil {
 		return nil, err
 	}

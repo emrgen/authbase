@@ -75,7 +75,7 @@ func createUserCommand() *cobra.Command {
 			defer client.Close()
 
 			ctx := tokenContext()
-			user, err := client.CreateUser(ctx, &v1.CreateUserRequest{
+			user, err := client.CreateAccount(ctx, &v1.CreateAccountRequest{
 				ProjectId: ProjectId,
 				Email:     email,
 				Username:  username,
@@ -131,7 +131,7 @@ func checkEmailUsedCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.UserEmailExists(tokenContext(), &v1.UserEmailExistsRequest{
+			res, err := client.AccountEmailExists(tokenContext(), &v1.AccountEmailExistsRequest{
 				ProjectId: ProjectId,
 				Email:     email,
 				Username:  username,
@@ -183,7 +183,7 @@ func listUserCommand() *cobra.Command {
 			defer client.Close()
 
 			ctx := tokenContext()
-			res, err := client.ListUsers(ctx, &v1.ListUsersRequest{
+			res, err := client.ListAccounts(ctx, &v1.ListAccountsRequest{
 				ProjectId: ProjectId,
 			})
 			if err != nil {
@@ -194,7 +194,7 @@ func listUserCommand() *cobra.Command {
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "Verified", "Active", "Member"})
-			for i, user := range res.Users {
+			for i, user := range res.Accounts {
 				verified := user.VerifiedAt.AsTime().Format("2006-01-02 15:04:05") != "1970-01-01 00:00:00"
 				table.Append([]string{
 					strconv.Itoa(i + 1),
@@ -210,7 +210,7 @@ func listUserCommand() *cobra.Command {
 
 			table.Render()
 
-			fmt.Printf("Users: page: %v, showing: %v, total: %v\n", res.Meta.Page, len(res.Users), res.Meta.Total)
+			fmt.Printf("Users: page: %v, showing: %v, total: %v\n", res.Meta.Page, len(res.Accounts), res.Meta.Total)
 		},
 	}
 
@@ -321,7 +321,7 @@ func registerUserCommand() *cobra.Command {
 				return
 			}
 
-			res, err := client.Register(context.Background(), &v1.RegisterRequest{
+			res, err := client.RegisterUsingPassword(context.Background(), &v1.RegisterUsingPasswordRequest{
 				ProjectId: ProjectId,
 				Username:  username,
 				Email:     email,
@@ -376,7 +376,7 @@ func loginUserCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.Login(context.Background(), &v1.LoginRequest{
+			res, err := client.LoginUsingPassword(context.Background(), &v1.LoginUsingPasswordRequest{
 				Email:     email,
 				Password:  password,
 				ProjectId: ProjectId,
@@ -468,7 +468,7 @@ func revokeUserSessionsCommand() *cobra.Command {
 			defer client.Close()
 
 			_, err = client.DeleteAllSessions(tokenContext(), &v1.DeleteAllSessionsRequest{
-				UserId: userID,
+				AccountId: userID,
 			})
 			if err != nil {
 				logrus.Errorf("failed to revoke user sessions: %v", err)
@@ -512,8 +512,8 @@ func enableUserCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			_, err = client.EnableUser(ctx, &v1.EnableUserRequest{
-				UserId:    userID,
+			_, err = client.EnableAccount(ctx, &v1.EnableAccountRequest{
+				AccountId: userID,
 				ProjectId: ProjectId,
 			})
 
@@ -554,8 +554,8 @@ func disableUserCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			_, err = client.DisableUser(ctx, &v1.DisableUserRequest{
-				UserId: userID,
+			_, err = client.DisableAccount(ctx, &v1.DisableAccountRequest{
+				AccountId: userID,
 			})
 
 			logrus.Infof("user disabled successfully")

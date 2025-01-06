@@ -58,7 +58,7 @@ func createTokenCommand() *cobra.Command {
 				return
 			}
 
-			token, err := client.CreateToken(context.Background(), &v1.CreateTokenRequest{
+			token, err := client.CreateAccessKey(context.Background(), &v1.CreateAccessKeyRequest{
 				ProjectId: projectId,
 				Email:     email,
 				Password:  password,
@@ -134,9 +134,9 @@ func listTokenCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			res, err := client.ListTokens(ctx, &v1.ListTokensRequest{
-				ProjectId: organizationId,
-				UserId:    userId,
+			res, err := client.ListAccessKeys(ctx, &v1.ListAccessKeysRequest{
+				ProjectId: &organizationId,
+				AccountId: &userId,
 			})
 			if err != nil {
 				logrus.Errorf("failed to list tokens %v", err)
@@ -146,7 +146,7 @@ func listTokenCommand() *cobra.Command {
 			for _, token := range res.Tokens {
 				fmt.Printf("UserID: %v\n", userId)
 				fmt.Printf("ID: %v\n", token.Id)
-				fmt.Printf("Token: %v\n", token.Token)
+				fmt.Printf("Token: %v\n", token.AccessKey)
 				fmt.Printf("------\n")
 			}
 		},
@@ -181,7 +181,7 @@ func deleteTokenCommand() *cobra.Command {
 				return
 			}
 
-			_, err = client.DeleteToken(context.Background(), &v1.DeleteTokenRequest{
+			_, err = client.DeleteAccessKey(context.Background(), &v1.DeleteAccessKeyRequest{
 				Id: tokeID,
 			})
 			if err != nil {

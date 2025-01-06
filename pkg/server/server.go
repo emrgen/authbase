@@ -155,18 +155,16 @@ func (s *Server) registerServices() error {
 
 	// Register the grpc services
 
-	oauthService := service.NewOauthService(s.provider, redis)
-	offlineTokenService := service.NewOfflineTokenService(perm, s.provider, redis)
+	//oauthService := service.NewOAuth2Service(s.provider, redis)
+	//offlineTokenService := service.NewOfflineTokenService(perm, s.provider, redis)
 
 	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
-	v1.RegisterMemberServiceServer(grpcServer, service.NewMemberService(perm, s.provider, redis))
-	v1.RegisterUserServiceServer(grpcServer, service.NewUserService(perm, s.provider, redis))
-	v1.RegisterPermissionServiceServer(grpcServer, service.NewPermissionService(perm, s.provider, redis))
+	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, redis))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, perm, s.mailer, redis))
-	v1.RegisterOauthServiceServer(grpcServer, oauthService)
-	v1.RegisterOfflineTokenServiceServer(grpcServer, offlineTokenService)
-	gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
+	//v1.RegisterOAuth2ServiceServer(grpcServer, oauthService)
+	//v1.RegisterAccountServiceServer()
+	//gopackv1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(offlineTokenService, oauthService))
 
 	// Register the rest gateway
 	if err = v1.RegisterProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -175,22 +173,7 @@ func (s *Server) registerServices() error {
 	if err = v1.RegisterProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
-	if err = v1.RegisterMemberServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
-		return err
-	}
-	if err = v1.RegisterUserServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
-		return err
-	}
-	if err = v1.RegisterPermissionServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
-		return err
-	}
 	if err = v1.RegisterAuthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
-		return err
-	}
-	if err = v1.RegisterOauthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
-		return err
-	}
-	if err = v1.RegisterOfflineTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 	if err = gopackv1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -258,10 +241,10 @@ func (s *Server) run() error {
 		logrus.Infof("trying to create admin project: %v", s.config.AdminOrg)
 		adminOrgService := service.NewAdminProjectService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminProject(context.TODO(), &v1.CreateAdminProjectRequest{
-			Name:     s.config.AdminOrg.OrgName,
-			Username: s.config.AdminOrg.Username,
-			Email:    s.config.AdminOrg.Email,
-			Password: &s.config.AdminOrg.Password,
+			Name:        s.config.AdminOrg.OrgName,
+			VisibleName: s.config.AdminOrg.VisibleName,
+			Email:       s.config.AdminOrg.Email,
+			Password:    &s.config.AdminOrg.Password,
 		})
 		if err != nil {
 			if !errors.Is(err, store.ErrProjectExists) {

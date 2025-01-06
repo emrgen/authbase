@@ -58,7 +58,7 @@ func FromEnv() (*Config, error) {
 
 	adminOrgConfig := &AdminOrgConfig{}
 	adminOrgConfig.OrgName = os.Getenv("ADMIN_ORGANIZATION_NAME")
-	adminOrgConfig.Username = os.Getenv("SUPER_ADMIN_USERNAME")
+	adminOrgConfig.VisibleName = os.Getenv("SUPER_ADMIN_VISIBLE_NAME")
 	adminOrgConfig.Email = os.Getenv("SUPER_ADMIN_EMAIL")
 	adminOrgConfig.Password = os.Getenv("SUPER_ADMIN_PASSWORD")
 

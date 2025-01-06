@@ -50,11 +50,11 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	password := request.GetPassword()
 	verifyEmail := request.GetVerifyEmail()
 
-	user := model.User{
-		ID:       uuid.New().String(),
-		Email:    request.GetEmail(),
-		Username: request.GetUsername(),
-		Member:   true,
+	user := model.Account{
+		ID:            uuid.New().String(),
+		Email:         request.GetEmail(),
+		VisibleName:   request.GetVisibleName(),
+		ProjectMember: true,
 	}
 
 	org := model.Project{
@@ -67,7 +67,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	// create owner member permission
 	perm := model.ProjectMember{
 		ProjectID:  org.ID,
-		UserID:     user.ID,
+		AccountID:  user.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
@@ -112,7 +112,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 			user.Salt = secret
 		}
 
-		err = tx.CreateUser(ctx, &user)
+		err = tx.CreateAccount(ctx, &user)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectR
 		return nil, err
 	}
 
-	userCount, err := as.GetUserCount(ctx, id)
+	userCount, err := as.GetAccountCount(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -177,8 +177,8 @@ func (o *ProjectService) GetProject(ctx context.Context, request *v1.GetProjectR
 			CreatedAt: timestamppb.New(org.CreatedAt),
 			UpdatedAt: timestamppb.New(org.UpdatedAt),
 		},
-		Users:   uint64(userCount),
-		Members: uint64(memberCount),
+		Accounts: uint64(userCount),
+		Members:  uint64(memberCount),
 	}, nil
 }
 

@@ -50,12 +50,12 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		return nil, x.ErrProjectExists
 	}
 
-	user := model.User{
-		ID:        uuid.New().String(),
-		Email:     request.GetEmail(),
-		Username:  request.GetUsername(),
-		SassAdmin: true,
-		Member:    true,
+	user := model.Account{
+		ID:            uuid.New().String(),
+		Email:         request.GetEmail(),
+		VisibleName:   request.GetVisibleName(),
+		SassAdmin:     true,
+		ProjectMember: true,
 	}
 
 	org = &model.Project{
@@ -68,7 +68,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 
 	perm := model.ProjectMember{
 		ProjectID:  org.ID,
-		UserID:     user.ID,
+		AccountID:  user.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
@@ -107,7 +107,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 			user.Salt = secret
 		}
 
-		err = tx.CreateUser(ctx, &user)
+		err = tx.CreateAccount(ctx, &user)
 		if err != nil {
 			return err
 		}

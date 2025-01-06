@@ -13,44 +13,45 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var _ v1.MemberServiceServer = new(MemberService)
+var _ v1.ProjectMemberServiceServer = new(ProjectMemberService)
 
-type MemberService struct {
+type ProjectMemberService struct {
 	perm  permission.AuthBasePermission
 	store store.Provider
 	cache *cache.Redis
-	v1.UnimplementedMemberServiceServer
+	v1.UnimplementedProjectMemberServiceServer
 }
 
-func NewMemberService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) *MemberService {
-	return &MemberService{perm: perm, store: store, cache: cache}
+func NewProjectMemberService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) *ProjectMemberService {
+	return &ProjectMemberService{perm: perm, store: store, cache: cache}
 }
 
-// CreateMember creates a member of an project
-func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemberRequest) (*v1.CreateMemberResponse, error) {
+// CreateProjectMember creates a member of an project
+func (m *ProjectMemberService) CreateProjectMember(ctx context.Context, request *v1.CreateProjectMemberRequest) (*v1.CreateProjectMemberResponse, error) {
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
 		return nil, err
 	}
 
-	member := model.User{
-		ID:        uuid.New().String(),
-		ProjectID: request.GetProjectId(),
-		Username:  request.GetUsername(),
-		Email:     request.GetEmail(),
-		Member:    true,
+	member := model.Account{
+		ID:            uuid.New().String(),
+		ProjectID:     request.GetProjectId(),
+		Username:      request.GetUsername(),
+		VisibleName:   request.GetVisibleName(),
+		Email:         request.GetEmail(),
+		ProjectMember: true,
 	}
 
 	// create a perm for the new member
 	perm := model.ProjectMember{
 		ProjectID:  request.GetProjectId(),
-		UserID:     member.ID,
+		AccountID:  member.ID,
 		Permission: uint32(request.GetPermission()),
 	}
 
 	// if the user already exists, return an error
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		if err := tx.CreateUser(ctx, &member); err != nil {
+		if err := tx.CreateAccount(ctx, &member); err != nil {
 			return err
 		}
 
@@ -64,13 +65,13 @@ func (m *MemberService) CreateMember(ctx context.Context, request *v1.CreateMemb
 		return nil, err
 	}
 
-	return &v1.CreateMemberResponse{
+	return &v1.CreateProjectMemberResponse{
 		Id: member.ID,
 	}, nil
 }
 
-// GetMember gets a member by ID of an project
-func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequest) (*v1.GetMemberResponse, error) {
+// GetProjectMember gets a member by ID of an project
+func (m *ProjectMemberService) GetProjectMember(ctx context.Context, request *v1.GetProjectMemberRequest) (*v1.GetProjectMemberResponse, error) {
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
 		return nil, err
@@ -80,7 +81,7 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 		return nil, err
 	}
 
-	member, err := as.GetUserByID(ctx, id)
+	member, err := as.GetAccountByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +98,8 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 	}
 
 	perm, err := as.GetProjectMemberByID(ctx, orgID, id)
-	return &v1.GetMemberResponse{
-		Member: &v1.Member{
+	return &v1.GetProjectMemberResponse{
+		ProjectMember: &v1.ProjectMember{
 			Id:         member.ID,
 			Username:   member.Username,
 			Permission: v1.Permission(perm.Permission),
@@ -106,8 +107,8 @@ func (m *MemberService) GetMember(ctx context.Context, request *v1.GetMemberRequ
 	}, nil
 }
 
-// ListMember lists members of an project
-func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRequest) (*v1.ListMemberResponse, error) {
+// ListProjectMember lists members of an project
+func (m *ProjectMemberService) ListProjectMember(ctx context.Context, request *v1.ListProjectMemberRequest) (*v1.ListProjectMemberResponse, error) {
 	var err error
 	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
@@ -125,7 +126,7 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 	}
 
 	page := x.GetPageFromRequest(request)
-	members, total, err := as.ListUsersByOrg(ctx, true, orgID, int(page.Page), int(page.Size))
+	members, total, err := as.ListAccountsByOrg(ctx, true, orgID, int(page.Page), int(page.Size))
 	if err != nil {
 		return nil, err
 	}
@@ -139,20 +140,20 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 		userIDs = append(userIDs, id)
 	}
 
-	permissions, err := as.ListProjectMembersUsers(ctx, orgID, userIDs)
+	permissions, err := as.ListProjectMembersByAccountIDs(ctx, orgID, userIDs)
 	permissionMap := make(map[string]uint32)
 	for _, perm := range permissions {
-		permissionMap[perm.UserID] = perm.Permission
+		permissionMap[perm.AccountID] = perm.Permission
 	}
 
-	var memberList []*v1.Member
+	var memberList []*v1.ProjectMember
 	for _, member := range members {
 		perm := permissionMap[member.ID]
 		if perm == 0 {
 			continue
 		}
 
-		memberList = append(memberList, &v1.Member{
+		memberList = append(memberList, &v1.ProjectMember{
 			Id:         member.ID,
 			Username:   member.Username,
 			Email:      member.Email,
@@ -160,14 +161,14 @@ func (m *MemberService) ListMember(ctx context.Context, request *v1.ListMemberRe
 		})
 	}
 
-	return &v1.ListMemberResponse{
+	return &v1.ListProjectMemberResponse{
 		Members: memberList,
 		Meta:    &v1.Meta{Total: int32(total)},
 	}, nil
 }
 
-// UpdateMember updates a member of an project
-func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemberRequest) (*v1.UpdateMemberResponse, error) {
+// UpdateProjectMember updates a member of an project
+func (m *ProjectMemberService) UpdateProjectMember(ctx context.Context, request *v1.UpdateProjectMemberRequest) (*v1.UpdateProjectMemberResponse, error) {
 	var err error
 	userID, err := uuid.Parse(request.GetMemberId())
 	if err != nil {
@@ -179,7 +180,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 		return nil, err
 	}
 
-	member, err := as.GetUserByID(ctx, userID)
+	member, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +206,7 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 			perm.Permission = uint32(request.GetPermission())
 		}
 
-		err = tx.UpdateUser(ctx, member)
+		err = tx.UpdateAccount(ctx, member)
 		if err != nil {
 			return err
 		}
@@ -221,15 +222,15 @@ func (m *MemberService) UpdateMember(ctx context.Context, request *v1.UpdateMemb
 		return nil, err
 	}
 
-	return &v1.UpdateMemberResponse{
+	return &v1.UpdateProjectMemberResponse{
 		Id:      member.ID,
-		Message: "Member updated successfully.",
+		Message: "ProjectMember updated successfully.",
 	}, nil
 }
 
-// AddMember makes a user a member of an organization.
-func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequest) (*v1.AddMemberResponse, error) {
-	logrus.Info("AddMember")
+// AddProjectMember makes a user a member of an organization.
+func (m *ProjectMemberService) AddProjectMember(ctx context.Context, request *v1.AddProjectMemberRequest) (*v1.AddProjectMemberResponse, error) {
+	logrus.Info("AddProjectMember")
 	as, err := store.GetProjectStore(ctx, m.store)
 	if err != nil {
 		return nil, err
@@ -250,11 +251,11 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	user.Member = true
+	user.ProjectMember = true
 
 	err = m.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
 	if err != nil {
@@ -265,7 +266,7 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 	if errors.Is(err, store.ErrPermissionNotFound) {
 		perm = &model.ProjectMember{
 			ProjectID: orgID.String(),
-			UserID:    userID.String(),
+			AccountID: userID.String(),
 		}
 	} else if err != nil {
 		return nil, nil
@@ -277,7 +278,7 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err = tx.UpdateUser(ctx, user)
+		err = tx.UpdateAccount(ctx, user)
 		if err != nil {
 			return err
 		}
@@ -293,13 +294,13 @@ func (m *MemberService) AddMember(ctx context.Context, request *v1.AddMemberRequ
 		return nil, err
 	}
 
-	return &v1.AddMemberResponse{
-		Message: "Member added successfully",
+	return &v1.AddProjectMemberResponse{
+		Message: "ProjectMember added successfully",
 	}, nil
 }
 
-// RemoveMember removes a member from an organization
-func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error) {
+// RemoveProjectMember removes a member from an organization
+func (m *ProjectMemberService) RemoveProjectMember(ctx context.Context, request *v1.RemoveProjectMemberRequest) (*v1.RemoveProjectMemberResponse, error) {
 	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
@@ -327,13 +328,13 @@ func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemb
 			return errors.New("cannot remove an owner")
 		}
 
-		user, err := as.GetUserByID(ctx, memberID)
+		user, err := as.GetAccountByID(ctx, memberID)
 		if err != nil {
 			return err
 		}
-		user.Member = false
+		user.ProjectMember = false
 
-		err = tx.UpdateUser(ctx, user)
+		err = tx.UpdateAccount(ctx, user)
 		if err != nil {
 			return err
 		}
@@ -350,7 +351,7 @@ func (m *MemberService) RemoveMember(ctx context.Context, request *v1.RemoveMemb
 		return nil, err
 	}
 
-	return &v1.RemoveMemberResponse{
+	return &v1.RemoveProjectMemberResponse{
 		Message: "user member removed successfully",
 	}, nil
 }

@@ -25,7 +25,7 @@ type ProjectID interface {
 	GetProjectId() string
 }
 
-func InjectPermissionInterceptor(member v1.MemberServiceClient) grpc.UnaryServerInterceptor {
+func InjectPermissionInterceptor(member v1.ProjectMemberServiceClient) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		// check if the projectPermission are in the context
 		_, err = GetProjectPermission(ctx)
@@ -43,7 +43,7 @@ func InjectPermissionInterceptor(member v1.MemberServiceClient) grpc.UnaryServer
 			return nil, status.Errorf(codes.InvalidArgument, "missing project id")
 		}
 		logrus.Infof("project id: %s", projectID)
-		
+
 		projectUUID, err := uuid.Parse(projectID)
 		if err != nil {
 			return nil, err
@@ -60,7 +60,7 @@ func InjectPermissionInterceptor(member v1.MemberServiceClient) grpc.UnaryServer
 		ctx = metadata.NewOutgoingContext(ctx, md)
 
 		// GetProjectMembership is a gRPC call to the project membership service
-		res, err := member.GetMember(ctx, &v1.GetMemberRequest{
+		res, err := member.GetProjectMember(ctx, &v1.GetProjectMemberRequest{
 			ProjectId: projectUUID.String(),
 			MemberId:  userID.String(),
 		})
@@ -68,7 +68,7 @@ func InjectPermissionInterceptor(member v1.MemberServiceClient) grpc.UnaryServer
 			return nil, err
 		}
 
-		ctx = context.WithValue(ctx, ProjectPermissionKey, res.Member.Permission)
+		ctx = context.WithValue(ctx, ProjectPermissionKey, res.ProjectMember.Permission)
 		ctx = context.WithValue(ctx, ProjectIDKey, projectUUID)
 
 		return handler(ctx, req)

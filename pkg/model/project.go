@@ -19,7 +19,7 @@ type Project struct {
 	Name              string         `gorm:"not null;unique;index:idx_project_name"` // unique project name
 	OwnerID           string         `gorm:"not null"`
 	ProjectID         string         `gorm:"uuid;default:null"`                              // filled when running in multistore mode
-	Owner             *User          `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE"` // filled when running in multistore mode
+	Owner             *Account       `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE"` // filled when running in multistore mode
 	Master            bool           `gorm:"not null;default:false"`
 	AllowedDomains    string         `gorm:"not null;default:''"`
 	EmailVerification bool           `gorm:"not null;default:false"`

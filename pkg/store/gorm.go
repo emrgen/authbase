@@ -15,9 +15,9 @@ type GormStore struct {
 	db *gorm.DB
 }
 
-func (g *GormStore) GetUserCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
+func (g *GormStore) GetAccountCount(ctx context.Context, projectID uuid.UUID) (uint32, error) {
 	var count int64
-	g.db.Model(&model.User{}).Where("project_id = ?", projectID).Count(&count)
+	g.db.Model(&model.Account{}).Where("project_id = ?", projectID).Count(&count)
 
 	return uint32(count), nil
 }
@@ -29,9 +29,9 @@ func (g *GormStore) GetMemberCount(ctx context.Context, projectID uuid.UUID) (ui
 	return uint32(count), nil
 }
 
-func (g *GormStore) ListProjectMembersUsers(ctx context.Context, orgID uuid.UUID, userIDs []uuid.UUID) ([]*model.ProjectMember, error) {
+func (g *GormStore) ListProjectMembersByAccountIDs(ctx context.Context, projectID uuid.UUID, accountIDs []uuid.UUID) ([]*model.ProjectMember, error) {
 	var permissions []*model.ProjectMember
-	err := g.db.Find(&permissions, "project_id = ? AND user_id IN ?", orgID, userIDs).Error
+	err := g.db.Find(&permissions, "project_id = ? AND user_id IN ?", projectID, accountIDs).Error
 	return permissions, err
 }
 
@@ -45,8 +45,8 @@ func (g *GormStore) GetMasterProject(ctx context.Context) (*model.Project, error
 	return &org, err
 }
 
-// DeleteSessionByUserID expire and delete all sessions for a user which not deleted or expired already
-func (g *GormStore) DeleteSessionByUserID(ctx context.Context, userID uuid.UUID) error {
+// DeleteSessionByAccountID expire and delete all sessions for a user which not deleted or expired already
+func (g *GormStore) DeleteSessionByAccountID(ctx context.Context, userID uuid.UUID) error {
 	return g.db.Model(&model.Session{}).
 		Where("user_id = ? AND expired_at > ?", userID, time.Now()).
 		Update("expired_at", time.Now()).
@@ -55,7 +55,7 @@ func (g *GormStore) DeleteSessionByUserID(ctx context.Context, userID uuid.UUID)
 
 func (g *GormStore) ListSessions(ctx context.Context, orgID uuid.UUID, page, perPage int) ([]*model.Session, error) {
 	var sessions []*model.Session
-	err := g.db.Limit(perPage).Offset(page*perPage).Preload("User").Find(&sessions, "project_id = ?", orgID).Error
+	err := g.db.Limit(perPage).Offset(page*perPage).Preload("Account").Find(&sessions, "project_id = ?", orgID).Error
 	return sessions, err
 }
 
@@ -99,7 +99,7 @@ func (g *GormStore) GetTokenByID(ctx context.Context, id uuid.UUID) (*model.Toke
 	return &token, err
 }
 
-func (g *GormStore) ListUserTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error) {
+func (g *GormStore) ListAccountTokens(ctx context.Context, orgID, userID uuid.UUID, page, perPage int) ([]*model.Token, int, error) {
 	var tokens []*model.Token
 	var total int64
 
@@ -123,38 +123,38 @@ func NewGormStore(db *gorm.DB) *GormStore {
 	return &GormStore{db: db}
 }
 
-func (g *GormStore) CreateUser(ctx context.Context, user *model.User) error {
+func (g *GormStore) CreateAccount(ctx context.Context, user *model.Account) error {
 	return g.db.Create(user).Error
 }
 
-func (g *GormStore) GetUserByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.User, error) {
-	var user model.User
+func (g *GormStore) GetAccountByEmail(ctx context.Context, orgID uuid.UUID, email string) (*model.Account, error) {
+	var user model.Account
 	err := g.db.Find(&user, "project_id = ? AND email = ?", orgID, email).Error
 	return &user, err
 }
 
-func (g *GormStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
-	var user model.User
+func (g *GormStore) GetAccountByID(ctx context.Context, id uuid.UUID) (*model.Account, error) {
+	var user model.Account
 	err := g.db.Where("id = ?", id.String()).Preload("Project").First(&user).Error
 	return &user, err
 }
 
-func (g *GormStore) UpdateUser(ctx context.Context, user *model.User) error {
+func (g *GormStore) UpdateAccount(ctx context.Context, user *model.Account) error {
 	return g.db.Save(user).Error
 }
 
-func (g *GormStore) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	user := model.User{ID: id.String()}
+func (g *GormStore) DeleteAccount(ctx context.Context, id uuid.UUID) error {
+	user := model.Account{ID: id.String()}
 	return g.db.Delete(&user).Error
 }
 
-func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.User, int, error) {
-	var users []*model.User
+func (g *GormStore) ListAccountsByOrg(ctx context.Context, member bool, orgID uuid.UUID, page, perPage int) ([]*model.Account, int, error) {
+	var users []*model.Account
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
 		if member {
-			if err := tx.Model(&model.User{}).Where("project_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.Account{}).Where("project_id = ? AND member = ?", orgID.String(), member).Count(&total).Error; err != nil {
 				return err
 			}
 
@@ -164,12 +164,12 @@ func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.
 			}
 
 			for _, member := range members {
-				users = append(users, member.User)
+				users = append(users, member.Account)
 			}
 
 			return nil
 		} else {
-			if err := tx.Model(&model.User{}).Where("project_id = ?", orgID.String()).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.Account{}).Where("project_id = ?", orgID.String()).Count(&total).Error; err != nil {
 				return err
 			}
 			return g.db.Where("project_id = ?", orgID).Limit(perPage).Offset(page * perPage).Find(&users).Error
@@ -179,23 +179,23 @@ func (g *GormStore) ListUsersByOrg(ctx context.Context, member bool, orgID uuid.
 	return users, int(total), err
 }
 
-func (g *GormStore) DisableUser(ctx context.Context, id uuid.UUID) error {
-	user := model.User{ID: id.String()}
+func (g *GormStore) DisableAccount(ctx context.Context, id uuid.UUID) error {
+	user := model.Account{ID: id.String()}
 	return g.db.Model(&user).Update("disabled", true).Update("disabled_at", gorm.Expr("NOW()")).Error
 }
 
-func (g *GormStore) EnableUser(ctx context.Context, id uuid.UUID) error {
-	user := model.User{ID: id.String()}
+func (g *GormStore) EnableAccount(ctx context.Context, id uuid.UUID) error {
+	user := model.Account{ID: id.String()}
 	return g.db.Model(&user).Update("disabled", false).Update("disabled_at", nil).Error
 }
 
-func (g *GormStore) VerifyUser(ctx context.Context, id uuid.UUID) error {
-	user := model.User{ID: id.String()}
+func (g *GormStore) VerifyAccount(ctx context.Context, id uuid.UUID) error {
+	user := model.Account{ID: id.String()}
 	return g.db.Model(&user).Update("verified", true).Update("verified_at", gorm.Expr("NOW()")).Error
 }
 
-func (g *GormStore) UserExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.User, error) {
-	var users []*model.User
+func (g *GormStore) AccountExists(ctx context.Context, orgID uuid.UUID, username, email string) ([]*model.Account, error) {
+	var users []*model.Account
 	err := g.db.Where("project_id = ? AND (username = ? OR email = ?)", orgID, username, email).Find(&users).Error
 	return users, err
 }
@@ -287,7 +287,7 @@ func (g *GormStore) GetProjectMemberByID(ctx context.Context, orgID, userID uuid
 
 func (g *GormStore) ListProjectMembers(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.ProjectMember, error) {
 	var permissions []*model.ProjectMember
-	err := g.db.Where("project_id = ?", projectID).Preload("User").Limit(perPage).Offset(page * perPage).Order("permission DESC").Find(&permissions).Error
+	err := g.db.Where("project_id = ?", projectID).Preload("Account").Limit(perPage).Offset(page * perPage).Order("permission DESC").Find(&permissions).Error
 	return permissions, err
 }
 
@@ -296,7 +296,7 @@ func (g *GormStore) UpdateProjectMember(ctx context.Context, permission *model.P
 }
 
 func (g *GormStore) DeleteProjectMember(ctx context.Context, orgID, userID uuid.UUID) error {
-	permission := model.ProjectMember{ProjectID: orgID.String(), UserID: userID.String()}
+	permission := model.ProjectMember{ProjectID: orgID.String(), AccountID: userID.String()}
 	return g.db.Delete(&permission).Error
 }
 

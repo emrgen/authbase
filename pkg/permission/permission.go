@@ -95,7 +95,7 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	user, err := as.GetUserByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -104,9 +104,9 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 		return errors.New("user account is disabled")
 	}
 
-	if !user.Member {
-		return x.ErrNotProjectMember
-	}
+	//if !user.Member {
+	//	return x.ErrNotProjectMember
+	//}
 
 	// if the user is a member of the master project
 	if user.Project.Master {
@@ -127,7 +127,7 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 var permissionMap = map[string]uint32{
 	"unknown": uint32(v1.Permission_UNKNOWN),
 	"none":    uint32(v1.Permission_NONE),
-	"read":    uint32(v1.Permission_READ),
+	"viewer":  uint32(v1.Permission_VIEWER),
 	"admin":   uint32(v1.Permission_OWNER),
 	"owner":   uint32(v1.Permission_OWNER),
 }
@@ -144,7 +144,7 @@ func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, orgID
 		return err
 	}
 
-	user, err := as.GetUserByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, orgID
 		return errors.New("user account is disabled")
 	}
 
-	if !user.Member {
+	if !user.ProjectMember {
 		return x.ErrNotProjectMember
 	}
 

@@ -100,7 +100,7 @@ func addMemberCommand() *cobra.Command {
 			defer client.Close()
 
 			ctx := tokenContext()
-			res, err := client.AddMember(ctx, &v1.AddMemberRequest{
+			res, err := client.AddProjectMember(ctx, &v1.AddProjectMemberRequest{
 				MemberId:   userID,
 				ProjectId:  ProjectId,
 				Permission: v1.Permission(permission),
@@ -136,7 +136,7 @@ func listMemberCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.ListMember(tokenContext(), &v1.ListMemberRequest{
+			res, err := client.ListProjectMember(tokenContext(), &v1.ListProjectMemberRequest{
 				ProjectId: ProjectId,
 			})
 			if err != nil {
@@ -203,7 +203,7 @@ func updateMemberCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			_, err = client.UpdateMember(tokenContext(), &v1.UpdateMemberRequest{
+			_, err = client.UpdateProjectMember(tokenContext(), &v1.UpdateProjectMemberRequest{
 				MemberId:   userID,
 				Permission: v1.Permission(permission),
 			})
@@ -245,7 +245,7 @@ func deleteMemberCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			_, err = client.RemoveMember(tokenContext(), &v1.RemoveMemberRequest{
+			_, err = client.RemoveProjectMember(tokenContext(), &v1.RemoveProjectMemberRequest{
 				ProjectId: ProjectId,
 				MemberId:  userID,
 			})
@@ -286,7 +286,7 @@ func removeMemberCommand() *cobra.Command {
 			}
 
 			ctx := tokenContext()
-			res, err := client.RemoveMember(ctx, &v1.RemoveMemberRequest{MemberId: userID, ProjectId: ProjectId})
+			res, err := client.RemoveProjectMember(ctx, &v1.RemoveProjectMemberRequest{MemberId: userID, ProjectId: ProjectId})
 			if err != nil {
 				logrus.Errorf("failed to remove member: %v", err)
 				return

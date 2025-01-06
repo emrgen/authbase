@@ -9,8 +9,8 @@ import (
 type Session struct {
 	gorm.Model
 	ID        string `gorm:"primaryKey"`
-	UserID    string
-	User      *User `gorm:"foreignKey:UserID;OnDelete:CASCADE;"`
+	AccountID string
+	Account   *Account `gorm:"foreignKey:AccountID;OnDelete:CASCADE;"`
 	ProjectID string
 	ExpiredAt time.Time `gorm:"default:null"`
 }

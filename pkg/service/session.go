@@ -21,7 +21,7 @@ type SessionService struct {
 	v1.UnimplementedSessionServiceServer
 }
 
-func (s *SessionService) ListUserSession(ctx context.Context, request *v1.ListUserSessionRequest) (*v1.ListUserSessionResponse, error) {
+func (s *SessionService) ListUserSession(ctx context.Context, request *v1.ListAccountSessionRequest) (*v1.ListAccountSessionResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -38,7 +38,7 @@ func (s *SessionService) DeleteSession(ctx context.Context, request *v1.DeleteSe
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, sessionID)
+	user, err := as.GetAccountByID(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,14 +62,14 @@ func (s *SessionService) DeleteSession(ctx context.Context, request *v1.DeleteSe
 func (s *SessionService) DeleteAllSessions(ctx context.Context, request *v1.DeleteAllSessionsRequest) (*v1.DeleteAllSessionsResponse, error) {
 	var err error
 
-	userID := uuid.MustParse(request.GetUserId())
+	userID := uuid.MustParse(request.GetAccountId())
 	as, err := store.GetProjectStore(ctx, s.store)
 	if err != nil {
 		return nil, err
 	}
 
 	// user project id
-	user, err := as.GetUserByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (s *SessionService) DeleteAllSessions(ctx context.Context, request *v1.Dele
 		return nil, err
 	}
 
-	err = as.DeleteSessionByUserID(ctx, userID)
+	err = as.DeleteSessionByAccountID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

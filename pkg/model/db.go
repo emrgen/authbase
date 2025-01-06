@@ -7,7 +7,7 @@ import (
 
 // Migrate creates the tables in the database
 func Migrate(db *gorm.DB) error {
-	if err := db.AutoMigrate(&User{}); err != nil {
+	if err := db.AutoMigrate(&Account{}); err != nil {
 		return err
 	}
 

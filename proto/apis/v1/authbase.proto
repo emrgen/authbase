@@ -9,551 +9,14 @@ import "validate/validate.proto";
 
 option go_package = "github.com/emrgen/authbase/proto/v1";
 
-message User {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string username = 3;
-  bool disabled = 4;
-  bool member = 5;
 
-  google.protobuf.Timestamp created_at = 10;
-  google.protobuf.Timestamp updated_at = 11;
-  optional google.protobuf.Timestamp verified_at = 12;
-}
-
-message Page {
-  int32 page = 1;
-  int32 size = 2;
-}
-
-message Meta {
-  int32 total = 1;
-  int32 page = 2;
-  int32 size = 3;
-}
-
-message RegisterRequest {
-  string Project_id = 1 [(validate.rules).string.uuid = true];
-  string username = 2 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
-  string email = 3 [(validate.rules).string.email = true];
-  string password = 4 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
-}
-
-message RegisterResponse {
-  string message = 1;
-}
-
-message Tokens {
-  string access_token = 1;
-  string refresh_token = 2;
-  google.protobuf.Timestamp expires_at = 3;
-}
-
-message LoginRequest {
-  string email = 2 [(validate.rules).string.email = true];
-  string password = 3 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
-  string project_id = 4 [(validate.rules).string.uuid = true];
-}
-
-message AuthToken {
-  string access_token = 1;
-  string refresh_token = 2;
-  google.protobuf.Timestamp expires_at = 3;
-  google.protobuf.Timestamp issued_at = 4;
-  google.protobuf.Timestamp refresh_expires_at = 5;
-}
-
-message LoginResponse {
-  User user = 1;
-  AuthToken token = 2;
-}
-
-message LogoutRequest {
-  string access_token = 1;
-}
-
-message LogoutResponse {
-  string message = 1;
-}
-
-message RefreshRequest {
-  string refresh_token = 1;
-  optional string project_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message RefreshResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  google.protobuf.Timestamp expires_at = 3;
-  google.protobuf.Timestamp issued_at = 4;
-  google.protobuf.Timestamp refresh_expires_at = 5;
-}
-
-message VerifyEmailRequest {
-  string token = 1;
-  string project_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message VerifyEmailResponse {
-  string message = 1;
-}
-
-message UserEmailExistsRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string username = 3 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
-}
-
-message UserEmailExistsResponse {
-  bool email_exists = 1;
-  bool username_exists = 2;
-}
-
-message Session {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
-  string project_id = 3 [(validate.rules).string.uuid = true];
-  google.protobuf.Timestamp created_at = 10;
-  google.protobuf.Timestamp expires_at = 11;
-}
-
-message ListUserSessionRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
-  string project_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message ListUserSessionResponse {
-  repeated Session sessions = 1;
-  Meta meta = 2;
-}
-
-
-message DeleteSessionsRequest {
-  string session_id = 1 [(validate.rules).string.uuid = true];
-}
-
-message DeleteSessionsResponse {
-  uint64 session_count = 1;
-  string message = 2;
-}
-
-message DeleteAllSessionsRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
-}
-
-message DeleteAllSessionsResponse {
-  string message = 1;
-}
-
-service SessionService {
-  // ListUserSession
-  rpc ListUserSession(ListUserSessionRequest) returns (ListUserSessionResponse) {
-    option (google.api.http) = {get: "/v1/users/{user_id}/sessions"};
-  }
-
-  // DeleteSessions
-  rpc DeleteSessions(DeleteSessionsRequest) returns (DeleteSessionsResponse) {
-    option (google.api.http) = {delete: "/v1/users/-/sessions/{session_id}"};
-  }
-
-  // DeleteAllSessions
-  rpc DeleteAllSessions(DeleteAllSessionsRequest) returns (DeleteAllSessionsResponse) {
-    option (google.api.http) = {delete: "/v1/users/{user_id}/sessions"};
-  }
-}
-
-// Auth service
-
-service AuthService {
-  // UserEmailExists
-  rpc UserEmailExists(UserEmailExistsRequest) returns (UserEmailExistsResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/check-user"
-      body: "*"
-    };
-  }
-
-  // Register
-  rpc Register(RegisterRequest) returns (RegisterResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/signup"
-      body: "*"
-    };
-  }
-
-  // Login
-  rpc Login(LoginRequest) returns (LoginResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/login"
-      body: "*"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      operation_id: "Login"
-    };
-  }
-
-  // Logout
-  rpc Logout(LogoutRequest) returns (LogoutResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/logout"
-      body: "*"
-    };
-  }
-
-  // Refresh
-  rpc Refresh(RefreshRequest) returns (RefreshResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/refresh"
-      body: "*"
-    };
-  }
-
-  // VerifyEmail
-  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
-    option (google.api.http) = {
-      post: "/v1/auth/verify-email"
-      body: "*"
-    };
-  }
-}
-
-message OAuthLoginRequest {
-  string project_id = 1;
-  string provider = 2;
-}
-
-message OAuthLoginResponse {
-  OAuthProvider provider = 1;
-  string callback_url = 2;
-}
-
-message OAuthCallbackRequest {
-  string code = 1;
-  string state = 3;
-}
-
-message OAuthCallbackResponse {
-  optional Tokens tokens = 1;
-}
-
-message TokenRequest {
-  string code = 1;
-  string provider = 2;
-  string project = 3;
-  string state = 4;
-}
-
-message TokenResponse {
-  Tokens tokens = 1;
-}
-
-message OauthLogoutRequest {
-  string access_token = 3;
-}
-
-message OauthLogoutResponse {
-  string message = 1;
-}
-
-message VerifyOAuthTokenRequest {
-  string token = 1;
-}
-
-message VerifyOAuthTokenResponse {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
-  repeated Permission permission = 3;
-}
-
-service OauthService {
-  // OAuthLogin
-  rpc OAuthLogin(OAuthLoginRequest) returns (OAuthLoginResponse) {
-    option (google.api.http) = {
-      post: "/v1/oauth/authorize"
-      body: "*"
-    };
-  }
-
-  // OAuthCallback
-  rpc OAuthCallback(OAuthCallbackRequest) returns (OAuthCallbackResponse) {
-    option (google.api.http) = {
-      post: "/v1/oauth/callback"
-      body: "*"
-    };
-  }
-
-  // OAuthVerifyToken
-  rpc OAuthVerifyToken(VerifyOAuthTokenRequest) returns (VerifyOAuthTokenResponse) {
-    option (google.api.http) = {
-      post: "/v1/oauth/verify"
-      body: "*"
-    };
-  }
-}
-
-// Token
-
-message Token {
+message Project {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
-  string token = 3;
-  string project_id = 4;
-  string user_id = 5;
-  google.protobuf.Timestamp created_at = 10;
-  google.protobuf.Timestamp expires_at = 11;
-}
-
-message CreateTokenRequest {
-  string project_id = 1;
-  string email = 2 [
-    (validate.rules).string.min_len = 6,
-    (validate.rules).string.max_len = 64
-  ];
-  string password = 3 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
-  optional int64 expires_in = 4; // in seconds
-  optional string name = 5;
-  map<string, string> data = 6; // additional data
-  repeated string scopes = 7;
-}
-
-message CreateTokenResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string token = 2;
-  google.protobuf.Timestamp expires_at = 10;
-}
-
-message GetTokenRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-}
-
-message GetTokenResponse {
-  Token token = 1;
-}
-
-message ListTokensRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
-  string project_id = 2 [(validate.rules).string.uuid = true];
-  optional string token = 3;
-  optional string password = 4;
-  Page page = 5;
-}
-
-message ListTokensResponse {
-  repeated Token tokens = 1;
-  Meta meta = 2;
-}
-
-message DeleteTokenRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-}
-
-message DeleteTokenResponse {
-  string message = 1;
-}
-
-message OfflineTokenVerifyRequest {
-  string token = 1;
-}
-
-message OfflineTokenVerifyResponse {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
-  repeated Permission permission = 3;
-}
-
-// Token service
-
-service OfflineTokenService {
-  // CreateToken
-  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
-    option (google.api.http) = {
-      post: "/v1/tokens/projects/{project_id}"
-      body: "*"
-    };
-  }
-
-  // GetToken
-  rpc GetToken(GetTokenRequest) returns (GetTokenResponse) {
-    option (google.api.http) = {get: "/v1/tokens/{id}"};
-  }
-
-  // ListTokens
-  rpc ListTokens(ListTokensRequest) returns (ListTokensResponse) {
-    option (google.api.http) = {get: "/v1/tokens/-/projects/{project_id}/users/{user_id}"};
-  }
-
-  // DeleteToken
-  rpc DeleteToken(DeleteTokenRequest) returns (DeleteTokenResponse) {
-    option (google.api.http) = {delete: "/v1/tokens/{id}"};
-  }
-
-  // VerifyToken
-  rpc VerifyOfflineToken(OfflineTokenVerifyRequest) returns (OfflineTokenVerifyResponse) {
-    option (google.api.http) = {post: "/v1/tokens/-/verify"};
-  }
-}
-
-message CreateUserRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string username = 3;
-  string password = 4 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 11
-  ];
-}
-
-message CreateUserResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string email = 2 [(validate.rules).string.email = true];
-  string username = 3;
-  google.protobuf.Timestamp created_at = 10;
-}
-
-// User service
-message GetUserRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-}
-
-message GetUserResponse {
-  User user = 1;
-}
-
-message ListUsersRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  Page page = 2;
-}
-
-message ListUsersResponse {
-  repeated User users = 1;
-  Meta meta = 2;
-}
-
-message UpdateUserRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string username = 2;
-  string email = 3 [(validate.rules).string.email = true];
-  string project_id = 4 [(validate.rules).string.uuid = true];
-}
-
-message UpdateUserResponse {
-  User user = 1;
-}
-
-message DeleteUserRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string project_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message DeleteUserResponse {
-  string message = 1;
-}
-
-message ListActiveUsersRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  optional Page page = 2;
-}
-
-message ListActiveUsersResponse {
-  repeated User users = 1;
-  Meta meta = 2;
-}
-
-message ListInactiveUsersRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  optional Page page = 2;
-}
-
-message ListInactiveUserResponse {
-  repeated User users = 1;
-  Meta meta = 2;
-}
-
-message DisableUserRequest {
-  string user_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message DisableUserResponse {
-  string message = 1;
-}
-
-message EnableUserRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string user_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message EnableUserResponse {
-  string message = 1;
-}
-
-// User service
-
-service UserService {
-  // CreateUser
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
-    option (google.api.http) = {
-      post: "/v1/users/projects/{project_id}"
-      body: "*"
-    };
-  }
-
-  // GetUser
-  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
-    option (google.api.http) = {post: "/v1/projects/-/users/{id}"};
-  }
-
-  // ListUsers
-  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
-    option (google.api.http) = {get: "/v1/projects/{project_id}/users"};
-  }
-
-  // UpdateUser
-  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
-    option (google.api.http) = {
-      put: "/v1/projects/{project_id}/users/{id}"
-      body: "*"
-    };
-  }
-
-  // DeleteUser
-  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
-    option (google.api.http) = {delete: "/v1/projects/{project_id}/users/{id}"};
-  }
-
-  // ActivateUsers
-  rpc ListActiveUsers(ListActiveUsersRequest) returns (ListActiveUsersResponse) {
-    option (google.api.http) = {get: "/v1/projects/{project_id}/users/active"};
-  }
-
-  // InactiveUsers
-  rpc ListInactiveUsers(ListInactiveUsersRequest) returns (ListInactiveUserResponse) {
-    option (google.api.http) = {get: "/v1/projects/{project_id}/users/inactive"};
-  }
-
-  // DisableUser
-  rpc DisableUser(DisableUserRequest) returns (DisableUserResponse) {
-    option (google.api.http) = {delete: "/v1/projects/-/users/{user_id}/disable"};
-  }
-
-  // EnableUser
-  rpc EnableUser(EnableUserRequest) returns (EnableUserResponse) {
-    option (google.api.http) = {delete: "/v1/projects/-/users/{user_id}/enable"};
-  }
+  bool master = 3;
+  string owner_id = 10 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
 }
 
 message CreateProjectRequest {
@@ -561,7 +24,7 @@ message CreateProjectRequest {
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
-  string username = 2 [
+  string visible_name = 2 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
@@ -579,15 +42,6 @@ message CreateProjectResponse {
   string name = 2;
 }
 
-message Project {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string name = 2;
-  bool master = 3;
-  string owner_id = 10 [(validate.rules).string.uuid = true];
-  google.protobuf.Timestamp created_at = 11;
-  google.protobuf.Timestamp updated_at = 12;
-}
-
 message GetProjectRequest {
   string id = 1 [(validate.rules).string.uuid = true];
 }
@@ -595,7 +49,7 @@ message GetProjectRequest {
 message GetProjectResponse {
   Project project = 1;
   uint64 members = 2;
-  uint64 users = 3;
+  uint64 accounts = 3;
 }
 
 message GetProjectIdRequest {
@@ -637,6 +91,594 @@ message DeleteProjectResponse {
 }
 
 message GetProjectConfigRequest {}
+
+// Client service
+
+message Client {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string client_id = 3;
+  string client_secret = 4;
+  string project_id = 5 [(validate.rules).string.uuid = true];
+  Permission permission = 6;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreateClientRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string redirect_uri = 3;
+}
+
+message CreateClientResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string client_id = 3;
+  string client_secret = 4;
+}
+
+message GetClientRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetClientResponse {
+  Client client = 1;
+}
+
+message ListClientsRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListClientsResponse {
+  repeated Client clients = 1;
+  Meta meta = 2;
+}
+
+message UpdateClientRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  optional string name = 2;
+  optional string redirect_uri = 3;
+  optional Permission permission = 4;
+}
+
+message UpdateClientResponse {
+  Client client = 1;
+}
+
+message DeleteClientRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteClientResponse {
+  string message = 1;
+}
+
+service ClientService {
+  // CreateClient
+  rpc CreateClient(CreateClientRequest) returns (CreateClientResponse) {
+    option (google.api.http) = {
+      post: "/v1/clients/projects/{project_id}"
+      body: "*"
+    };
+  }
+
+  // GetClient
+  rpc GetClient(GetClientRequest) returns (GetClientResponse) {
+    option (google.api.http) = {get: "/v1/clients/{id}"};
+  }
+
+  // ListClients
+  rpc ListClients(ListClientsRequest) returns (ListClientsResponse) {
+    option (google.api.http) = {get: "/v1/clients"};
+  }
+
+  // UpdateClient
+  rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse) {
+    option (google.api.http) = {
+      put: "/v1/clients/{id}"
+      body: "*"
+    };
+  }
+
+  // DeleteClient
+  rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse) {
+    option (google.api.http) = {delete: "/v1/clients/{id}"};
+  }
+}
+
+// Account service
+
+message Account {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3;
+  string visible_name = 4;
+  bool disabled = 5;
+  bool member = 6;
+  string kind = 7;
+
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  optional google.protobuf.Timestamp verified_at = 12;
+}
+
+message GetAccountRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetAccountResponse {
+  Account account = 1;
+}
+
+message ListAccountsRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListAccountsResponse {
+  repeated Account accounts = 1;
+  Meta meta = 2;
+}
+
+message UpdateAccountRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string visible_name = 2;
+  string project_id = 4 [(validate.rules).string.uuid = true];
+}
+
+message UpdateAccountResponse {
+  Account account = 1;
+}
+
+message DeleteAccountRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeleteAccountResponse {
+  string message = 1;
+}
+
+message ListActiveAccountsRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  optional Page page = 2;
+}
+
+message ListActiveAccountsResponse {
+  repeated Account accounts = 1;
+  Meta meta = 2;
+}
+
+message ListInactiveAccountsRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  optional Page page = 2;
+}
+
+message ListInactiveAccountsResponse {
+  repeated Account users = 1;
+  Meta meta = 2;
+}
+
+message DisableAccountRequest {
+  string account_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message DisableAccountResponse {
+  string message = 1;
+}
+
+message EnableAccountRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message EnableAccountResponse {
+  string message = 1;
+}
+
+service AccountService {
+  // CreateAccount
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/projects/{project_id}"
+      body: "*"
+    };
+  }
+
+  // GetAccount
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {
+    option (google.api.http) = {post: "/v1/projects/-/users/{id}"};
+  }
+
+  // ListAccounts
+  rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse) {
+    option (google.api.http) = {get: "/v1/projects/{project_id}/users"};
+  }
+
+  // UpdateAccount
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse) {
+    option (google.api.http) = {
+      put: "/v1/projects/{project_id}/users/{id}"
+      body: "*"
+    };
+  }
+
+  // DeleteAccount
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
+    option (google.api.http) = {delete: "/v1/projects/{project_id}/users/{id}"};
+  }
+
+  // ActivateAccounts
+  rpc ListActiveAccounts(ListActiveAccountsRequest) returns (ListActiveAccountsResponse) {
+    option (google.api.http) = {get: "/v1/projects/{project_id}/users/active"};
+  }
+
+  // InactiveAccounts
+  rpc ListInactiveAccounts(ListInactiveAccountsRequest) returns (ListInactiveAccountsResponse) {
+    option (google.api.http) = {get: "/v1/projects/{project_id}/users/inactive"};
+  }
+
+  // DisableAccount
+  rpc DisableAccount(DisableAccountRequest) returns (DisableAccountResponse) {
+    option (google.api.http) = {delete: "/v1/projects/-/users/{account_id}/disable"};
+  }
+
+  // EnableAccount
+  rpc EnableAccount(EnableAccountRequest) returns (EnableAccountResponse) {
+    option (google.api.http) = {delete: "/v1/projects/-/accounts/{account_id}/enable"};
+  }
+}
+
+message Tokens {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+message AuthToken {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  google.protobuf.Timestamp issued_at = 4;
+  google.protobuf.Timestamp refresh_expires_at = 5;
+}
+
+// Session
+
+message Session {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+  string project_id = 3 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+message ListAccountSessionRequest {
+  string account_id = 1 [(validate.rules).string.uuid = true];
+  string project_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message ListAccountSessionResponse {
+  repeated Session sessions = 1;
+  Meta meta = 2;
+}
+
+message DeleteSessionsRequest {
+  string session_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteSessionsResponse {
+  uint64 session_count = 1;
+  string message = 2;
+}
+
+message DeleteAllSessionsRequest {
+  string account_id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteAllSessionsResponse {
+  string message = 1;
+}
+
+service SessionService {
+  // ListAccountSession
+  rpc ListAccountSession(ListAccountSessionRequest) returns (ListAccountSessionResponse) {
+    option (google.api.http) = {get: "/v1/accounts/{account_id}/sessions"};
+  }
+
+  // DeleteSessions
+  rpc DeleteSessions(DeleteSessionsRequest) returns (DeleteSessionsResponse) {
+    option (google.api.http) = {delete: "/v1/accounts/-/sessions/{session_id}"};
+  }
+
+  // DeleteAllSessions
+  rpc DeleteAllSessions(DeleteAllSessionsRequest) returns (DeleteAllSessionsResponse) {
+    option (google.api.http) = {delete: "/v1/accounts/{account_id}/sessions"};
+  }
+}
+
+// Auth service
+
+message RegisterUsingPasswordRequest {
+  string Project_id = 1 [(validate.rules).string.uuid = true];
+  string username = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  string email = 3 [(validate.rules).string.email = true];
+  string password = 4 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message RegisterUsingPasswordResponse {
+  string message = 1;
+}
+
+message LoginUsingPasswordRequest {
+  string email = 2 [(validate.rules).string.email = true];
+  string password = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  string project_id = 4 [(validate.rules).string.uuid = true];
+}
+
+message LoginUsingPasswordResponse {
+  Account user = 1;
+  AuthToken token = 2;
+}
+
+message LoginUsingIdpRequest {
+  string provider = 1;
+  string client_id = 2;
+}
+
+message LoginUsingIdpResponse {
+  string message = 1;
+  string redirect_url = 2;
+}
+
+message GetIdpTokenRequest {
+  string provider = 1;
+  string code = 2;
+  string project_id = 3 [(validate.rules).string.uuid = true];
+}
+
+message GetIdpTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  google.protobuf.Timestamp issued_at = 4;
+  google.protobuf.Timestamp refresh_expires_at = 5;
+}
+
+message LogoutRequest {
+  string access_token = 1;
+}
+
+message LogoutResponse {
+  string message = 1;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+  optional string project_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  google.protobuf.Timestamp issued_at = 4;
+  google.protobuf.Timestamp refresh_expires_at = 5;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+  string project_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message VerifyEmailResponse {
+  string message = 1;
+}
+
+message AccountEmailExistsRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message AccountEmailExistsResponse {
+  bool email_exists = 1;
+  bool username_exists = 2;
+}
+
+service AuthService {
+  // AccountEmailExists
+  rpc AccountEmailExists(AccountEmailExistsRequest) returns (AccountEmailExistsResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/check-user"
+      body: "*"
+    };
+  }
+
+  // RegisterUsingPassword
+  rpc RegisterUsingPassword(RegisterUsingPasswordRequest) returns (RegisterUsingPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/signup/password"
+      body: "*"
+    };
+  }
+
+  // LoginUsingPassword
+  rpc LoginUsingPassword(LoginUsingPasswordRequest) returns (LoginUsingPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/signin/password"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "LoginUsingPassword"
+    };
+  }
+
+  // LoginUsingIdp
+  rpc LoginUsingIdp(LoginUsingPasswordRequest) returns (LoginUsingPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/signin/idp"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "LoginUsingIdentityProvider"
+      description: "Login using identity provider (idp)"
+    };
+  }
+
+  // GetIdpToken
+  rpc GetIdpToken(GetIdpTokenRequest) returns (GetIdpTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/idp/token"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "GetIdpToken"
+      description: "Get idp token from code"
+    };
+  }
+
+  // Logout
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/singout"
+      body: "*"
+    };
+  }
+
+  // Refresh
+  rpc Refresh(RefreshRequest) returns (RefreshResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/refresh"
+      body: "*"
+    };
+  }
+
+  // VerifyEmail
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/verify-email"
+      body: "*"
+    };
+  }
+}
+
+// AccessKey
+
+message AccessKey {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string access_key = 3;
+  string client_id = 5;
+  string project_id = 6;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+message CreateAccessKeyRequest {
+  string project_id = 1;
+  string email = 2 [
+    (validate.rules).string.min_len = 6,
+    (validate.rules).string.max_len = 64
+  ];
+  string password = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+  optional int64 expires_in = 4; // in seconds
+  optional string name = 5;
+  map<string, string> data = 6; // additional data
+  repeated string scopes = 7;
+}
+
+message CreateAccessKeyResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string token = 2;
+  google.protobuf.Timestamp expires_at = 10;
+}
+
+message GetTokenRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetAccessKeyResponse {
+  AccessKey token = 1;
+}
+
+message ListAccessKeysRequest {
+  optional string account_id = 1 [(validate.rules).string.uuid = true];
+  optional string project_id = 2 [(validate.rules).string.uuid = true];
+  Page page = 5;
+}
+
+message ListAccessKeysResponse {
+  repeated AccessKey tokens = 1;
+  Meta meta = 2;
+}
+
+message DeleteAccessKeyRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteAccessKeyResponse {
+  string message = 1;
+}
+
+message AccessKeyPermissionRequest {
+  string token = 1;
+}
+
+message AccessKeyPermissionResponse {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permission = 3;
+}
+
+service AccessKeyService {
+  // CreateAccessKey
+  rpc CreateAccessKey(CreateAccessKeyRequest) returns (CreateAccessKeyResponse) {
+    option (google.api.http) = {
+      post: "/v1/tokens/projects/{project_id}"
+      body: "*"
+    };
+  }
+
+  // GetAccessKey
+  rpc GetAccessKey(GetTokenRequest) returns (GetAccessKeyResponse) {
+    option (google.api.http) = {get: "/v1/tokens/{id}"};
+  }
+
+  // ListAccessKeys
+  rpc ListAccessKeys(ListAccessKeysRequest) returns (ListAccessKeysResponse) {
+    option (google.api.http) = {get: "/v1/tokens"};
+  }
+
+  // DeleteAccessKey
+  rpc DeleteAccessKey(DeleteAccessKeyRequest) returns (DeleteAccessKeyResponse) {
+    option (google.api.http) = {delete: "/v1/tokens/{id}"};
+  }
+
+  // AccessKeyPermission
+  rpc AccessKeyPermission(AccessKeyPermissionRequest) returns (AccessKeyPermissionResponse) {
+    option (google.api.http) = {post: "/v1/tokens/-/verify"};
+  }
+}
+
+// Provider service
 
 message OAuthProvider {
   string id = 1 [(validate.rules).string.uuid = true];
@@ -692,6 +734,92 @@ message DeleteOauthProviderRequest {
 
 message DeleteOauthProviderResponse {
   string message = 1;
+}
+
+// OAuth2 service
+
+message OAuth2LoginRequest {
+  string client_id = 1;
+  string provider = 2;
+}
+
+message OAuth2LoginResponse {
+  OAuthProvider provider = 1;
+  string callback_url = 2;
+}
+
+message OAuth2CallbackRequest {
+  string code = 1;
+  string state = 3;
+}
+
+message OAuth2CallbackResponse {
+  optional Tokens tokens = 1;
+}
+
+message TokenRequest {
+  string code = 1;
+  string provider = 2;
+  string project = 3;
+  string state = 4;
+}
+
+message TokenResponse {
+  Tokens tokens = 1;
+}
+
+message OAuth2LogoutRequest {
+  string access_token = 3;
+}
+
+message OAuth2LogoutResponse {
+  string message = 1;
+}
+
+message VerifyOAuth2TokenRequest {
+  string token = 1;
+}
+
+message VerifyOAuth2TokenResponse {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string account_id = 2 [(validate.rules).string.uuid = true];
+  repeated Permission permission = 3;
+}
+
+service OAuth2Service {
+  // OAuth2Auth
+  rpc OAuth2Auth(OAuth2LoginRequest) returns (OAuth2LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/oauth2/auth"
+      body: "*"
+    };
+  }
+
+  // OAuth2Token
+  rpc OAuth2Token(OAuth2CallbackRequest) returns (OAuth2CallbackResponse) {
+    option (google.api.http) = {
+      post: "/v1/oauth2/token"
+      body: "*"
+    };
+  }
+}
+
+message CreateAccountRequest {
+  string project_id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3;
+  string visible_name = 4;
+  string password = 5 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 11
+  ];
+}
+
+message CreateAccountResponse {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string email = 2 [(validate.rules).string.email = true];
+  string username = 3;
+  google.protobuf.Timestamp created_at = 10;
 }
 
 // Project service
@@ -765,10 +893,7 @@ message CreateAdminProjectRequest {
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ]; // project name
-  string username = 2 [
-    (validate.rules).string.min_len = 3,
-    (validate.rules).string.max_len = 64
-  ];
+  string visible_name = 2;
   string email = 3 [(validate.rules).string.email = true];
   optional string password = 4 [
     (validate.rules).string.min_len = 3,
@@ -808,80 +933,82 @@ service AdminProjectService {
   }
 }
 
-message Member {
+// Project member service
+
+message ProjectMember {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];
   string username = 3;
-  Permission permission = 4;
+  string visible_name = 4;
+  Permission permission = 5;
 }
 
-message CreateMemberRequest {
+message CreateProjectMemberRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
   string username = 2 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
   string email = 3 [(validate.rules).string.email = true];
-  Permission permission = 4;
+  string visible_name = 4;
+  Permission permission = 5;
 }
 
-message CreateMemberResponse {
+message CreateProjectMemberResponse {
   string id = 1 [(validate.rules).string.uuid = true];
 }
 
-message GetMemberRequest {
+message GetProjectMemberRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
-message GetMemberResponse {
-  Member member = 1;
+message GetProjectMemberResponse {
+  ProjectMember project_member = 1;
 }
 
-message ListMemberRequest {
+message ListProjectMemberRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
   Page page = 2;
 }
 
-message ListMemberResponse {
-  repeated Member members = 1;
+message ListProjectMemberResponse {
+  repeated ProjectMember members = 1;
   Meta meta = 2;
 }
 
-message UpdateMemberRequest {
+message UpdateProjectMemberRequest {
   string member_id = 2 [(validate.rules).string.uuid = true];
   Permission permission = 5;
 }
 
-message UpdateMemberResponse {
+message UpdateProjectMemberResponse {
   string id = 1 [(validate.rules).string.uuid = true];
   string message = 2;
 }
 
-message AddMemberRequest {
+message AddProjectMemberRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
   Permission permission = 3;
 }
 
-message AddMemberResponse {
+message AddProjectMemberResponse {
   string message = 1;
 }
 
-message RemoveMemberRequest {
+message RemoveProjectMemberRequest {
   string project_id = 1 [(validate.rules).string.uuid = true];
   string member_id = 2 [(validate.rules).string.uuid = true];
 }
 
-message RemoveMemberResponse {
+message RemoveProjectMemberResponse {
   string message = 1;
 }
 
-// Member service
-
-service MemberService {
+service ProjectMemberService {
   // CreateMember
-  rpc CreateMember(CreateMemberRequest) returns (CreateMemberResponse) {
+  rpc CreateProjectMember(CreateProjectMemberRequest) returns (CreateProjectMemberResponse) {
     option (google.api.http) = {
       post: "/v1/members/-/projects/{project_id}"
       body: "*"
@@ -889,17 +1016,17 @@ service MemberService {
   }
 
   // GetMember
-  rpc GetMember(GetMemberRequest) returns (GetMemberResponse) {
+  rpc GetProjectMember(GetProjectMemberRequest) returns (GetProjectMemberResponse) {
     option (google.api.http) = {get: "/v1/members/{member_id}/projects/{project_id}"};
   }
 
   // ListMember
-  rpc ListMember(ListMemberRequest) returns (ListMemberResponse) {
+  rpc ListProjectMember(ListProjectMemberRequest) returns (ListProjectMemberResponse) {
     option (google.api.http) = {get: "/v1/members/-/project/{project_id}"};
   }
 
   // UpdateMember
-  rpc UpdateMember(UpdateMemberRequest) returns (UpdateMemberResponse) {
+  rpc UpdateProjectMember(UpdateProjectMemberRequest) returns (UpdateProjectMemberResponse) {
     option (google.api.http) = {
       put: "/v1/members/{member_id}"
       body: "*"
@@ -907,7 +1034,7 @@ service MemberService {
   }
 
   // AddMember
-  rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {
+  rpc AddProjectMember(AddProjectMemberRequest) returns (AddProjectMemberResponse) {
     option (google.api.http) = {
       post: "/v1/members/projects/{project_id}/members/{member_id}"
       body: "*"
@@ -915,7 +1042,7 @@ service MemberService {
   }
 
   // RemoveMember
-  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {
+  rpc RemoveProjectMember(RemoveProjectMemberRequest) returns (RemoveProjectMemberResponse) {
     option (google.api.http) = {delete: "/v1/members/projects/{project_id}/members/{member_id}"};
   }
 }
@@ -923,86 +1050,18 @@ service MemberService {
 enum Permission {
   UNKNOWN = 0;  // default
   NONE = 1;     // no permission
-  READ = 2;     // read permission
+  VIEWER = 2;   // viewer permission
   ADMIN = 4;    // admin permission
   OWNER = 8;    // owner permission, can do anything, including delete the project, can not be removed while the project exists
 }
 
-message CreatePermissionRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-  repeated Permission permissions = 3;
+message Page {
+  int32 page = 1;
+  int32 size = 2;
 }
 
-message CreatePermissionResponse {
-  string id = 1 [(validate.rules).string.uuid = true];
-  string message = 2;
-}
-
-message GetPermissionRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message GetPermissionResponse {
-  repeated Permission permissions = 1;
-}
-
-message UpdatePermissionRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-  repeated Permission permissions = 3;
-}
-
-message UpdatePermissionResponse {
-  string message = 1;
-}
-
-message DeletePermissionRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string member_id = 2 [(validate.rules).string.uuid = true];
-}
-
-message DeletePermissionResponse {
-  string message = 1;
-}
-
-// Permission service
-
-// Permissions
-service PermissionService {
-  // CreatePermission
-  rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse) {
-    option (google.api.http) = {
-      post: "/v1/projects/{project_id}/members/{member_id}/permissions"
-      body: "*"
-    };
-
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "Create permission"
-      description: "Create permission for a member"
-      responses: {
-        key: "200"
-        value: {description: "Permission created"}
-      }
-    };
-  }
-
-  // GetPermission
-  rpc GetPermission(GetPermissionRequest) returns (GetPermissionResponse) {
-    option (google.api.http) = {get: "/v1/projects/{project_id}/members/{member_id}/permissions"};
-  }
-
-  // UpdatePermission
-  rpc UpdatePermission(UpdatePermissionRequest) returns (UpdatePermissionResponse) {
-    option (google.api.http) = {
-      put: "/v1/projects/{project_id}/members/{member_id}/permissions"
-      body: "*"
-    };
-  }
-
-  // DeletePermission
-  rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse) {
-    option (google.api.http) = {delete: "/v1/projects/{project_id}/members/{member_id}/permissions"};
-  }
+message Meta {
+  int32 total = 1;
+  int32 page = 2;
+  int32 size = 3;
 }

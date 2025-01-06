@@ -14,22 +14,22 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var _ v1.UserServiceServer = new(UserService)
+var _ v1.AccountServiceServer = new(AccountService)
 
-type UserService struct {
+type AccountService struct {
 	perm  permission.AuthBasePermission
 	store store.Provider
 	cache *cache.Redis
-	v1.UnimplementedUserServiceServer
+	v1.UnimplementedAccountServiceServer
 }
 
 // NewUserService creates a new user service.
-func NewUserService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) v1.UserServiceServer {
-	return &UserService{perm: perm, store: store, cache: cache}
+func NewUserService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) v1.AccountServiceServer {
+	return &AccountService{perm: perm, store: store, cache: cache}
 }
 
-// CreateUser creates a new user.
-func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
+// CreateAccount creates a new user.
+func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAccountRequest) (*v1.CreateAccountResponse, error) {
 	var err error
 	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
@@ -47,11 +47,12 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 		return nil, err
 	}
 
-	user := model.User{
-		ID:        uuid.New().String(),
-		Username:  request.GetUsername(),
-		Email:     request.GetEmail(),
-		ProjectID: orgID.String(),
+	user := model.Account{
+		ID:          uuid.New().String(),
+		Username:    request.GetUsername(),
+		Email:       request.GetEmail(),
+		VisibleName: request.GetVisibleName(),
+		ProjectID:   orgID.String(),
 	}
 
 	password := request.GetPassword()
@@ -65,11 +66,11 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 		user.Salt = salt
 	}
 
-	if err := as.CreateUser(ctx, &user); err != nil {
+	if err := as.CreateAccount(ctx, &user); err != nil {
 		return nil, err
 	}
 
-	return &v1.CreateUserResponse{
+	return &v1.CreateAccountResponse{
 		Id:        user.ID,
 		Username:  user.Username,
 		Email:     user.Email,
@@ -77,8 +78,8 @@ func (u *UserService) CreateUser(ctx context.Context, request *v1.CreateUserRequ
 	}, nil
 }
 
-// GetUser gets a user by ID.
-func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (*v1.GetUserResponse, error) {
+// GetAccount gets a user by ID.
+func (u *AccountService) GetAccount(ctx context.Context, request *v1.GetAccountRequest) (*v1.GetAccountResponse, error) {
 	// get the user
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
@@ -90,7 +91,7 @@ func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, id)
+	user, err := as.GetAccountByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -100,16 +101,16 @@ func (u *UserService) GetUser(ctx context.Context, request *v1.GetUserRequest) (
 		return nil, err
 	}
 
-	return &v1.GetUserResponse{
-		User: &v1.User{
+	return &v1.GetAccountResponse{
+		Account: &v1.Account{
 			Id:       user.ID,
 			Username: user.Username,
 		},
 	}, nil
 }
 
-// ListUsers lists users.
-func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
+// ListAccounts lists users.
+func (u *AccountService) ListAccounts(ctx context.Context, request *v1.ListAccountsRequest) (*v1.ListAccountsResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
@@ -126,26 +127,27 @@ func (u *UserService) ListUsers(ctx context.Context, request *v1.ListUsersReques
 	}
 
 	page := x.GetPageFromRequest(request)
-	users, total, err := as.ListUsersByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
+	users, total, err := as.ListAccountsByOrg(ctx, false, orgID, int(page.Page), int(page.Size))
 
-	var userProtoList []*v1.User
+	var userProtoList []*v1.Account
 	for _, user := range users {
-		userProtoList = append(userProtoList, &v1.User{
-			Id:        user.ID,
-			Username:  user.Username,
-			Email:     user.Email,
-			CreatedAt: timestamppb.New(user.CreatedAt),
-			UpdatedAt: timestamppb.New(user.UpdatedAt),
-			Disabled:  user.Disabled,
-			Member:    user.Member,
+		userProtoList = append(userProtoList, &v1.Account{
+			Id:          user.ID,
+			Username:    user.Username,
+			Email:       user.Email,
+			VisibleName: user.VisibleName,
+			CreatedAt:   timestamppb.New(user.CreatedAt),
+			UpdatedAt:   timestamppb.New(user.UpdatedAt),
+			Disabled:    user.Disabled,
+			Member:      user.ProjectMember,
 		})
 	}
 
-	return &v1.ListUsersResponse{Users: userProtoList, Meta: &v1.Meta{Total: int32(total)}}, nil
+	return &v1.ListAccountsResponse{Accounts: userProtoList, Meta: &v1.Meta{Total: int32(total)}}, nil
 }
 
-// UpdateUser updates a user.
-func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequest) (*v1.UpdateUserResponse, error) {
+// UpdateAccount updates a user.
+func (u *AccountService) UpdateAccount(ctx context.Context, request *v1.UpdateAccountRequest) (*v1.UpdateAccountResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
@@ -157,7 +159,7 @@ func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequ
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		user, err := tx.GetUserByID(ctx, id)
+		user, err := tx.GetAccountByID(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -167,15 +169,9 @@ func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequ
 			return err
 		}
 
-		if request.GetUsername() != "" {
-			user.Username = request.GetUsername()
-		}
+		user.VisibleName = request.GetVisibleName()
 
-		if request.GetEmail() != "" {
-			user.Email = request.GetEmail()
-		}
-
-		err = tx.UpdateUser(ctx, user)
+		err = tx.UpdateAccount(ctx, user)
 		if err != nil {
 			return err
 		}
@@ -186,15 +182,15 @@ func (u *UserService) UpdateUser(ctx context.Context, request *v1.UpdateUserRequ
 		return nil, err
 	}
 
-	return &v1.UpdateUserResponse{
-		User: &v1.User{
+	return &v1.UpdateAccountResponse{
+		Account: &v1.Account{
 			Id: id.String(),
 		},
 	}, nil
 }
 
-// DeleteUser deletes a user.
-func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error) {
+// DeleteAccount deletes a user.
+func (u *AccountService) DeleteAccount(ctx context.Context, request *v1.DeleteAccountRequest) (*v1.DeleteAccountResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
@@ -205,7 +201,7 @@ func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequ
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, id)
+	user, err := as.GetAccountByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -215,18 +211,18 @@ func (u *UserService) DeleteUser(ctx context.Context, request *v1.DeleteUserRequ
 		return nil, err
 	}
 
-	err = as.DeleteUser(ctx, id)
+	err = as.DeleteAccount(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.DeleteUserResponse{
-		Message: "User deleted successfully.",
+	return &v1.DeleteAccountResponse{
+		Message: "Account deleted successfully.",
 	}, nil
 }
 
-// ListActiveUsers lists active users.
-func (u *UserService) ListActiveUsers(ctx context.Context, request *v1.ListActiveUsersRequest) (*v1.ListActiveUsersResponse, error) {
+// ListActiveAccounts lists active users.
+func (u *AccountService) ListActiveAccounts(ctx context.Context, request *v1.ListActiveAccountsRequest) (*v1.ListActiveAccountsResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
@@ -249,14 +245,14 @@ func (u *UserService) ListActiveUsers(ctx context.Context, request *v1.ListActiv
 		return nil, err
 	}
 
-	var userProtos []*v1.User
+	var userProtos []*v1.Account
 	for _, session := range sessions {
-		user := session.User
+		user := session.Account
 		if user == nil {
 			continue
 		}
-		userProtos = append(userProtos, &v1.User{
-			Id:        session.UserID,
+		userProtos = append(userProtos, &v1.Account{
+			Id:        session.AccountID,
 			Username:  user.Username,
 			Email:     user.Email,
 			CreatedAt: timestamppb.New(user.CreatedAt),
@@ -264,21 +260,62 @@ func (u *UserService) ListActiveUsers(ctx context.Context, request *v1.ListActiv
 		})
 	}
 
-	return &v1.ListActiveUsersResponse{Users: userProtos}, nil
+	return &v1.ListActiveAccountsResponse{Accounts: userProtos}, nil
 }
 
-// DisableUser activates a user.
-func (u *UserService) DisableUser(ctx context.Context, request *v1.DisableUserRequest) (*v1.DisableUserResponse, error) {
+func (u *AccountService) ListInactiveAccounts(ctx context.Context, request *v1.ListInactiveAccountsRequest) (*v1.ListInactiveAccountsResponse, error) {
+	//as, err := store.GetProjectStore(ctx, u.store)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//orgID, err := uuid.Parse(request.GetProjectId())
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//err = u.perm.CheckProjectPermission(ctx, orgID, "read")
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//page := x.GetPageFromRequest(request)
+	//
+	//sessions, err := as.ListInactiveSessions(ctx, orgID, int(page.Page), int(page.Size))
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//var userProtos []*v1.Account
+	//for _, session := range sessions {
+	//	user := session.Account
+	//	if user == nil {
+	//		continue
+	//	}
+	//	userProtos = append(userProtos, &v1.Account{
+	//		Id:          session.AccountID,
+	//		Accountname: user.Accountname,
+	//		Email:       user.Email,
+	//		CreatedAt:   timestamppb.New(user.CreatedAt),
+	//		UpdatedAt:   timestamppb.New(user.UpdatedAt),
+	//	})
+	//}
+
+	return &v1.ListInactiveAccountsResponse{}, nil
+}
+
+// DisableAccount activates a user.
+func (u *AccountService) DisableAccount(ctx context.Context, request *v1.DisableAccountRequest) (*v1.DisableAccountResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
 	}
-	userID, err := uuid.Parse(request.GetUserId())
+	userID, err := uuid.Parse(request.GetAccountId())
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -290,28 +327,28 @@ func (u *UserService) DisableUser(ctx context.Context, request *v1.DisableUserRe
 
 	user.Disabled = true
 
-	err = as.UpdateUser(ctx, user)
+	err = as.UpdateAccount(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.DisableUserResponse{
-		Message: "User disabled successfully.",
+	return &v1.DisableAccountResponse{
+		Message: "Account disabled successfully.",
 	}, nil
 }
 
-// EnableUser activates a user.
-func (u *UserService) EnableUser(ctx context.Context, request *v1.EnableUserRequest) (*v1.EnableUserResponse, error) {
+// EnableAccount activates a user.
+func (u *AccountService) EnableAccount(ctx context.Context, request *v1.EnableAccountRequest) (*v1.EnableAccountResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
 		return nil, err
 	}
-	userID, err := uuid.Parse(request.GetUserId())
+	userID, err := uuid.Parse(request.GetAccountId())
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := as.GetUserByID(ctx, userID)
+	user, err := as.GetAccountByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -323,12 +360,12 @@ func (u *UserService) EnableUser(ctx context.Context, request *v1.EnableUserRequ
 
 	user.Disabled = false
 
-	err = as.UpdateUser(ctx, user)
+	err = as.UpdateAccount(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.EnableUserResponse{
-		Message: "User enabled successfully.",
+	return &v1.EnableAccountResponse{
+		Message: "Account enabled successfully.",
 	}, nil
 }

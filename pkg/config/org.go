@@ -6,14 +6,14 @@ type OrgConfig struct {
 }
 
 type AdminOrgConfig struct {
-	OrgName  string
-	Username string
-	Email    string
-	Password string
+	OrgName     string
+	VisibleName string
+	Email       string
+	Password    string
 }
 
 func (a AdminOrgConfig) Valid() bool {
-	if a.OrgName == "" || a.Username == "" || a.Email == "" || a.Password == "" {
+	if a.OrgName == "" || a.VisibleName == "" || a.Email == "" || a.Password == "" {
 		return false
 	}
 	return true
