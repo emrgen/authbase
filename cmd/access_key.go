@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -91,7 +90,7 @@ func createTokenCommand() *cobra.Command {
 }
 
 func listTokenCommand() *cobra.Command {
-	var organizationId string
+	var projectID string
 	var userId string
 	var password string
 
@@ -105,23 +104,12 @@ func listTokenCommand() *cobra.Command {
 				return
 			}
 
-			if organizationId == "" {
-				logrus.Error("missing required flags: --organizationId")
-				return
-			}
-
-			if userId == "" {
-				token, _, err := jwt.NewParser().ParseUnverified(Token, jwt.MapClaims{})
-				if err != nil {
-					logrus.Errorf("failed to parse token: %v", err)
-					return
-				}
-				userId = token.Claims.(jwt.MapClaims)["user_id"].(string)
+			if projectID == "" {
+				logrus.Error("missing required flags: --projectID")
 			}
 
 			if userId == "" {
 				logrus.Error("missing required flags: --userId")
-				return
 			}
 
 			client, err := authbase.NewClient(":4000")
@@ -130,11 +118,17 @@ func listTokenCommand() *cobra.Command {
 				return
 			}
 
-			ctx := tokenContext()
-			res, err := client.ListAccessKeys(ctx, &v1.ListAccessKeysRequest{
-				ProjectId: &organizationId,
-				AccountId: &userId,
-			})
+			req := &v1.ListAccessKeysRequest{}
+
+			if projectID != "" {
+				req.ProjectId = &projectID
+			}
+
+			if userId != "" {
+				req.AccountId = &userId
+			}
+
+			res, err := client.ListAccessKeys(tokenContext(), req)
 			if err != nil {
 				logrus.Errorf("failed to list tokens %v", err)
 				return
@@ -149,8 +143,8 @@ func listTokenCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&organizationId, "organizationId", "o", "", "organizationId name")
-	command.Flags().StringVarP(&userId, "userId", "u", "", "userId name")
+	command.Flags().StringVarP(&projectID, "projectID", "r", "", "project id")
+	command.Flags().StringVarP(&userId, "userId", "u", "", "account id")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
 
 	return command

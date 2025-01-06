@@ -171,6 +171,7 @@ func listProjectCommand() *cobra.Command {
 				logrus.Errorf("error creating client: %v", err)
 				return
 			}
+			defer client.Close()
 
 			ctx := tokenContext()
 			res, err := client.ListProjects(ctx, &v1.ListProjectsRequest{})
@@ -186,7 +187,7 @@ func listProjectCommand() *cobra.Command {
 				table.Append([]string{strconv.FormatInt(int64(i+1), 10), project.Id, project.Name, project.OwnerId, strconv.FormatBool(project.Master)})
 			}
 			table.Render()
-			fmt.Printf("showing %v res, page: %v\n, total: %v\n", len(res.Projects), res.Meta.Page, res.Meta.Total)
+			fmt.Printf("projects => showing: %v, page: %v, total: %v\n", len(res.Projects), res.Meta.Page, res.Meta.Total)
 		},
 	}
 
@@ -196,7 +197,10 @@ func listProjectCommand() *cobra.Command {
 func updateProjectCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "update",
-		Short: "update org",
+		Short: "update project",
+		Run: func(cmd *cobra.Command, args []string) {
+
+		},
 	}
 
 	return command
@@ -205,7 +209,10 @@ func updateProjectCommand() *cobra.Command {
 func deleteProjectCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "delete",
-		Short: "delete org",
+		Short: "delete project",
+		Run: func(cmd *cobra.Command, args []string) {
+
+		},
 	}
 
 	return command

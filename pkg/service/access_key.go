@@ -160,19 +160,25 @@ func (t *AccessKeyService) ListAccessKeys(ctx context.Context, request *v1.ListA
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetProjectId())
+	projectID, err := x.GetAuthbaseProjectID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if request.ProjectId != nil {
+		projectID = uuid.MustParse(request.GetProjectId())
+	}
+
+	err = t.perm.CheckProjectPermission(ctx, projectID, "read")
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.perm.CheckProjectPermission(ctx, orgID, "read")
+	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	userID, err := uuid.Parse(request.GetAccountId())
-	if err != nil {
-		return nil, err
+	if request.AccountId != nil {
+		accountID = uuid.MustParse(request.GetAccountId())
 	}
 
 	page := &v1.Page{
@@ -184,21 +190,21 @@ func (t *AccessKeyService) ListAccessKeys(ctx context.Context, request *v1.ListA
 	}
 	size := max(page.Size, 20)
 
-	tokens, total, err := as.ListAccountAccessKeys(ctx, orgID, userID, int(page.Page), int(size))
+	accessKeys, total, err := as.ListAccountAccessKeys(ctx, projectID, accountID, int(page.Page), int(size))
 	if err != nil {
 		return nil, err
 	}
 
-	var tokenProtos []*v1.AccessKey
-	for _, token := range tokens {
-		tokenProtos = append(tokenProtos, &v1.AccessKey{
+	var keys []*v1.AccessKey
+	for _, token := range accessKeys {
+		keys = append(keys, &v1.AccessKey{
 			Id:        token.ID,
 			AccessKey: token.Token,
 		})
 	}
 
 	return &v1.ListAccessKeysResponse{
-		Tokens: tokenProtos,
+		Tokens: keys,
 		Meta: &v1.Meta{
 			Total: int32(total),
 			Page:  page.Page,
