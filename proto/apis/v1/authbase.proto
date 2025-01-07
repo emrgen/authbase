@@ -391,13 +391,107 @@ service PoolMemberService {
   }
 }
 
+// Role service
+
+message Role {
+  string name = 2;
+  string pool_id = 3 [(validate.rules).string.uuid = true];
+  map<string, string> attributes = 5;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreateRoleRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string name = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message CreateRoleResponse {
+  Role role = 1;
+}
+
+message GetRoleRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string role_name = 2 [(validate.rules).string.uuid = true];
+}
+
+message GetRoleResponse {
+  Role role = 1;
+}
+
+message ListRolesRequest {
+  optional string pool_id = 1 [(validate.rules).string.uuid = true];
+  optional string account_id = 2 [(validate.rules).string.uuid = true];
+  Page page = 3;
+}
+
+message ListRolesResponse {
+  repeated Role roles = 1;
+  Meta meta = 2;
+}
+
+message UpdateRoleRequest {
+  string role_name = 2 [(validate.rules).string.uuid = true];
+  string name = 3;
+  repeated string scopes = 4;
+}
+
+message UpdateRoleResponse {
+  Role role = 1;
+}
+
+message DeleteRoleRequest {
+  string role_name = 2 [(validate.rules).string.uuid = true];
+}
+
+message DeleteRoleResponse {
+  string message = 1;
+}
+
+service RoleService {
+  // CreateRole
+  rpc CreateRole(CreateRoleRequest) returns (CreateRoleResponse) {
+    option (google.api.http) = {
+      post: "/v1/roles"
+      body: "*"
+    };
+  }
+
+  // GetRole
+  rpc GetRole(GetRoleRequest) returns (GetRoleResponse) {
+    option (google.api.http) = {get: "/v1/roles/{role_name}"};
+  }
+
+  // ListRoles
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
+    option (google.api.http) = {get: "/v1/roles"};
+  }
+
+  // UpdateRole
+  rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse) {
+    option (google.api.http) = {
+      put: "/v1/roles/{role_name}"
+      body: "*"
+    };
+  }
+
+  // DeleteRole
+  rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse) {
+    option (google.api.http) = {delete: "/v1/roles/{role_name}"};
+  }
+}
+
 // PoolGroup service
 
 message Group {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   string pool_id = 3 [(validate.rules).string.uuid = true];
-  repeated string scopes = 4;
+  repeated Role roles = 4;
+  map<string, string> attributes = 5;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
 }
@@ -408,7 +502,7 @@ message CreateGroupRequest {
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
-  repeated string scopes = 3;
+  repeated string role_names = 3;
 }
 
 message CreateGroupResponse {
@@ -438,7 +532,7 @@ message ListGroupsResponse {
 message UpdateGroupRequest {
   string group_id = 2 [(validate.rules).string.uuid = true];
   string name = 3;
-  repeated string scopes = 4;
+  repeated string role_names = 4;
 }
 
 message UpdateGroupResponse {
@@ -450,6 +544,24 @@ message DeleteGroupRequest {
 }
 
 message DeleteGroupResponse {
+  string message = 1;
+}
+
+message AddRoleRequest {
+  string group_id = 2 [(validate.rules).string.uuid = true];
+  string role_name = 3 [(validate.rules).string.uuid = true];
+}
+
+message AddRoleResponse {
+  string message = 1;
+}
+
+message RemoveRoleRequest {
+  string group_id = 2 [(validate.rules).string.uuid = true];
+  string role_name = 3 [(validate.rules).string.uuid = true];
+}
+
+message RemoveRoleResponse {
   string message = 1;
 }
 
@@ -471,7 +583,6 @@ message RemoveGroupMemberResponse {
   string message = 1;
 }
 
-
 message ListGroupMembersRequest {
   string group_id = 2 [(validate.rules).string.uuid = true];
   Page page = 3;
@@ -479,7 +590,7 @@ message ListGroupMembersRequest {
 
 message ListGroupMembersResponse {
   repeated Account members = 1;
-  repeated string scopes = 2;
+  repeated Role roles = 2;
   Meta meta = 3;
 }
 
@@ -487,14 +598,14 @@ service GroupService {
   // CreateGroup
   rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
     option (google.api.http) = {
-      post: "/v1/groups/pools/{pool_id}"
+      post: "/v1/groups"
       body: "*"
     };
   }
 
   // GetGroup
   rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
-    option (google.api.http) = {get: "/v1/groups/{pool_id}/{group_id}"};
+    option (google.api.http) = {get: "/v1/groups/{group_id}"};
   }
 
   // ListGroups
@@ -515,17 +626,30 @@ service GroupService {
     option (google.api.http) = {delete: "/v1/groups/{group_id}"};
   }
 
+  // AddRole
+  rpc AddRole(AddRoleRequest) returns (AddRoleResponse) {
+    option (google.api.http) = {
+      post: "/v1/groups/{group_id}/roles"
+      body: "*"
+    };
+  }
+
+  // RemoveRole
+  rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse) {
+    option (google.api.http) = {delete: "/v1/groups/{group_id}/roles"};
+  }
+
   // AddGroupMember
   rpc AddGroupMember(AddGroupMemberRequest) returns (AddGroupMemberResponse) {
     option (google.api.http) = {
-      post: "/v1/groups/{group_id}/members/{account_id}"
+      post: "/v1/groups/{group_id}"
       body: "*"
     };
   }
 
   // RemoveGroupMember
   rpc RemoveGroupMember(RemoveGroupMemberRequest) returns (RemoveGroupMemberResponse) {
-    option (google.api.http) = {delete: "/v1/groups/{group_id}/members/{account_id}"};
+    option (google.api.http) = {delete: "/v1/groups/{group_id}/members"};
   }
 
   // ListGroupMembers
@@ -657,7 +781,8 @@ message GetAccountResponse {
 message ListAccountsRequest {
   optional string project_id = 1 [(validate.rules).string.uuid = true];
   optional string pool_id = 3 [(validate.rules).string.uuid = true];
-  Page page = 2;
+  optional string role_name = 4;
+  Page page = 5;
 }
 
 message ListAccountsResponse {

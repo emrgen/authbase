@@ -63,6 +63,10 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := db.AutoMigrate(&Role{}); err != nil {
+		return err
+	}
+
 	return nil
 }
 

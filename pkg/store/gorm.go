@@ -21,6 +21,36 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) ListRolesByNames(ctx context.Context, poolID uuid.UUID, names []string) ([]*model.Role, error) {
+	var roles []*model.Role
+	err := g.db.Find(&roles, "pool_id = ? AND name IN ?", poolID.String(), names).Error
+	return roles, err
+}
+
+func (g *GormStore) CreateRole(ctx context.Context, role *model.Role) error {
+	return g.db.Create(role).Error
+}
+
+func (g *GormStore) GetRole(ctx context.Context, poolID uuid.UUID, name string) (*model.Role, error) {
+	var role model.Role
+	err := g.db.Where("name = ? AND pool_id = ?", name, poolID.String()).First(&role).Error
+	return &role, err
+}
+
+func (g *GormStore) ListRoles(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.Role, int, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (g *GormStore) UpdateRole(ctx context.Context, role *model.Role) error {
+	return g.db.Save(role).Error
+}
+
+func (g *GormStore) DeleteRole(ctx context.Context, poolID uuid.UUID, name string) error {
+	role := model.Role{Name: name, PoolID: poolID.String()}
+	return g.db.Delete(&role).Error
+}
+
 func (g *GormStore) CreateGroup(ctx context.Context, group *model.Group) error {
 	return g.db.Create(group).Error
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
-	"strings"
 )
 
 func NewGroupService(store store.Provider) *GroupService {
@@ -32,13 +31,27 @@ func (g *GroupService) CreateGroup(ctx context.Context, request *v1.CreateGroupR
 
 	name := request.GetName()
 	poolID := request.GetPoolId()
-	scopes := request.GetScopes()
+	rolesNames := request.GetRoleNames()
+	roles := make([]*model.Role, 0)
+
+	// Create roles if not exist.
+	for _, roleName := range rolesNames {
+		role := &model.Role{
+			Name:   roleName,
+			PoolID: poolID,
+		}
+		err = as.CreateRole(ctx, role)
+		if err != nil {
+			return nil, err
+		}
+		roles = append(roles, role)
+	}
 
 	group := &model.Group{
 		ID:     uuid.New().String(),
 		Name:   name,
 		PoolID: poolID,
-		Scopes: strings.Join(scopes, ","),
+		Roles:  roles,
 	}
 
 	err = as.CreateGroup(ctx, group)
@@ -46,12 +59,19 @@ func (g *GroupService) CreateGroup(ctx context.Context, request *v1.CreateGroupR
 		return nil, err
 	}
 
+	roleProtos := make([]*v1.Role, 0)
+	for _, role := range roles {
+		roleProtos = append(roleProtos, &v1.Role{
+			Name: role.Name,
+		})
+	}
+
 	return &v1.CreateGroupResponse{
 		Group: &v1.Group{
 			Id:     group.ID,
 			Name:   name,
 			PoolId: poolID,
-			Scopes: scopes,
+			Roles:  roleProtos,
 		},
 	}, nil
 }
@@ -68,12 +88,19 @@ func (g *GroupService) GetGroup(ctx context.Context, request *v1.GetGroupRequest
 		return nil, err
 	}
 
+	roles := make([]*v1.Role, 0)
+	for _, role := range group.Roles {
+		roles = append(roles, &v1.Role{
+			Name: role.Name,
+		})
+	}
+
 	return &v1.GetGroupResponse{
 		Group: &v1.Group{
 			Id:     group.ID,
 			Name:   group.Name,
 			PoolId: group.PoolID,
-			Scopes: strings.Split(group.Scopes, ","),
+			Roles:  roles,
 		},
 	}, nil
 }
@@ -123,11 +150,17 @@ func (g *GroupService) ListGroups(ctx context.Context, request *v1.ListGroupsReq
 
 	var responseGroups []*v1.Group
 	for _, group := range groups {
+		roles := make([]*v1.Role, 0)
+		for _, role := range group.Roles {
+			roles = append(roles, &v1.Role{
+				Name: role.Name,
+			})
+		}
 		responseGroups = append(responseGroups, &v1.Group{
 			Id:     group.ID,
 			Name:   group.Name,
 			PoolId: group.PoolID,
-			Scopes: strings.Split(group.Scopes, ","),
+			Roles:  roles,
 		})
 	}
 
@@ -148,9 +181,19 @@ func (g *GroupService) UpdateGroup(ctx context.Context, request *v1.UpdateGroupR
 	}
 
 	groupID := uuid.MustParse(request.GetGroupId())
-	scopes := request.GetScopes()
+	roleNames := request.GetRoleNames()
+
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		group, err := tx.GetGroup(ctx, groupID)
+		if err != nil {
+			return err
+		}
+		poolID, err := uuid.Parse(group.PoolID)
+		if err != nil {
+			return err
+		}
+
+		roles, err := as.ListRolesByNames(ctx, poolID, roleNames)
 		if err != nil {
 			return err
 		}
@@ -158,8 +201,7 @@ func (g *GroupService) UpdateGroup(ctx context.Context, request *v1.UpdateGroupR
 		if request.GetName() != "" {
 			group.Name = request.GetName()
 		}
-		group.Scopes = strings.Join(scopes, ",")
-
+		group.Roles = roles
 		err = tx.UpdateGroup(ctx, group)
 		if err != nil {
 			return err
@@ -255,9 +297,16 @@ func (g *GroupService) ListGroupMembers(ctx context.Context, request *v1.ListGro
 		})
 	}
 
+	roles := make([]*v1.Role, 0)
+	for _, role := range group.Roles {
+		roles = append(roles, &v1.Role{
+			Name: role.Name,
+		})
+	}
+
 	return &v1.ListGroupMembersResponse{
 		Members: responseGroupMembers,
-		Scopes:  strings.Split(group.Scopes, ","),
+		Roles:   roles,
 		Meta: &v1.Meta{
 			Total: int32(total),
 			Page:  page.Page,

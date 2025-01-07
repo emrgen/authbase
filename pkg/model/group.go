@@ -10,11 +10,11 @@ const (
 // Group represents a group of accounts with a common purpose (scopes).
 type Group struct {
 	gorm.Model
-	ID     string `gorm:"uuid;not null"`
-	Name   string `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
-	PoolID string `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
-	Pool   *Pool  `gorm:"foreignKey:PoolID;OnDelete:CASCADE"`
-	Scopes string `gorm:"not null"`
+	ID     string  `gorm:"uuid;not null"`
+	Name   string  `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
+	PoolID string  `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
+	Pool   *Pool   `gorm:"foreignKey:PoolID;OnDelete:CASCADE"`
+	Roles  []*Role `gorm:"many2many:group_roles;foreignKey:ID;joinForeignKey:GroupID;references:Name;joinReferences:Name;OnDelete:CASCADE"`
 }
 
 // GroupMember represents a member of a group.

@@ -20,6 +20,11 @@ var groupMemberCommand = &cobra.Command{
 	Short: "Group member commands",
 }
 
+var groupRoleCommand = &cobra.Command{
+	Use:   "role",
+	Short: "Group role commands",
+}
+
 func init() {
 	groupCommand.AddCommand(groupCreateCommand())
 	groupCommand.AddCommand(groupListCommand())
@@ -32,6 +37,10 @@ func init() {
 	groupMemberCommand.AddCommand(groupAddMemberCommand())
 	groupMemberCommand.AddCommand(groupRemoveMemberCommand())
 	groupMemberCommand.AddCommand(groupListMemberCommand())
+
+	groupCommand.AddCommand(groupRoleCommand)
+	groupRoleCommand.AddCommand(groupAddRoleCommand())
+	groupRoleCommand.AddCommand(groupRemoveRoleCommand())
 }
 
 func groupCreateCommand() *cobra.Command {
@@ -61,9 +70,9 @@ func groupCreateCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.CreateGroup(tokenContext(), &v1.CreateGroupRequest{
-				PoolId: poolID,
-				Name:   name,
-				Scopes: scopes,
+				PoolId:    poolID,
+				Name:      name,
+				RoleNames: scopes,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create group: %v", err)
@@ -72,7 +81,11 @@ func groupCreateCommand() *cobra.Command {
 
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"ID", "Pool ID", "Name", "Scopes"})
-			table.Append([]string{res.Group.Id, res.Group.PoolId, res.Group.Name, strings.Join(res.Group.Scopes, ",")})
+			roleNames := make([]string, 0)
+			for _, role := range res.Group.Roles {
+				roleNames = append(roleNames, role.Name)
+			}
+			table.Append([]string{res.Group.Id, res.Group.PoolId, res.Group.Name, strings.Join(roleNames, ",")})
 			table.Render()
 		},
 	}
@@ -121,7 +134,11 @@ func groupListCommand() *cobra.Command {
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"ID", "Pool ID", "Name", "Scopes"})
 			for _, group := range res.Groups {
-				table.Append([]string{group.Id, group.PoolId, group.Name, strings.Join(group.Scopes, ",")})
+				roleNames := make([]string, 0)
+				for _, role := range group.Roles {
+					roleNames = append(roleNames, role.Name)
+				}
+				table.Append([]string{group.Id, group.PoolId, group.Name, strings.Join(roleNames, ",")})
 			}
 			table.Render()
 		},
@@ -163,7 +180,7 @@ func groupUpdateCommand() *cobra.Command {
 			}
 
 			if len(scopes) > 0 {
-				req.Scopes = scopes
+				req.RoleNames = scopes
 			}
 
 			_, err = client.UpdateGroup(tokenContext(), req)
@@ -335,13 +352,103 @@ func groupListMemberCommand() *cobra.Command {
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"Account ID", "Name", "Email", "Scopes"})
 			for _, member := range res.Members {
-				table.Append([]string{member.Id, member.VisibleName, member.Email, strings.Join(res.Scopes, ",")})
+				roleNames := make([]string, 0)
+				for _, role := range res.Roles {
+					roleNames = append(roleNames, role.Name)
+				}
+				table.Append([]string{member.Id, member.VisibleName, member.Email, strings.Join(roleNames, ",")})
 			}
 			table.Render()
 		},
 	}
 
 	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
+
+	return command
+}
+
+func groupAddRoleCommand() *cobra.Command {
+	var groupID string
+	var roleName string
+
+	command := &cobra.Command{
+		Use:   "add",
+		Short: "Add a role to a group",
+		Run: func(cmd *cobra.Command, args []string) {
+			if groupID == "" {
+				logrus.Errorf("missing required flag: --group-id")
+				return
+			}
+			if roleName == "" {
+				logrus.Errorf("missing required flag: --role-name")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.AddRole(tokenContext(), &v1.AddRoleRequest{
+				GroupId:  groupID,
+				RoleName: roleName,
+			})
+			if err != nil {
+				logrus.Errorf("failed to add role to group: %v", err)
+				return
+			}
+
+			fmt.Print("role added to group\n")
+		},
+	}
+
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
+	command.Flags().StringVarP(&roleName, "role-name", "r", "", "Role Name")
+
+	return command
+}
+
+func groupRemoveRoleCommand() *cobra.Command {
+	var groupID string
+	var roleName string
+
+	command := &cobra.Command{
+		Use:   "remove",
+		Short: "Remove a role from a group",
+		Run: func(cmd *cobra.Command, args []string) {
+			if groupID == "" {
+				logrus.Errorf("missing required flag: --group-id")
+				return
+			}
+			if roleName == "" {
+				logrus.Errorf("missing required flag: --role-name")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.RemoveRole(tokenContext(), &v1.RemoveRoleRequest{
+				GroupId:  groupID,
+				RoleName: roleName,
+			})
+			if err != nil {
+				logrus.Errorf("failed to remove role from group: %v", err)
+				return
+			}
+
+			fmt.Print("role removed from group\n")
+		},
+	}
+
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
+	command.Flags().StringVarP(&roleName, "role-name", "r", "", "Role Name")
 
 	return command
 }

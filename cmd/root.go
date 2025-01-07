@@ -36,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(poolCommand)
 	rootCmd.AddCommand(clientCommand)
 	rootCmd.AddCommand(groupCommand)
+	rootCmd.AddCommand(roleCommand)
 
 	ctx := readContext()
 	if ctx.Token != "" {

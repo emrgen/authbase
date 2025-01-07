@@ -28,6 +28,7 @@ type AuthBaseStore interface {
 	PoolStore
 	PoolMemberStore
 	GroupStore
+	RoleStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -227,4 +228,19 @@ type GroupStore interface {
 	RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error
 	// ListGroupMembers retrieves a list of group members.
 	ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMember, int, error)
+}
+
+type RoleStore interface {
+	// CreateRole creates a new role in the database.
+	CreateRole(ctx context.Context, role *model.Role) error
+	// GetRole retrieves a role by its ID.
+	GetRole(ctx context.Context, poolID uuid.UUID, name string) (*model.Role, error)
+	// ListRolesByNames retrieves a list of roles by names.
+	ListRolesByNames(ctx context.Context, poolID uuid.UUID, names []string) ([]*model.Role, error)
+	// ListRoles retrieves a list of roles.
+	ListRoles(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.Role, int, error)
+	// UpdateRole updates a role in the database.
+	UpdateRole(ctx context.Context, role *model.Role) error
+	// DeleteRole deletes a role from the database.
+	DeleteRole(ctx context.Context, poolID uuid.UUID, name string) error
 }

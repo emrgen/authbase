@@ -172,6 +172,7 @@ func checkEmailUsedCommand() *cobra.Command {
 func listUserCommand() *cobra.Command {
 	var projectID string
 	var poolID string
+	var roleName string
 
 	command := &cobra.Command{
 		Use:   "list",
@@ -201,6 +202,10 @@ func listUserCommand() *cobra.Command {
 
 			if poolID != "" {
 				req.PoolId = &poolID
+			}
+
+			if roleName != "" {
+				req.RoleName = &roleName
 			}
 
 			res, err := client.ListAccounts(tokenContext(), req)
@@ -235,6 +240,7 @@ func listUserCommand() *cobra.Command {
 	bindContextFlags(command)
 	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "pool id")
 	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
+	command.Flags().StringVarP(&roleName, "role", "s", "", "role name")
 
 	return command
 }

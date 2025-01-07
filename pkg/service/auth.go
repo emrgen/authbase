@@ -15,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"strings"
 	"time"
 )
 
@@ -188,8 +187,6 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, errors.New("incorrect password")
 	}
 
-	scopes := []string{"account"}
-
 	//if account.ProjectMember {
 	//	perm, err = as.GetProjectMemberByID(ctx, clientID, uuid.MustParse(account.ID))
 	//	if err != nil {
@@ -205,25 +202,26 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	}
 	set := goset.NewSet[string]()
 	for _, member := range memberships {
-		for _, s := range strings.Split(member.Group.Scopes, ",") {
-			set.Add(s)
+		for _, role := range member.Group.Roles {
+			set.Add(role.Name)
 		}
 	}
+
+	roleNames := set.ToSlice()
 
 	// generate tokens
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(x.Claims{
-		Username:    account.Username,
-		Email:       account.Email,
-		ProjectID:   account.ProjectID,
-		AccountID:   account.ID,
-		Audience:    "", // the target website or app that will use the token
-		Jti:         jti,
-		ExpireAt:    time.Now().Add(x.AccessTokenDuration),
-		IssuedAt:    time.Now(),
-		Provider:    "authbase",
-		Scopes:      scopes,
-		Permissions: []string{},
+		Username:  account.Username,
+		Email:     account.Email,
+		ProjectID: account.ProjectID,
+		AccountID: account.ID,
+		Audience:  "", // the target website or app that will use the token
+		Jti:       jti,
+		ExpireAt:  time.Now().Add(x.AccessTokenDuration),
+		IssuedAt:  time.Now(),
+		Provider:  "authbase",
+		Scopes:    roleNames,
 	})
 	if err != nil {
 		return nil, err
