@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/olekukonko/tablewriter"
@@ -14,14 +15,23 @@ var groupCommand = &cobra.Command{
 	Use:   "group",
 	Short: "Group commands",
 }
+var groupMemberCommand = &cobra.Command{
+	Use:   "member",
+	Short: "Group member commands",
+}
 
 func init() {
 	groupCommand.AddCommand(groupCreateCommand())
 	groupCommand.AddCommand(groupListCommand())
 	groupCommand.AddCommand(groupUpdateCommand())
+	groupCommand.AddCommand(groupDeleteCommand())
 	groupCommand.AddCommand(groupAddMemberCommand())
 	groupCommand.AddCommand(groupRemoveMemberCommand())
-	groupCommand.AddCommand(groupDeleteCommand())
+
+	groupCommand.AddCommand(groupMemberCommand)
+	groupMemberCommand.AddCommand(groupAddMemberCommand())
+	groupMemberCommand.AddCommand(groupRemoveMemberCommand())
+	groupMemberCommand.AddCommand(groupListMemberCommand())
 }
 
 func groupCreateCommand() *cobra.Command {
@@ -173,92 +183,6 @@ func groupUpdateCommand() *cobra.Command {
 	return command
 }
 
-func groupAddMemberCommand() *cobra.Command {
-	var groupID string
-	var accountID string
-
-	command := &cobra.Command{
-		Use:   "add-member",
-		Short: "Add a member to a group",
-		Run: func(cmd *cobra.Command, args []string) {
-			if groupID == "" {
-				logrus.Errorf("missing required flag: --group-id")
-				return
-			}
-			if accountID == "" {
-				logrus.Errorf("missing required flag: --account-id")
-				return
-			}
-
-			client, err := authbase.NewClient("4000")
-			if err != nil {
-				logrus.Errorf("failed to create client: %v", err)
-				return
-			}
-			defer client.Close()
-
-			_, err = client.AddGroupMember(tokenContext(), &v1.AddGroupMemberRequest{
-				GroupId:   groupID,
-				AccountId: accountID,
-			})
-			if err != nil {
-				logrus.Errorf("failed to add member to group: %v", err)
-				return
-			}
-
-			cmd.Printf("member added to group")
-		},
-	}
-
-	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
-	command.Flags().StringVarP(&accountID, "account-id", "a", "", "Account ID")
-
-	return command
-}
-
-func groupRemoveMemberCommand() *cobra.Command {
-	var groupID string
-	var accountID string
-
-	command := &cobra.Command{
-		Use:   "remove-member",
-		Short: "Remove a member from a group",
-		Run: func(cmd *cobra.Command, args []string) {
-			if groupID == "" {
-				logrus.Errorf("missing required flag: --group-id")
-				return
-			}
-			if accountID == "" {
-				logrus.Errorf("missing required flag: --account-id")
-				return
-			}
-
-			client, err := authbase.NewClient("4000")
-			if err != nil {
-				logrus.Errorf("failed to create client: %v", err)
-				return
-			}
-			defer client.Close()
-
-			_, err = client.RemoveGroupMember(tokenContext(), &v1.RemoveGroupMemberRequest{
-				GroupId:   groupID,
-				AccountId: accountID,
-			})
-			if err != nil {
-				logrus.Errorf("failed to add member to group: %v", err)
-				return
-			}
-
-			cmd.Printf("member removed from group")
-		},
-	}
-
-	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
-	command.Flags().StringVarP(&accountID, "account-id", "a", "", "Account ID")
-
-	return command
-}
-
 func groupDeleteCommand() *cobra.Command {
 	var groupID string
 
@@ -287,6 +211,133 @@ func groupDeleteCommand() *cobra.Command {
 			}
 
 			logrus.Infof("group deleted")
+		},
+	}
+
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
+
+	return command
+}
+
+func groupAddMemberCommand() *cobra.Command {
+	var groupID string
+	var accountID string
+
+	command := &cobra.Command{
+		Use:   "add",
+		Short: "Add a member to a group",
+		Run: func(cmd *cobra.Command, args []string) {
+			if groupID == "" {
+				logrus.Errorf("missing required flag: --group-id")
+				return
+			}
+			if accountID == "" {
+				logrus.Errorf("missing required flag: --account-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.AddGroupMember(tokenContext(), &v1.AddGroupMemberRequest{
+				GroupId:   groupID,
+				AccountId: accountID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to add member to group: %v", err)
+				return
+			}
+
+			fmt.Print("member added to group\n")
+		},
+	}
+
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
+	command.Flags().StringVarP(&accountID, "account-id", "a", "", "Account ID")
+
+	return command
+}
+
+func groupRemoveMemberCommand() *cobra.Command {
+	var groupID string
+	var accountID string
+
+	command := &cobra.Command{
+		Use:   "remove",
+		Short: "Remove a member from a group",
+		Run: func(cmd *cobra.Command, args []string) {
+			if groupID == "" {
+				logrus.Errorf("missing required flag: --group-id")
+				return
+			}
+			if accountID == "" {
+				logrus.Errorf("missing required flag: --account-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.RemoveGroupMember(tokenContext(), &v1.RemoveGroupMemberRequest{
+				GroupId:   groupID,
+				AccountId: accountID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to add member to group: %v", err)
+				return
+			}
+
+			fmt.Print("member removed from group\n")
+		},
+	}
+
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
+	command.Flags().StringVarP(&accountID, "account-id", "a", "", "Account ID")
+
+	return command
+}
+
+func groupListMemberCommand() *cobra.Command {
+	var groupID string
+
+	command := &cobra.Command{
+		Use:   "list",
+		Short: "List group members",
+		Run: func(cmd *cobra.Command, args []string) {
+			if groupID == "" {
+				logrus.Errorf("missing required flag: --group-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.ListGroupMembers(tokenContext(), &v1.ListGroupMembersRequest{
+				GroupId: groupID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to list group members: %v", err)
+				return
+			}
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Account ID", "Name", "Email", "Scopes"})
+			for _, member := range res.Members {
+				table.Append([]string{member.Id, member.VisibleName, member.Email, strings.Join(res.Scopes, ",")})
+			}
+			table.Render()
 		},
 	}
 

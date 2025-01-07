@@ -9,7 +9,7 @@ import (
 type Keypair struct {
 	gorm.Model
 	ClientID   string    `gorm:"uuid;primaryKey"`
-	PublicKey  string    // used for token verification
 	PrivateKey string    // used for token generation
+	PublicKey  string    // used for token verification
 	ExpiresAt  time.Time `gorm:"index"`
 }

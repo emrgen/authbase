@@ -19,8 +19,8 @@ type Group struct {
 
 // GroupMember represents a member of a group.
 type GroupMember struct {
-	GroupID   string `gorm:"uuid;not null"`
-	AccountID string `gorm:"uuid;not null"`
+	GroupID   string `gorm:"uuid;not null;primaryKey"`
+	AccountID string `gorm:"uuid;not null;primaryKey"`
 
 	Group   *Group   `gorm:"foreignKey:GroupID;OnDelete:CASCADE"`
 	Account *Account `gorm:"foreignKey:AccountID;OnDelete:CASCADE"`
