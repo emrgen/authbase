@@ -27,6 +27,7 @@ var groupRoleCommand = &cobra.Command{
 
 func init() {
 	groupCommand.AddCommand(groupCreateCommand())
+	groupCommand.AddCommand(groupGetCommand())
 	groupCommand.AddCommand(groupListCommand())
 	groupCommand.AddCommand(groupUpdateCommand())
 	groupCommand.AddCommand(groupDeleteCommand())
@@ -93,6 +94,49 @@ func groupCreateCommand() *cobra.Command {
 	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "Pool ID")
 	command.Flags().StringVarP(&name, "name", "n", "", "Group name")
 	command.Flags().StringSliceVarP(&scopes, "scopes", "s", []string{}, "Group scopes")
+
+	return command
+}
+
+func groupGetCommand() *cobra.Command {
+	var groupID string
+
+	command := &cobra.Command{
+		Use:   "get",
+		Short: "Get a group",
+		Run: func(cmd *cobra.Command, args []string) {
+			if groupID == "" {
+				logrus.Errorf("missing required flag: --group-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.GetGroup(tokenContext(), &v1.GetGroupRequest{
+				GroupId: groupID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to get group: %v", err)
+				return
+			}
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"ID", "Pool ID", "Name", "Scopes"})
+			roleNames := make([]string, 0)
+			for _, role := range res.Group.Roles {
+				roleNames = append(roleNames, role.Name)
+			}
+			table.Append([]string{res.Group.Id, res.Group.PoolId, res.Group.Name, strings.Join(roleNames, ",")})
+			table.Render()
+		},
+	}
+
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "Group ID")
 
 	return command
 }

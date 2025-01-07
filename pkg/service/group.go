@@ -8,6 +8,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 func NewGroupService(store store.Provider) *GroupService {
@@ -44,6 +45,7 @@ func (g *GroupService) AddRole(ctx context.Context, request *v1.AddRoleRequest) 
 		}
 
 		role, err := tx.GetRole(ctx, poolID, roleName)
+		logrus.Infof("role: %v", role)
 		roles := make(map[string]*model.Role)
 		roles[roleName] = role
 		for _, role := range group.Roles {
@@ -53,6 +55,8 @@ func (g *GroupService) AddRole(ctx context.Context, request *v1.AddRoleRequest) 
 		group.Roles = make([]*model.Role, 0)
 		for _, role := range roles {
 			group.Roles = append(group.Roles, role)
+
+			logrus.Infof("roles: %v", role)
 		}
 
 		err = tx.UpdateGroup(ctx, group)

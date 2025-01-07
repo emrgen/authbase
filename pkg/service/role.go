@@ -35,7 +35,6 @@ func (r *RoleService) CreateRole(ctx context.Context, request *v1.CreateRoleRequ
 	}
 
 	role := &model.Role{
-		ID:         uuid.New().String(),
 		Name:       request.GetName(),
 		PoolID:     request.GetPoolId(),
 		Attributes: string(attrJSON),

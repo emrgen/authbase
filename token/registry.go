@@ -3,6 +3,7 @@ package token
 import (
 	"container/heap"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -54,13 +55,16 @@ func (tq *TokenQueue) Pop() interface{} {
 	return item
 }
 
+// Registry is a token registry
 type Registry struct {
 	keys   map[string]string
 	tokens map[string]*v1.Tokens
 	queue  TokenQueue
 	done   chan struct{}
+	rotate Rotate
 }
 
+// NewRegistry creates a new token registry
 func NewRegistry() *Registry {
 	return &Registry{
 		keys:   make(map[string]string),
@@ -70,8 +74,10 @@ func NewRegistry() *Registry {
 	}
 }
 
-func (r *Registry) Add(id, key string) {
+func (r *Registry) Add(id, key string) error {
 	r.keys[id] = key
+
+	return nil
 }
 
 func (r *Registry) Remove(key string) {
@@ -105,6 +111,19 @@ func (r *Registry) Reset() {
 	r.done = make(chan struct{})
 }
 
+func (r *Registry) getTokens() {
+	for id, key := range r.keys {
+		token, err := r.rotate.GetToken(key)
+		if err != nil {
+			logrus.Errorf("failed to get token: %v", err.Error())
+			continue
+		}
+		r.tokens[id] = token
+		r.queue.Push(NewToken(id, token))
+	}
+}
+
+// Start starts the token rotation
 func (r *Registry) Start() {
 	go r.Run()
 }
@@ -130,7 +149,12 @@ func (r *Registry) Run() {
 				heap.Push(&r.queue, token)
 			} else {
 				delete(r.tokens, token.id)
-				// TODO: refresh token
+				newToken, err := r.rotate.RefreshToken(token.token.RefreshToken)
+				if err != nil {
+					logrus.Infof("failed to refresh token")
+					continue
+				}
+				r.tokens[token.id] = newToken
 			}
 		case <-r.done:
 			return
@@ -138,7 +162,8 @@ func (r *Registry) Run() {
 	}
 }
 
-// Refresh is an interface for token refresh
-type Refresh interface {
-	Refresh(token string) (*v1.Tokens, error)
+// Rotate is an interface for token refresh
+type Rotate interface {
+	GetToken(key string) (*v1.Tokens, error)
+	RefreshToken(token string) (*v1.Tokens, error)
 }

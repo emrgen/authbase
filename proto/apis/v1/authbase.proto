@@ -393,6 +393,7 @@ service PoolMemberService {
 // Role service
 
 message Role {
+  string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   string pool_id = 3 [(validate.rules).string.uuid = true];
   map<string, string> attributes = 5;
@@ -512,7 +513,6 @@ message CreateGroupResponse {
 }
 
 message GetGroupRequest {
-  string pool_id = 1 [(validate.rules).string.uuid = true];
   string group_id = 2 [(validate.rules).string.uuid = true];
 }
 

@@ -34,6 +34,10 @@ func (g *GormStore) CreateRole(ctx context.Context, role *model.Role) error {
 func (g *GormStore) GetRole(ctx context.Context, poolID uuid.UUID, name string) (*model.Role, error) {
 	var role model.Role
 	err := g.db.Where("name = ? AND pool_id = ?", name, poolID.String()).First(&role).Error
+	if role.Name == "" {
+		return nil, ErrRoleNotFound
+	}
+	
 	return &role, err
 }
 

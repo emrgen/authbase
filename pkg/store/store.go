@@ -12,6 +12,7 @@ var (
 	ErrProjectNotFound         = errors.New("project not found")
 	ErrPermissionNotFound      = errors.New("permission not found")
 	ErrPermissionAlreadyExists = errors.New("permission already exists")
+	ErrRoleNotFound            = errors.New("role not found")
 )
 
 // AuthBaseStore is the interface for interacting with the database.
