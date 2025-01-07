@@ -47,7 +47,10 @@ func (g *GroupService) CreateGroup(ctx context.Context, request *v1.CreateGroupR
 
 	return &v1.CreateGroupResponse{
 		Group: &v1.Group{
-			Id: group.ID,
+			Id:     group.ID,
+			Name:   name,
+			PoolId: poolID,
+			Scopes: scopes,
 		},
 	}, nil
 }

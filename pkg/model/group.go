@@ -11,10 +11,10 @@ const (
 type Group struct {
 	gorm.Model
 	ID     string `gorm:"uuid;not null"`
-	Name   string `gorm:"unique;not null"`
-	PoolID string `json:"unique;not null"`
+	Name   string `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
+	PoolID string `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
 	Pool   *Pool  `gorm:"foreignKey:PoolID;OnDelete:CASCADE"`
-	Scopes string `json:"scopes"`
+	Scopes string `gorm:"not null"`
 }
 
 // GroupMember represents a member of a group.

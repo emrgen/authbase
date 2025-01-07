@@ -20,6 +20,7 @@ type Client interface {
 	v1.PoolServiceClient
 	v1.PoolMemberServiceClient
 	v1.TokenServiceClient
+	v1.GroupServiceClient
 	io.Closer
 }
 
@@ -37,6 +38,7 @@ type client struct {
 	v1.PoolServiceClient
 	v1.PoolMemberServiceClient
 	v1.TokenServiceClient
+	v1.GroupServiceClient
 }
 
 func NewClient(port string) (Client, error) {
@@ -58,6 +60,7 @@ func NewClient(port string) (Client, error) {
 		ProjectMemberServiceClient: v1.NewProjectMemberServiceClient(conn),
 		PoolServiceClient:          v1.NewPoolServiceClient(conn),
 		PoolMemberServiceClient:    v1.NewPoolMemberServiceClient(conn),
+		GroupServiceClient:         v1.NewGroupServiceClient(conn),
 	}, nil
 }
 

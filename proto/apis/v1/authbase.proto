@@ -435,7 +435,6 @@ message ListGroupsResponse {
 }
 
 message UpdateGroupRequest {
-  string pool_id = 1 [(validate.rules).string.uuid = true];
   string group_id = 2 [(validate.rules).string.uuid = true];
   string name = 3;
   repeated string scopes = 4;
@@ -446,7 +445,6 @@ message UpdateGroupResponse {
 }
 
 message DeleteGroupRequest {
-  string pool_id = 1 [(validate.rules).string.uuid = true];
   string group_id = 2 [(validate.rules).string.uuid = true];
 }
 
@@ -487,50 +485,50 @@ service GroupService {
   // CreateGroup
   rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
     option (google.api.http) = {
-      post: "/v1/pool-groups/pools/{pool_id}"
+      post: "/v1/groups/pools/{pool_id}"
       body: "*"
     };
   }
 
   // GetGroup
   rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
-    option (google.api.http) = {get: "/v1/pool-groups/{pool_id}/{group_id}"};
+    option (google.api.http) = {get: "/v1/groups/{pool_id}/{group_id}"};
   }
 
   // ListGroups
   rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
-    option (google.api.http) = {get: "/v1/pool-groups"};
+    option (google.api.http) = {get: "/v1/groups"};
   }
 
   // UpdateGroup
   rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse) {
     option (google.api.http) = {
-      put: "/v1/pool-groups/{pool_id}/{group_id}"
+      put: "/v1/groups/{group_id}"
       body: "*"
     };
   }
 
   // DeleteGroup
   rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse) {
-    option (google.api.http) = {delete: "/v1/pool-groups/{pool_id}/{group_id}"};
+    option (google.api.http) = {delete: "/v1/groups/{group_id}"};
   }
 
   // AddGroupMember
   rpc AddGroupMember(AddGroupMemberRequest) returns (AddGroupMemberResponse) {
     option (google.api.http) = {
-      post: "/v1/pool-groups/{group_id}/members/{account_id}"
+      post: "/v1/groups/{group_id}/members/{account_id}"
       body: "*"
     };
   }
 
   // RemoveGroupMember
   rpc RemoveGroupMember(RemoveGroupMemberRequest) returns (RemoveGroupMemberResponse) {
-    option (google.api.http) = {delete: "/v1/pool-groups/{group_id}/members/{account_id}"};
+    option (google.api.http) = {delete: "/v1/groups/{group_id}/members/{account_id}"};
   }
 
   // ListGroupMembers
   rpc ListGroupMembers(ListGroupMembersRequest) returns (ListGroupMembersResponse) {
-    option (google.api.http) = {get: "/v1/pool-groups/{group_id}/members"};
+    option (google.api.http) = {get: "/v1/groups/{group_id}/members"};
   }
 }
 

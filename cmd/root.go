@@ -35,6 +35,7 @@ func init() {
 	rootCmd.AddCommand(keygenCommand)
 	rootCmd.AddCommand(poolCommand)
 	rootCmd.AddCommand(clientCommand)
+	rootCmd.AddCommand(groupCommand)
 
 	ctx := readContext()
 	if ctx.Token != "" {
