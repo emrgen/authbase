@@ -1,18 +1,18 @@
 package config
 
-type OrgConfig struct {
+type ProjectConfig struct {
 	DatabaseConn              string
 	AccessTokenExpireInterval int
 }
 
-type AdminOrgConfig struct {
+type AdminProjectConfig struct {
 	OrgName     string
 	VisibleName string
 	Email       string
 	Password    string
 }
 
-func (a AdminOrgConfig) Valid() bool {
+func (a AdminProjectConfig) Valid() bool {
 	if a.OrgName == "" || a.VisibleName == "" || a.Email == "" || a.Password == "" {
 		return false
 	}

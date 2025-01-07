@@ -14,7 +14,7 @@ type Group struct {
 	Name   string  `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
 	PoolID string  `gorm:"uuid;not null;uniqueIndex:idx_pool_id_group_name"`
 	Pool   *Pool   `gorm:"foreignKey:PoolID;OnDelete:CASCADE"`
-	Roles  []*Role `gorm:"many2many:group_roles;foreignKey:ID;joinForeignKey:GroupID;references:Name;joinReferences:Name;OnDelete:CASCADE"`
+	Roles  []*Role `gorm:"many2many:group_roles;constraint:OnDelete:CASCADE"`
 }
 
 // GroupMember represents a member of a group.

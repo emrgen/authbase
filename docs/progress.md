@@ -28,3 +28,8 @@
 - [x] list groups
 - [x] list users of a group
 - [x] list groups of a user
+- [x] create role
+- [ ] list roles
+- [ ] add role to group
+- [ ] remove role from group
+- [ ] add role to user

@@ -23,6 +23,90 @@ type GroupService struct {
 	v1.UnimplementedGroupServiceServer
 }
 
+func (g *GroupService) AddRole(ctx context.Context, request *v1.AddRoleRequest) (*v1.AddRoleResponse, error) {
+	roleName := request.GetRoleName()
+	groupID := uuid.MustParse(request.GetGroupId())
+	as, err := store.GetProjectStore(ctx, g.store)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add role to group.
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		group, err := tx.GetGroup(ctx, groupID)
+		if err != nil {
+			return err
+		}
+
+		poolID, err := uuid.Parse(group.PoolID)
+		if err != nil {
+			return err
+		}
+
+		role, err := tx.GetRole(ctx, poolID, roleName)
+		roles := make(map[string]*model.Role)
+		roles[roleName] = role
+		for _, role := range group.Roles {
+			roles[role.Name] = role
+		}
+
+		group.Roles = make([]*model.Role, 0)
+		for _, role := range roles {
+			group.Roles = append(group.Roles, role)
+		}
+
+		err = tx.UpdateGroup(ctx, group)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.AddRoleResponse{}, nil
+}
+
+func (g *GroupService) RemoveRole(ctx context.Context, request *v1.RemoveRoleRequest) (*v1.RemoveRoleResponse, error) {
+	roleName := request.GetRoleName()
+	groupID := uuid.MustParse(request.GetGroupId())
+	as, err := store.GetProjectStore(ctx, g.store)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove role from group.
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		group, err := tx.GetGroup(ctx, groupID)
+		if err != nil {
+			return err
+		}
+
+		roles := group.Roles
+
+		group.Roles = make([]*model.Role, 0)
+		for _, role := range roles {
+			if role.Name != roleName {
+				group.Roles = append(group.Roles, role)
+			}
+		}
+
+		err = tx.UpdateGroup(ctx, group)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.RemoveRoleResponse{}, nil
+}
+
 func (g *GroupService) CreateGroup(ctx context.Context, request *v1.CreateGroupRequest) (*v1.CreateGroupResponse, error) {
 	as, err := store.GetProjectStore(ctx, g.store)
 	if err != nil {

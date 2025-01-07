@@ -27,7 +27,7 @@ const (
 type Config struct {
 	Environment Environment
 	DB          *DBConfig
-	AdminOrg    *AdminOrgConfig
+	AdminOrg    *AdminProjectConfig
 	Mode        AppMode
 	AppKey      string
 }
@@ -56,7 +56,7 @@ func FromEnv() (*Config, error) {
 
 	appKey := os.Getenv("APP_KEY")
 
-	adminOrgConfig := &AdminOrgConfig{}
+	adminOrgConfig := &AdminProjectConfig{}
 	adminOrgConfig.OrgName = os.Getenv("ADMIN_ORGANIZATION_NAME")
 	adminOrgConfig.VisibleName = os.Getenv("SUPER_ADMIN_VISIBLE_NAME")
 	adminOrgConfig.Email = os.Getenv("SUPER_ADMIN_EMAIL")

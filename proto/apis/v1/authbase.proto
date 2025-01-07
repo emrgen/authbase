@@ -9,7 +9,6 @@ import "validate/validate.proto";
 
 option go_package = "github.com/emrgen/authbase/proto/v1";
 
-
 message Project {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
@@ -534,7 +533,10 @@ message ListGroupsResponse {
 
 message UpdateGroupRequest {
   string group_id = 2 [(validate.rules).string.uuid = true];
-  string name = 3;
+  string name = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
   repeated string role_names = 4;
 }
 
@@ -552,7 +554,10 @@ message DeleteGroupResponse {
 
 message AddRoleRequest {
   string group_id = 2 [(validate.rules).string.uuid = true];
-  string role_name = 3 [(validate.rules).string.uuid = true];
+  string role_name = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
 }
 
 message AddRoleResponse {
@@ -561,7 +566,10 @@ message AddRoleResponse {
 
 message RemoveRoleRequest {
   string group_id = 2 [(validate.rules).string.uuid = true];
-  string role_name = 3 [(validate.rules).string.uuid = true];
+  string role_name = 3 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
 }
 
 message RemoveRoleResponse {
@@ -1071,7 +1079,6 @@ message AccountEmailExistsResponse {
   bool username_exists = 2;
 }
 
-
 message ForgotPasswordRequest {
   string email = 1 [(validate.rules).string.email = true];
   string pool_id = 2 [(validate.rules).string.uuid = true];
@@ -1128,9 +1135,7 @@ service AuthService {
       post: "/v1/auth/signin/password"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      operation_id: "LoginUsingPassword"
-    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {operation_id: "LoginUsingPassword"};
   }
 
   // LoginUsingIdp
@@ -1196,7 +1201,6 @@ service AuthService {
       body: "*"
     };
   }
-
 
   // ForgotPassword
   rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {
@@ -1581,7 +1585,6 @@ message VerifyTokenResponse {
   google.protobuf.Timestamp expires_at = 11;
 }
 
-
 service TokenService {
   rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse) {
     option (google.api.http) = {
@@ -1592,11 +1595,11 @@ service TokenService {
 }
 
 enum Permission {
-  UNKNOWN = 0;  // default
-  NONE = 1;     // no permission
-  VIEWER = 2;   // viewer permission
-  ADMIN = 4;    // admin permission
-  OWNER = 8;    // owner permission, can do anything, including delete the project, can not be removed while the project exists
+  UNKNOWN = 0; // default
+  NONE = 1; // no permission
+  VIEWER = 2; // viewer permission
+  ADMIN = 4; // admin permission
+  OWNER = 8; // owner permission, can do anything, including delete the project, can not be removed while the project exists
 }
 
 message Page {
