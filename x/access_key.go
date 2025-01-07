@@ -52,7 +52,7 @@ func (a AccessKey) String() string {
 }
 
 func uuidStripped(id uuid.UUID) string {
-	return strings.ReplaceAll(id.String(), "_", "")
+	return strings.ReplaceAll(id.String(), "-", "")
 }
 
 func uuidFromStripped(uuidStr string) (uuid.UUID, error) {

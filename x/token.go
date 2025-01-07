@@ -30,7 +30,7 @@ func NewToken(kind, value string) *Token {
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%s-%s", t.Kind, t.Value)
+	return fmt.Sprintf("%s_%s", t.Kind, t.Value)
 }
 
 func (t *Token) IsAccessToken() bool {
