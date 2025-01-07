@@ -211,6 +211,8 @@ type PoolMemberStore interface {
 type GroupStore interface {
 	// CreateGroup creates a new group in the database.
 	CreateGroup(ctx context.Context, group *model.Group) error
+	// GetGroupByAccountID retrieves a group by its account ID.
+	GetGroupByAccountID(ctx context.Context, poolID, accountID uuid.UUID) (*model.Group, error)
 	// GetGroup retrieves a group by its ID.
 	GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error)
 	// ListGroups retrieves a list of groups.

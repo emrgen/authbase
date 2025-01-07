@@ -2,6 +2,11 @@ package model
 
 import "gorm.io/gorm"
 
+const (
+	// GroupScopePrefix is the prefix for scopes that are given to account from a group.
+	groupScopePrefix = "x:"
+)
+
 // Group represents a group of accounts with a common purpose (scopes).
 type Group struct {
 	gorm.Model

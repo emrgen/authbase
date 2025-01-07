@@ -25,6 +25,12 @@ func (g *GormStore) CreateGroup(ctx context.Context, group *model.Group) error {
 	return g.db.Create(group).Error
 }
 
+func (g *GormStore) GetGroupByAccountID(ctx context.Context, poolID, accountID uuid.UUID) (*model.Group, error) {
+	var group model.Group
+	err := g.db.Where("pool_id = ? AND account_id = ?", poolID, accountID).First(&group).Error
+	return &group, err
+}
+
 func (g *GormStore) GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error) {
 	var group model.Group
 	err := g.db.Where("id = ?", id).First(&group).Error

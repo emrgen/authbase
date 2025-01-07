@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 	"time"
 )
 
@@ -198,6 +199,16 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	//		return nil, err
 	//	}
 	//}
+
+	accountID := uuid.MustParse(account.ID)
+	group, err := as.GetGroupByAccountID(ctx, poolID, accountID)
+	if err != nil {
+		return nil, err
+	}
+	if group != nil {
+		groupScopes := strings.Split(group.Scopes, ",")
+		scopes = append(scopes, groupScopes...)
+	}
 
 	// generate tokens
 	jti := uuid.New().String()
