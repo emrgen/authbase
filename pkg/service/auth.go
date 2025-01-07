@@ -36,22 +36,6 @@ type AuthService struct {
 }
 
 func (a *AuthService) AccountEmailExists(ctx context.Context, request *v1.AccountEmailExistsRequest) (*v1.AccountEmailExistsResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-// LoginUsingIdp redirects the user to the identity provider for login
-func (a *AuthService) LoginUsingIdp(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthService) GetIdpToken(ctx context.Context, request *v1.GetIdpTokenRequest) (*v1.GetIdpTokenResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.AccountEmailExistsRequest) (*v1.AccountEmailExistsResponse, error) {
 	orgID, err := uuid.Parse(request.GetProjectId())
 	if err != nil {
 		return nil, err
@@ -78,9 +62,21 @@ func (a *AuthService) UserEmailExists(ctx context.Context, request *v1.AccountEm
 		EmailExists:    emailExists,
 		UsernameExists: usernameExists,
 	}, nil
-
 }
 
+// LoginUsingIdp redirects the user to the identity provider for login
+func (a *AuthService) LoginUsingIdp(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// GetIdpToken gets the token from the identity provider
+func (a *AuthService) GetIdpToken(ctx context.Context, request *v1.GetIdpTokenRequest) (*v1.GetIdpTokenResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// RegisterUsingPassword registers a user using a username, email, and password
 func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.RegisterUsingPasswordRequest) (*v1.RegisterUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	username := request.GetUsername()
@@ -348,6 +344,11 @@ func (a *AuthService) ForgotPassword(ctx context.Context, request *v1.ForgotPass
 	code := x.GenerateVerificationCode()
 	expireAt := time.Now().Add(24 * time.Hour)
 
+	err = a.cache.Set(code, account.ID, 24*time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	err = as.CreateVerificationCode(ctx, &model.VerificationCode{
 		ID:        uuid.New().String(),
 		Code:      code,
@@ -372,6 +373,59 @@ func (a *AuthService) ForgotPassword(ctx context.Context, request *v1.ForgotPass
 	return &v1.ForgotPasswordResponse{Message: "password reset link sent"}, nil
 }
 
+// ResetPassword resets the password of a user using a verification code
+func (a *AuthService) ResetPassword(ctx context.Context, request *v1.ResetPasswordRequest) (*v1.ResetPasswordResponse, error) {
+	code := request.GetCode()
+	password := request.GetNewPassword()
+
+	as, err := store.GetProjectStore(ctx, a.store)
+	if err != nil {
+		return nil, err
+	}
+
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		code, err := tx.GetVerificationCode(ctx, code)
+		if err != nil {
+			return err
+		}
+
+		if code.ExpiresAt.Before(time.Now()) {
+			return errors.New("verification code has expired")
+		}
+
+		account, err := tx.GetAccountByID(ctx, uuid.MustParse(code.AccountID))
+		if err != nil {
+			return err
+		}
+
+		salt := x.Keygen()
+		hashedPassword, _ := x.HashPassword(password, salt)
+		account.Password = string(hashedPassword)
+		account.Salt = salt
+
+		// update the account with the new password
+		err = tx.UpdateAccount(ctx, account)
+		if err != nil {
+			return err
+		}
+
+		// delete the verification code
+		err = tx.DeleteVerificationCode(ctx, code.ID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: should redirect to the login page
+	return &v1.ResetPasswordResponse{Message: "password reset"}, nil
+}
+
+// ChangePassword changes the password of a user
 func (a *AuthService) ChangePassword(ctx context.Context, request *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
 	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {

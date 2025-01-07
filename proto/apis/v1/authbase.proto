@@ -953,6 +953,18 @@ message ForgotPasswordResponse {
   string message = 1;
 }
 
+message ResetPasswordRequest {
+  string code = 1;
+  string new_password = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message ResetPasswordResponse {
+  string message = 1;
+}
+
 message ChangePasswordRequest {
   string account_id = 1 [(validate.rules).string.uuid = true];
   string new_password = 2 [
@@ -1042,12 +1054,21 @@ service AuthService {
   }
 
   // ResetPassword
-  rpc ResetPassword(ChangePasswordRequest) returns (ChangePasswordResponse) {
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/reset-password"
+      body: "*"
+    };
+  }
+
+  // ChangePassword
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {
     option (google.api.http) = {
       post: "/v1/auth/change-password"
       body: "*"
     };
   }
+
 
   // ForgotPassword
   rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {
