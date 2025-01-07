@@ -943,6 +943,28 @@ message AccountEmailExistsResponse {
   bool username_exists = 2;
 }
 
+
+message ForgotPasswordRequest {
+  string email = 1 [(validate.rules).string.email = true];
+  string pool_id = 2 [(validate.rules).string.uuid = true];
+}
+
+message ForgotPasswordResponse {
+  string message = 1;
+}
+
+message ChangePasswordRequest {
+  string account_id = 1 [(validate.rules).string.uuid = true];
+  string new_password = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message ChangePasswordResponse {
+  string message = 1;
+}
+
 service AuthService {
   // AccountEmailExists
   rpc AccountEmailExists(AccountEmailExistsRequest) returns (AccountEmailExistsResponse) {
@@ -1015,6 +1037,22 @@ service AuthService {
   rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse) {
     option (google.api.http) = {
       post: "/v1/auth/verify-email"
+      body: "*"
+    };
+  }
+
+  // ResetPassword
+  rpc ResetPassword(ChangePasswordRequest) returns (ChangePasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/change-password"
+      body: "*"
+    };
+  }
+
+  // ForgotPassword
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/forgot-password"
       body: "*"
     };
   }

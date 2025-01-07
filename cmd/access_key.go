@@ -135,7 +135,7 @@ func listTokenCommand() *cobra.Command {
 			}
 
 			for _, token := range res.Tokens {
-				fmt.Printf("UserID: %v\n", userId)
+				fmt.Printf("AccountID: %v\n", userId)
 				fmt.Printf("ID: %v\n", token.Id)
 				fmt.Printf("Token: %v\n", token.AccessKey)
 				fmt.Printf("------\n")

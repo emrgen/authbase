@@ -9,7 +9,8 @@ import (
 type VerificationCode struct {
 	gorm.Model
 	ID          string `gorm:"primaryKey;type:uuid"`
-	UserID      string `gorm:"type:uuid"`
+	AccountID   string `gorm:"type:uuid"`
+	PoolID      string `gorm:"type:uuid"`
 	ProjectID   string `gorm:"type:uuid"`
 	Code        string
 	ExpiresAt   time.Time

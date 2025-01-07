@@ -133,7 +133,7 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 		err = as.CreateVerificationCode(ctx, &model.VerificationCode{
 			ID:        uuid.New().String(),
 			Code:      code,
-			UserID:    user.ID,
+			AccountID: user.ID,
 			ExpiresAt: expireAt,
 		})
 		if err != nil {
@@ -321,6 +321,93 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 	return &v1.LogoutResponse{Message: "logged out"}, nil
 }
 
+// ForgotPassword sends a password reset link to the user's email or phone number to reset their password
+func (a *AuthService) ForgotPassword(ctx context.Context, request *v1.ForgotPasswordRequest) (*v1.ForgotPasswordResponse, error) {
+	projectID, err := x.GetAuthbaseProjectID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := store.GetProjectStore(ctx, a.store)
+	if err != nil {
+		return nil, err
+	}
+
+	mailer := a.mailer.Provide(projectID)
+	email := request.GetEmail()
+
+	account, err := as.GetAccountByEmail(ctx, projectID, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if account == nil {
+		return nil, errors.New("account not found")
+	}
+
+	code := x.GenerateVerificationCode()
+	expireAt := time.Now().Add(24 * time.Hour)
+
+	err = as.CreateVerificationCode(ctx, &model.VerificationCode{
+		ID:        uuid.New().String(),
+		Code:      code,
+		AccountID: account.ID,
+		ProjectID: account.ProjectID,
+		PoolID:    account.PoolID,
+		ExpiresAt: expireAt,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// send email verification code to the user
+	go func() {
+		logrus.Infof("sending email to %s", email)
+		err = mailer.SendMail(email, email, "Reset your password", "reset-password")
+		if err != nil {
+			logrus.Errorf("failed to send email: %v", err)
+		}
+	}()
+
+	return &v1.ForgotPasswordResponse{Message: "password reset link sent"}, nil
+}
+
+func (a *AuthService) ChangePassword(ctx context.Context, request *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
+	accountID, err := x.GetAuthbaseAccountID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	as, err := store.GetProjectStore(ctx, a.store)
+	if err != nil {
+		return nil, err
+	}
+
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		account, err := tx.GetAccountByID(ctx, accountID)
+		if err != nil {
+			return err
+		}
+
+		salt := x.Keygen()
+		hashedPassword, _ := x.HashPassword(request.GetNewPassword(), salt)
+		account.Password = string(hashedPassword)
+		account.Salt = salt
+
+		err = tx.UpdateAccount(ctx, account)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.ChangePasswordResponse{Message: "password changed"}, nil
+}
+
 // Refresh generates a new access token using the refresh token
 func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (*v1.RefreshResponse, error) {
 	var foundToken bool
@@ -422,7 +509,7 @@ func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRe
 			return errors.New("verification code has expired")
 		}
 
-		user, err := tx.GetAccountByID(ctx, uuid.MustParse(code.UserID))
+		user, err := tx.GetAccountByID(ctx, uuid.MustParse(code.AccountID))
 		if err != nil {
 			return err
 		}
