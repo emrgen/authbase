@@ -425,8 +425,9 @@ message GetGroupResponse {
 }
 
 message ListGroupsRequest {
-  string pool_id = 1 [(validate.rules).string.uuid = true];
-  Page page = 2;
+  optional string pool_id = 1 [(validate.rules).string.uuid = true];
+  optional string account_id = 2 [(validate.rules).string.uuid = true];
+  Page page = 3;
 }
 
 message ListGroupsResponse {
@@ -469,6 +470,7 @@ message RemoveGroupMemberRequest {
 message RemoveGroupMemberResponse {
   string message = 1;
 }
+
 
 message ListGroupMembersRequest {
   string group_id = 2 [(validate.rules).string.uuid = true];

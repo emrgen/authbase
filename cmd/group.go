@@ -76,13 +76,14 @@ func groupCreateCommand() *cobra.Command {
 
 func groupListCommand() *cobra.Command {
 	var poolID string
+	var accountID string
 
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "List groups",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" {
-				logrus.Errorf("missing required flag: --pool-id")
+			if poolID == "" && accountID == "" {
+				logrus.Errorf("pool-id or account-id is required")
 				return
 			}
 
@@ -93,9 +94,15 @@ func groupListCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.ListGroups(tokenContext(), &v1.ListGroupsRequest{
-				PoolId: poolID,
-			})
+			req := &v1.ListGroupsRequest{}
+			if poolID != "" {
+				req.PoolId = &poolID
+			}
+			if accountID != "" {
+				req.AccountId = &accountID
+			}
+
+			res, err := client.ListGroups(tokenContext(), req)
 			if err != nil {
 				logrus.Errorf("failed to list groups: %v", err)
 				return
@@ -111,6 +118,7 @@ func groupListCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "Pool ID")
+	command.Flags().StringVarP(&accountID, "account-id", "a", "", "Account ID")
 
 	return command
 }

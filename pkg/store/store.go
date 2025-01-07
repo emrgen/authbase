@@ -211,8 +211,6 @@ type PoolMemberStore interface {
 type GroupStore interface {
 	// CreateGroup creates a new group in the database.
 	CreateGroup(ctx context.Context, group *model.Group) error
-	// GetGroupByAccountID retrieves a group by its account ID.
-	GetGroupByAccountID(ctx context.Context, poolID, accountID uuid.UUID) (*model.Group, error)
 	// GetGroup retrieves a group by its ID.
 	GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error)
 	// ListGroups retrieves a list of groups.
@@ -223,6 +221,8 @@ type GroupStore interface {
 	DeleteGroup(ctx context.Context, id uuid.UUID) error
 	// AddGroupMember creates a new group member in the database.
 	AddGroupMember(ctx context.Context, member *model.GroupMember) error
+	// ListGroupMemberByAccount retrieves a group by its account ID.
+	ListGroupMemberByAccount(ctx context.Context, poolID, accountID uuid.UUID) ([]*model.GroupMember, error)
 	// RemoveGroupMember deletes a group member from the database.
 	RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error
 	// ListGroupMembers retrieves a list of group members.

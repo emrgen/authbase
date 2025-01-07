@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	github.com/black-06/grpc-gateway-file v0.1.2
+	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gobuffalo/packr v1.30.1

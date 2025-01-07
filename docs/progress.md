@@ -14,11 +14,17 @@
 - [x] disable user account - disabled user can not access their account
 - [x] enable user account
 - [ ] delete user account - deleted user can not access their account
-- [ ] delete organization - all users and data will be deleted
-- [ ] list organizations
-- [ ] list users of master org
+- [ ] delete projects - all users and data will be deleted
+- [x] list projects
+- [x] list users of master org
 - [x] list tokens for a user
 - [ ] list tokens for an organization
 - [ ] login via google oauth
 - [ ] login via github oauth
 - [x] unified token verification
+- [x] create group
+- [ ] add user to group
+- [ ] remove user from group
+- [x] list groups
+- [x] list users of a group
+- [x] list groups of a user

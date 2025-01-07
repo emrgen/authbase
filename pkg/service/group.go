@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
@@ -77,18 +78,47 @@ func (g *GroupService) GetGroup(ctx context.Context, request *v1.GetGroupRequest
 	}, nil
 }
 
+// ListGroups lists groups in a pool or groups that an account is a member of.
+// when both pool_id and account_id are provided, list groups will be filtered by pool_id.
 func (g *GroupService) ListGroups(ctx context.Context, request *v1.ListGroupsRequest) (*v1.ListGroupsResponse, error) {
+	var err error
+	if request.GetPoolId() == "" && request.GetAccountId() == "" {
+		return nil, errors.New("pool_id or account_id is required")
+	}
+
 	as, err := store.GetProjectStore(ctx, g.store)
 	if err != nil {
 		return nil, err
 	}
 
-	poolID := uuid.MustParse(request.GetPoolId())
 	page := x.GetPageFromRequest(request)
+	var groups []*model.Group
+	var total int
 
-	groups, total, err := as.ListGroups(ctx, poolID, int(page.Page), int(page.Size))
-	if err != nil {
-		return nil, err
+	// If account_id is provided, list groups that the account is a member of.
+	if request.GetAccountId() != "" {
+		accountID := uuid.MustParse(request.GetAccountId())
+		account, err := as.GetAccountByID(ctx, accountID)
+		if err != nil {
+			return nil, err
+		}
+		poolID := uuid.MustParse(account.PoolID)
+		memberships, err := as.ListGroupMemberByAccount(ctx, poolID, accountID)
+		if err != nil {
+			return nil, err
+		}
+		for _, membership := range memberships {
+			groups = append(groups, membership.Group)
+		}
+	}
+
+	// If pool_id is provided, list groups in the pool.
+	if request.GetPoolId() != "" {
+		poolID := uuid.MustParse(request.GetPoolId())
+		groups, total, err = as.ListGroups(ctx, poolID, int(page.Page), int(page.Size))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var responseGroups []*v1.Group

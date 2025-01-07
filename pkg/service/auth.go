@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	goset "github.com/deckarep/golang-set/v2"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
@@ -200,14 +201,17 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	//	}
 	//}
 
+	// get the account scopes from the memberships
 	accountID := uuid.MustParse(account.ID)
-	group, err := as.GetGroupByAccountID(ctx, poolID, accountID)
+	memberships, err := as.ListGroupMemberByAccount(ctx, poolID, accountID)
 	if err != nil {
 		return nil, err
 	}
-	if group != nil {
-		groupScopes := strings.Split(group.Scopes, ",")
-		scopes = append(scopes, groupScopes...)
+	set := goset.NewSet[string]()
+	for _, member := range memberships {
+		for _, s := range strings.Split(member.Group.Scopes, ",") {
+			set.Add(s)
+		}
 	}
 
 	// generate tokens

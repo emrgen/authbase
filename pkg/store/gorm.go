@@ -25,12 +25,6 @@ func (g *GormStore) CreateGroup(ctx context.Context, group *model.Group) error {
 	return g.db.Create(group).Error
 }
 
-func (g *GormStore) GetGroupByAccountID(ctx context.Context, poolID, accountID uuid.UUID) (*model.Group, error) {
-	var group model.Group
-	err := g.db.Where("pool_id = ? AND account_id = ?", poolID, accountID).First(&group).Error
-	return &group, err
-}
-
 func (g *GormStore) GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error) {
 	var group model.Group
 	err := g.db.Where("id = ?", id).First(&group).Error
@@ -62,6 +56,12 @@ func (g *GormStore) DeleteGroup(ctx context.Context, id uuid.UUID) error {
 
 func (g *GormStore) AddGroupMember(ctx context.Context, member *model.GroupMember) error {
 	return g.db.Create(member).Error
+}
+
+func (g *GormStore) ListGroupMemberByAccount(ctx context.Context, poolID, accountID uuid.UUID) ([]*model.GroupMember, error) {
+	var groups []*model.GroupMember
+	err := g.db.Where("pool_id = ? AND account_id = ?", poolID.String(), accountID.String()).Preload("Group").Find(&groups).Error
+	return groups, err
 }
 
 func (g *GormStore) RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error {
