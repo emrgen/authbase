@@ -426,7 +426,8 @@ message GetRoleResponse {
 message ListRolesRequest {
   optional string pool_id = 1 [(validate.rules).string.uuid = true];
   optional string account_id = 2 [(validate.rules).string.uuid = true];
-  Page page = 3;
+  optional string group_id = 3 [(validate.rules).string.uuid = true];
+  Page page = 4;
 }
 
 message ListRolesResponse {

@@ -3,8 +3,10 @@ package cmd
 import (
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var roleCommand = &cobra.Command{
@@ -44,7 +46,8 @@ func roleCreateCommand() *cobra.Command {
 			}
 
 			res, err := client.CreateRole(tokenContext(), &v1.CreateRoleRequest{
-				Name: name,
+				Name:   name,
+				PoolId: poolID,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create role: %v", err)
@@ -63,6 +66,10 @@ func roleCreateCommand() *cobra.Command {
 }
 
 func roleListCommand() *cobra.Command {
+	var poolID string
+	var groupID string
+	var accountID string
+
 	command := &cobra.Command{
 		Use:   "list",
 		Short: "List roles",
@@ -73,19 +80,38 @@ func roleListCommand() *cobra.Command {
 				return
 			}
 
-			res, err := client.ListRoles(tokenContext(), &v1.ListRolesRequest{})
+			req := &v1.ListRolesRequest{}
+			if poolID != "" {
+				req.PoolId = &poolID
+			}
+
+			if groupID != "" {
+				req.GroupId = &groupID
+			}
+
+			if accountID != "" {
+				req.AccountId = &accountID
+			}
+
+			res, err := client.ListRoles(tokenContext(), req)
 			if err != nil {
 				logrus.Errorf("failed to list roles: %v", err)
 				return
 			}
 
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"Pool ID", "Name"})
 			for _, role := range res.GetRoles() {
-				logrus.Infof("role: %v", role.GetName())
+				table.Append([]string{role.GetPoolId(), role.GetName()})
 			}
+			table.Render()
 		},
 	}
 
 	bindContextFlags(command)
+	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "pool id")
+	command.Flags().StringVarP(&groupID, "group-id", "g", "", "group id")
+	command.Flags().StringVarP(&accountID, "user-id", "u", "", "user id")
 
 	return command
 }
@@ -109,7 +135,7 @@ func roleUpdateCommand() *cobra.Command {
 			}
 
 			res, err := client.UpdateRole(tokenContext(), &v1.UpdateRoleRequest{
-				Name: name,
+				RoleName: name,
 			})
 			if err != nil {
 				logrus.Errorf("failed to update role: %v", err)

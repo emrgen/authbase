@@ -105,7 +105,7 @@ func (g *GormStore) AddGroupMember(ctx context.Context, member *model.GroupMembe
 
 func (g *GormStore) ListGroupMemberByAccount(ctx context.Context, poolID, accountID uuid.UUID) ([]*model.GroupMember, error) {
 	var groups []*model.GroupMember
-	err := g.db.Where("pool_id = ? AND account_id = ?", poolID.String(), accountID.String()).Preload("Group").Find(&groups).Error
+	err := g.db.Where("pool_id = ? AND account_id = ?", poolID.String(), accountID.String()).Preload("Group.Roles").Find(&groups).Error
 	return groups, err
 }
 
