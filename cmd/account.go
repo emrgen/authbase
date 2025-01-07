@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	goset "github.com/deckarep/golang-set/v2"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/olekukonko/tablewriter"
@@ -18,8 +19,14 @@ var userCommand = &cobra.Command{
 	Short: "account commands",
 }
 
+var permCommand = &cobra.Command{
+	Use:   "perm",
+	Short: "permission commands",
+}
+
 func init() {
 	userCommand.AddCommand(createUserCommand())
+	userCommand.AddCommand(getUserCommand())
 	userCommand.AddCommand(checkEmailUsedCommand())
 	userCommand.AddCommand(registerUserCommand())
 	userCommand.AddCommand(loginUserCommand())
@@ -32,6 +39,8 @@ func init() {
 	userCommand.AddCommand(disableUserCommand())
 	userCommand.AddCommand(listUserSessionsCommand())
 	userCommand.AddCommand(listActiveSessionsCommand())
+
+	userCommand.AddCommand(getUserPermissionsCommand())
 }
 
 func createUserCommand() *cobra.Command {
@@ -106,6 +115,62 @@ func createUserCommand() *cobra.Command {
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
+
+	return command
+}
+
+func getUserCommand() *cobra.Command {
+	var accountID string
+
+	command := &cobra.Command{
+		Use:   "get",
+		Short: "get account",
+		Run: func(cmd *cobra.Command, args []string) {
+			loadToken()
+
+			if Token == "" {
+				logrus.Errorf("missing required flags: --token")
+				return
+			}
+
+			if accountID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			res, err := client.GetAccount(tokenContext(), &v1.GetAccountRequest{
+				Id: accountID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to get user: %v", err)
+				return
+			}
+
+			// print response in table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "ID", "Email", "Username", "Verified", "Active", "Member"})
+			table.Append([]string{
+				"1",
+				res.Account.Id,
+				res.Account.Email,
+				res.Account.Username,
+				strconv.FormatBool(res.Account.VerifiedAt.AsTime().Format("2006-01-02 15:04:05") != "1970-01-01 00:00:00"),
+				strconv.FormatBool(!res.Account.Disabled),
+				strconv.FormatBool(res.Account.Member),
+			})
+			table.Render()
+		},
+	}
+
+	bindContextFlags(command)
+	command.Flags().StringVarP(&accountID, "account-id", "a", "", "account id")
 
 	return command
 }
@@ -680,6 +745,58 @@ func disableUserCommand() *cobra.Command {
 
 	bindContextFlags(command)
 	command.Flags().StringVarP(&userID, "user-id", "u", "", "user id")
+
+	return command
+}
+
+func getUserPermissionsCommand() *cobra.Command {
+	var accountID string
+
+	command := &cobra.Command{
+		Use:   "perm",
+		Short: "get user permissions",
+		Run: func(cmd *cobra.Command, args []string) {
+			if accountID == "" {
+				logrus.Errorf("missing required flag: --user-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+
+			res, err := client.ListGroups(tokenContext(), &v1.ListGroupsRequest{
+				AccountId: &accountID,
+			})
+			if err != nil {
+				logrus.Errorf("failed to get user permissions: %v", err)
+				return
+			}
+
+			roles := goset.NewSet[string]()
+			for _, group := range res.Groups {
+				for _, role := range group.Roles {
+					roles.Add(role.Name)
+				}
+			}
+
+			// print response in table
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"#", "Roles"})
+			for i, role := range roles.ToSlice() {
+				table.Append([]string{
+					strconv.Itoa(i + 1),
+					role,
+				})
+			}
+			table.Render()
+		},
+	}
+
+	bindContextFlags(command)
+	command.Flags().StringVarP(&accountID, "account-id", "a", "", "account id")
 
 	return command
 }

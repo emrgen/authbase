@@ -122,8 +122,13 @@ func (u *AccountService) GetAccount(ctx context.Context, request *v1.GetAccountR
 
 	return &v1.GetAccountResponse{
 		Account: &v1.Account{
-			Id:       user.ID,
-			Username: user.Username,
+			Id:        user.ID,
+			Email:     user.Email,
+			Username:  user.Username,
+			Disabled:  user.Disabled,
+			CreatedAt: timestamppb.New(user.CreatedAt),
+			UpdatedAt: timestamppb.New(user.UpdatedAt),
+			Member:    user.ProjectMember,
 		},
 	}, nil
 }

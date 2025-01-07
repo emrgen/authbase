@@ -37,7 +37,7 @@ func (g *GormStore) GetRole(ctx context.Context, poolID uuid.UUID, name string) 
 	if role.Name == "" {
 		return nil, ErrRoleNotFound
 	}
-	
+
 	return &role, err
 }
 
@@ -107,9 +107,9 @@ func (g *GormStore) AddGroupMember(ctx context.Context, member *model.GroupMembe
 	return g.db.Create(member).Error
 }
 
-func (g *GormStore) ListGroupMemberByAccount(ctx context.Context, poolID, accountID uuid.UUID) ([]*model.GroupMember, error) {
+func (g *GormStore) ListGroupMemberByAccount(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMember, error) {
 	var groups []*model.GroupMember
-	err := g.db.Where("pool_id = ? AND account_id = ?", poolID.String(), accountID.String()).Preload("Group.Roles").Find(&groups).Error
+	err := g.db.Where("account_id = ?", accountID.String()).Preload("Group.Roles").Find(&groups).Error
 	return groups, err
 }
 

@@ -92,13 +92,8 @@ func (r *RoleService) ListRoles(ctx context.Context, request *v1.ListRolesReques
 		if err != nil {
 			return nil, err
 		}
-		account, err := as.GetAccountByID(ctx, accountID)
-		if err != nil {
-			return nil, err
-		}
 
-		poolID, err := uuid.Parse(account.PoolID)
-		groups, err := as.ListGroupMemberByAccount(ctx, poolID, accountID)
+		groups, err := as.ListGroupMemberByAccount(ctx, accountID)
 		if err != nil {
 			return nil, err
 		}

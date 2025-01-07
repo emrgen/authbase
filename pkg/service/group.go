@@ -8,7 +8,6 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 func NewGroupService(store store.Provider) *GroupService {
@@ -210,12 +209,7 @@ func (g *GroupService) ListGroups(ctx context.Context, request *v1.ListGroupsReq
 	// If account_id is provided, list groups that the account is a member of.
 	if request.GetAccountId() != "" {
 		accountID := uuid.MustParse(request.GetAccountId())
-		account, err := as.GetAccountByID(ctx, accountID)
-		if err != nil {
-			return nil, err
-		}
-		poolID := uuid.MustParse(account.PoolID)
-		memberships, err := as.ListGroupMemberByAccount(ctx, poolID, accountID)
+		memberships, err := as.ListGroupMemberByAccount(ctx, accountID)
 		if err != nil {
 			return nil, err
 		}

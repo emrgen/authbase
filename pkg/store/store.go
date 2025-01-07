@@ -224,7 +224,7 @@ type GroupStore interface {
 	// AddGroupMember creates a new group member in the database.
 	AddGroupMember(ctx context.Context, member *model.GroupMember) error
 	// ListGroupMemberByAccount retrieves a group by its account ID.
-	ListGroupMemberByAccount(ctx context.Context, poolID, accountID uuid.UUID) ([]*model.GroupMember, error)
+	ListGroupMemberByAccount(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMember, error)
 	// RemoveGroupMember deletes a group member from the database.
 	RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error
 	// ListGroupMembers retrieves a list of group members.

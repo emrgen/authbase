@@ -196,7 +196,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	// get the account scopes from the memberships
 	accountID := uuid.MustParse(account.ID)
-	memberships, err := as.ListGroupMemberByAccount(ctx, poolID, accountID)
+	memberships, err := as.ListGroupMemberByAccount(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}
