@@ -38,8 +38,18 @@ func (g *GormStore) GetRole(ctx context.Context, poolID uuid.UUID, name string) 
 }
 
 func (g *GormStore) ListRoles(ctx context.Context, poolID uuid.UUID, page, perPage int) ([]*model.Role, int, error) {
-	//TODO implement me
-	panic("implement me")
+	var roles []*model.Role
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Role{}).Where("pool_id = ?", poolID.String()).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Find(&roles, "pool_id = ?", poolID.String()).Error
+	})
+
+	return roles, int(total), err
+
 }
 
 func (g *GormStore) UpdateRole(ctx context.Context, role *model.Role) error {
@@ -57,7 +67,7 @@ func (g *GormStore) CreateGroup(ctx context.Context, group *model.Group) error {
 
 func (g *GormStore) GetGroup(ctx context.Context, id uuid.UUID) (*model.Group, error) {
 	var group model.Group
-	err := g.db.Where("id = ?", id).First(&group).Error
+	err := g.db.Where("id = ?", id).Preload("Roles").First(&group).Error
 	return &group, err
 }
 
@@ -66,17 +76,22 @@ func (g *GormStore) ListGroups(ctx context.Context, poolID uuid.UUID, page, perP
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Group{}).Where("pool_id = ?", poolID.String()).Count(&total).Error; err != nil {
+		if err := tx.Model(&model.Group{}).Preload("Roles").Where("pool_id = ?", poolID.String()).Count(&total).Error; err != nil {
 			return err
 		}
-		return tx.Limit(perPage).Offset(page*perPage).Find(&groups, "pool_id = ?", poolID.String()).Error
+		return tx.Limit(perPage).Offset(page*perPage).Preload("Roles").Find(&groups, "pool_id = ?", poolID.String()).Error
 	})
 
 	return groups, int(total), err
 }
 
 func (g *GormStore) UpdateGroup(ctx context.Context, group *model.Group) error {
-	return g.db.Save(group).Error
+	return g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(group).Association("Roles").Replace(group.Roles); err != nil {
+			return err
+		}
+		return tx.Save(group).Error
+	})
 }
 
 func (g *GormStore) DeleteGroup(ctx context.Context, id uuid.UUID) error {
