@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	goset "github.com/deckarep/golang-set/v2"
 	v1 "github.com/emrgen/authbase/apis/v1"
@@ -215,13 +214,15 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		Username:  account.Username,
 		Email:     account.Email,
 		ProjectID: account.ProjectID,
+		PoolID:    account.PoolID,
 		AccountID: account.ID,
 		Audience:  "", // the target website or app that will use the token
 		Jti:       jti,
 		ExpireAt:  time.Now().Add(x.AccessTokenDuration),
 		IssuedAt:  time.Now(),
 		Provider:  "authbase",
-		Scopes:    roleNames,
+		Scopes:    roleNames, // internal roles
+		Roles:     roleNames,
 	})
 	if err != nil {
 		return nil, err
@@ -229,7 +230,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	refreshExpireAt := time.Now().Add(x.RefreshTokenDuration)
 	// save refresh token to cache, it will be used to validate the refresh token request
-	err = a.cache.Set(jti, account.ID, x.RefreshTokenDuration)
+	err = a.cache.Set(jti, token.RefreshToken, x.RefreshTokenDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -486,19 +487,14 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	}
 
 	if tokenStr != "" {
-		var token model.RefreshToken
-		err := json.Unmarshal([]byte(tokenStr), &token)
-		if err != nil {
-			return nil, err
-		}
-		accountID = token.AccountID
-		projectID = token.ProjectID
+		accountID = claims.AccountID
+		projectID = claims.ProjectID
 		foundToken = true
 	}
 
 	if !foundToken {
 		// check the db
-		token, err := as.GetRefreshTokenByID(ctx, refreshToken)
+		token, err := as.GetRefreshTokenByID(ctx, claims.Jti)
 		if err != nil {
 			return nil, err
 		}
@@ -510,6 +506,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		foundToken = true
 		accountID = token.AccountID
 		projectID = token.ProjectID
+		logrus.Infof("token: %v", token)
 	}
 
 	user, err := as.GetAccountByID(ctx, uuid.MustParse(accountID))
@@ -533,12 +530,20 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	if err != nil {
 		return nil, err
 	}
+	err = a.cache.Set(claims.Jti, token.RefreshToken, x.ScheduleRefreshTokenExpiry)
+	if err != nil {
+		return nil, err
+	}
 
+	// TODO: should intercept the response and delete old token from cookie
 	return &v1.RefreshResponse{
-		AccessToken:  token.AccessToken,
-		RefreshToken: refreshToken,
-		ExpiresAt:    timestamppb.New(token.ExpireAt),
-		IssuedAt:     timestamppb.New(token.IssuedAt),
+		Tokens: &v1.Tokens{
+			AccessToken:      token.AccessToken,
+			RefreshToken:     refreshToken,
+			ExpiresAt:        timestamppb.New(token.ExpireAt),
+			IssuedAt:         timestamppb.New(token.IssuedAt),
+			RefreshExpiresAt: timestamppb.New(token.ExpireAt),
+		},
 	}, nil
 }
 

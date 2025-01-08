@@ -914,6 +914,8 @@ message Tokens {
   string access_token = 1;
   string refresh_token = 2;
   google.protobuf.Timestamp expires_at = 3;
+  google.protobuf.Timestamp issued_at = 4;
+  google.protobuf.Timestamp refresh_expires_at = 5;
 }
 
 message AuthToken {
@@ -1045,15 +1047,10 @@ message LogoutResponse {
 
 message RefreshRequest {
   string refresh_token = 1;
-  optional string project_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message RefreshResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  google.protobuf.Timestamp expires_at = 3;
-  google.protobuf.Timestamp issued_at = 4;
-  google.protobuf.Timestamp refresh_expires_at = 5;
+  Tokens tokens = 1;
 }
 
 message VerifyEmailRequest {

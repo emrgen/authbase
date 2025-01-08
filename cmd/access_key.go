@@ -10,15 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var tokenCommand = &cobra.Command{
+var accessKeyCommand = &cobra.Command{
 	Use:   "key",
 	Short: "key commands",
 }
 
 func init() {
-	tokenCommand.AddCommand(createTokenCommand())
-	tokenCommand.AddCommand(listTokenCommand())
-	tokenCommand.AddCommand(deleteTokenCommand())
+	accessKeyCommand.AddCommand(createTokenCommand())
+	accessKeyCommand.AddCommand(listTokenCommand())
+	accessKeyCommand.AddCommand(deleteTokenCommand())
+	accessKeyCommand.AddCommand(refreshTokenCommand())
 }
 
 func createTokenCommand() *cobra.Command {

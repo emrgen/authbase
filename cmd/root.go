@@ -29,7 +29,7 @@ func init() {
 	rootCmd.AddCommand(userCommand)
 	rootCmd.AddCommand(memberCommand)
 	rootCmd.AddCommand(configCommand)
-	rootCmd.AddCommand(tokenCommand)
+	rootCmd.AddCommand(accessKeyCommand)
 	rootCmd.AddCommand(strategyCommand)
 	rootCmd.AddCommand(contextCommand)
 	rootCmd.AddCommand(keygenCommand)
@@ -37,6 +37,7 @@ func init() {
 	rootCmd.AddCommand(clientCommand)
 	rootCmd.AddCommand(groupCommand)
 	rootCmd.AddCommand(roleCommand)
+	rootCmd.AddCommand(tokenCommand)
 
 	ctx := readContext()
 	if ctx.Token != "" {

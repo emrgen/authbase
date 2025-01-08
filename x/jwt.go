@@ -15,6 +15,8 @@ const (
 	// AccessTokenDuration is the duration for the access token
 	// TODO: this should be configurable in the future
 	AccessTokenDuration = 15 * time.Minute
+	// ScheduleRefreshTokenExpiry is the duration to schedule the refresh token expiry
+	ScheduleRefreshTokenExpiry = 5 * time.Minute
 )
 
 func jwtSecret() string {
@@ -28,19 +30,19 @@ func jwtSecret() string {
 }
 
 type Claims struct {
-	Username    string    `json:"username"`
-	Email       string    `json:"email"`
-	ProjectID   string    `json:"project_id"`
-	ClientID    string    `json:"client_id"`
-	PoolID      string    `json:"pool_id"`
-	AccountID   string    `json:"account_id"`
-	Audience    string    `json:"aud"`
-	Jti         string    `json:"jti"`
-	ExpireAt    time.Time `json:"exp"`
-	IssuedAt    time.Time `json:"iat"`
-	Provider    string    `json:"provider"` // google, github, etc
-	Scopes      []string  `json:"scopes"`
-	Permissions []string  `json:"permissions"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	ProjectID string    `json:"project_id"`
+	ClientID  string    `json:"client_id"`
+	PoolID    string    `json:"pool_id"`
+	AccountID string    `json:"account_id"`
+	Audience  string    `json:"aud"`
+	Jti       string    `json:"jti"`
+	ExpireAt  time.Time `json:"exp"`
+	IssuedAt  time.Time `json:"iat"`
+	Provider  string    `json:"provider"` // google, github, etc
+	Scopes    []string  `json:"scopes"`
+	Roles     []string  `json:"roles"`
 }
 
 type JWTToken struct {
@@ -53,18 +55,18 @@ type JWTToken struct {
 // GenerateJWTToken generates a JWT token for the user
 func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	claim := jwt.MapClaims{
-		"username":    claims.Username,
-		"email":       claims.Email,
-		"account_id":  claims.AccountID,
-		"project_id":  claims.ProjectID,
-		"client_id":   claims.ClientID,
-		"pool_id":     claims.PoolID,
-		"exp":         claims.ExpireAt.Unix(),
-		"iat":         time.Now().Unix(),
-		"jti":         claims.Jti,
-		"provider":    "authbase",
-		"scopes":      claims.Scopes,
-		"permissions": claims.Permissions,
+		"username":   claims.Username,
+		"email":      claims.Email,
+		"account_id": claims.AccountID,
+		"project_id": claims.ProjectID,
+		"client_id":  claims.ClientID,
+		"pool_id":    claims.PoolID,
+		"exp":        claims.ExpireAt.Unix(),
+		"iat":        time.Now().Unix(),
+		"jti":        claims.Jti,
+		"provider":   "authbase",
+		"scopes":     claims.Scopes,
+		"roles":      claims.Roles,
 	}
 
 	// Generate the access token
@@ -125,9 +127,9 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		return nil, fmt.Errorf("jti not found")
 	}
 
-	userID, ok := claims["user_id"].(string)
+	accountID, ok := claims["account_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("user_id not found")
+		return nil, fmt.Errorf("account_id not found")
 	}
 
 	projectID, ok := claims["project_id"].(string)
@@ -155,21 +157,21 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 		scopes = []string{}
 	}
 
-	permissions, ok := claims["permissions"].([]string)
+	roles, ok := claims["roles"].([]string)
 	if !ok {
-		permissions = []string{}
+		roles = []string{}
 	}
 
 	return &Claims{
-		AccountID:   userID,
-		ProjectID:   projectID,
-		ClientID:    clientID,
-		PoolID:      poolID,
-		Jti:         jti,
-		Provider:    provider,
-		ExpireAt:    expireAt.Time,
-		IssuedAt:    issuedAt.Time,
-		Scopes:      scopes,
-		Permissions: permissions,
+		AccountID: accountID,
+		ProjectID: projectID,
+		ClientID:  clientID,
+		PoolID:    poolID,
+		Jti:       jti,
+		Provider:  provider,
+		ExpireAt:  expireAt.Time,
+		IssuedAt:  issuedAt.Time,
+		Scopes:    scopes,
+		Roles:     roles,
 	}, nil
 }

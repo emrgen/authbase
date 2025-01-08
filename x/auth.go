@@ -5,6 +5,7 @@ import (
 	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"strings"
@@ -17,6 +18,7 @@ func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 		switch info.FullMethod {
 		case
 			v1.AuthService_LoginUsingPassword_FullMethodName,
+			v1.AuthService_Refresh_FullMethodName,
 			v1.TokenService_VerifyToken_FullMethodName:
 			break
 		case v1.AccessKeyService_CreateAccessKey_FullMethodName:
@@ -36,6 +38,8 @@ func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication
 			token, err := tokenFromHeader(ctx, "Bearer")
+
+			logrus.Infof("token: %v", token)
 
 			accessKey, err := ParseAccessKey(token)
 			if !errors.Is(err, ErrInvalidToken) && err != nil {

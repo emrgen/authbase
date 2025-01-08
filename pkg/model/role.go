@@ -5,5 +5,6 @@ type Role struct {
 	PoolID     string      `gorm:"primaryKey;not null;not null;"` // Pool ID
 	Pool       *Pool       `gorm:"foreignKey:PoolID;references:ID;OnDelete:CASCADE"`
 	Groups     []*Group    `gorm:"many2many:group_roles"`
-	Attributes interface{} `gorm:"type:jsonb;"` // Attributes of the role
+	Attributes interface{} `gorm:"type:jsonb;"`            // Attributes of the role
+	Internal   bool        `gorm:"not null;default:false"` // Internal roles are not allowed to be deleted
 }
