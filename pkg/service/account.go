@@ -87,11 +87,8 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 	password := request.GetPassword()
 	if password != "" {
 		salt := x.GenerateSalt()
-		hashedPassword, err := x.HashPassword(password, salt)
-		if err != nil {
-			return nil, err
-		}
-		user.Password = string(hashedPassword)
+		hashedPassword := x.HashPassword(password, salt)
+		user.PasswordHash = string(hashedPassword)
 		user.Salt = salt
 	}
 

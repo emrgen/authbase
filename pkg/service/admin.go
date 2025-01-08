@@ -9,6 +9,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/ratelimit"
 	"os"
 )
@@ -41,10 +42,10 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 
 	// check if the master project already exists
 	project, err := as.GetMasterProject(ctx)
-	if err != nil && !errors.Is(err, store.ErrProjectNotFound) {
+	if !errors.Is(err, store.ErrProjectNotFound) && err != nil {
 		return nil, err
 	}
-
+	err = nil
 	if project != nil {
 		return nil, x.ErrProjectExists
 	}
@@ -86,25 +87,31 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
-	secret := x.GenerateClientSecret()
-	salt := x.GenerateSalt()
-	hash, err := x.HashPassword(secret, salt)
+	clientSecret := request.GetClientSecret()
+	clientSalt := x.GenerateSalt()
+	clientSecretHash := x.HashPassword(clientSecret, clientSalt)
 	if err != nil {
+		logrus.Infof("account: %v", err)
 		return nil, err
 	}
+
+	logrus.Infof("clientSecretHash: %v", string(clientSecretHash))
+	logrus.Infof("clientSecretHash: %v", clientSecretHash)
 
 	client := model.Client{
 		ID:          request.GetClientId(),
 		PoolID:      pool.ID,
 		Name:        "default",
-		Secret:      string(hash),
-		Salt:        salt,
+		SecretHash:  string(clientSecretHash),
+		Salt:        clientSalt,
 		CreatedByID: account.ID,
 		Default:     true,
 	}
 
 	// Create project and account in a transaction
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		logrus.Infof("account: %v", account)
+
 		err := tx.CreateProject(ctx, project)
 		if err != nil {
 			return err
@@ -121,16 +128,12 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		//)
 		//		}
 
-		//// if password is provided, hash it and provider it
+		//// if password is provided, clientSecretHash it and provider it
 		password := request.GetPassword()
 		if password != "" {
 			secret := x.Keygen()
-			hash, err := x.HashPassword(password, secret)
-			if err != nil {
-				return err
-			}
-
-			account.Password = string(hash)
+			hash := x.HashPassword(password, secret)
+			account.PasswordHash = string(hash)
 			account.Salt = secret
 		}
 

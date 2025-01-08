@@ -55,16 +55,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		return nil, err
 	}
 
-	clientID, err := uuid.Parse(request.GetClientId())
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := as.GetClientByID(ctx, clientID)
-	if err != nil {
-		return nil, err
-	}
-	poolID, err := uuid.Parse(client.PoolID)
+	poolID, err := x.GetAuthbasePoolID(ctx)
 	if err != nil {
 		return nil, err
 	}

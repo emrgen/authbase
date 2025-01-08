@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 )
- 
+
 // Account is the database model for users.
 // one project can have multiple users and one user can belong to multiple projects.
 type Account struct {
@@ -14,7 +14,7 @@ type Account struct {
 	Username      string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	Email         string `gorm:"not null;uniqueIndex:compositeIndex;"`
 	VisibleName   string
-	Password      string // hash of the password
+	PasswordHash  string // hash of the password
 	Salt          string
 	SassAdmin     bool      `gorm:"not null;default:false"`
 	ProjectMember bool      `gorm:"not null;default:false"`

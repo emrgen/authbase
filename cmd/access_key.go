@@ -23,6 +23,7 @@ func init() {
 
 func createTokenCommand() *cobra.Command {
 	var clientID string
+	var clientSecret string
 	var email string
 	var password string
 	var save bool
@@ -53,11 +54,12 @@ func createTokenCommand() *cobra.Command {
 			}
 
 			req := &v1.CreateAccessKeyRequest{
-				ClientId:  clientID,
-				Email:     email,
-				Password:  password,
-				ExpiresIn: nil,
-				Name:      nil,
+				ClientId:     clientID,
+				ClientSecret: clientSecret,
+				Email:        email,
+				Password:     password,
+				ExpiresIn:    nil,
+				Name:         nil,
 			}
 
 			token, err := client.CreateAccessKey(tokenContext(), req)
@@ -65,7 +67,7 @@ func createTokenCommand() *cobra.Command {
 				logrus.Errorf("failed to create token %v", err)
 				return
 			}
-
+ 
 			logrus.Infof("token created successfully")
 			fmt.Printf("Token: %v\n", token.Token.AccessKey)
 
@@ -79,9 +81,10 @@ func createTokenCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&clientID, "client-id", "c", "", "client id")
+	command.Flags().StringVarP(&clientSecret, "client-secret", "s", "", "client secret")
 	command.Flags().StringVarP(&email, "email", "e", "", "user name")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
-	command.Flags().BoolVarP(&save, "save", "s", false, "set context")
+	command.Flags().BoolVarP(&save, "save", "v", false, "set context")
 
 	return command
 }

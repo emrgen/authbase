@@ -80,9 +80,6 @@ func roleListCommand() *cobra.Command {
 			}
 
 			req := &v1.ListRolesRequest{}
-			if poolID != "" {
-				req.PoolId = &poolID
-			}
 
 			if groupID != "" {
 				req.GroupId = &groupID
@@ -90,6 +87,15 @@ func roleListCommand() *cobra.Command {
 
 			if accountID != "" {
 				req.AccountId = &accountID
+			}
+
+			if poolID != "" {
+				req.PoolId = &poolID
+			}
+
+			if poolID == "" && groupID == "" && accountID == "" {
+				poolID = getAccountPoolID(client)
+				req.PoolId = &poolID
 			}
 
 			res, err := client.ListRoles(tokenContext(), req)

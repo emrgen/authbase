@@ -30,14 +30,31 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			if err != nil {
 				return nil, err
 			}
+
+			// check if the token present in the header
 			if token != "" {
-				ctx, _, err = verifyJwtToken(ctx, keyProvider, token)
-				if err == nil {
-					// if the token is valid, return the handler
-					return handler(ctx, req)
+				accessKey, err := ParseAccessKey(token)
+				if !errors.Is(err, ErrInvalidToken) && err != nil {
+					logrus.Errorf("authbase: interceptor error parsing access key: %v", err)
+					return nil, err
 				}
+
+				if accessKey != nil {
+					ctx, _, err = verifyAccessKey(ctx, verifier, accessKey)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					ctx, _, err = verifyJwtToken(ctx, keyProvider, token)
+					if err == nil {
+						return nil, err
+					}
+				}
+
+				return handler(ctx, req)
 			}
 
+			// verify the client secret and password
 			as, err := store.GetProjectStore(ctx, provider)
 			if err != nil {
 				return nil, err
@@ -50,6 +67,13 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			client, err := as.GetClientByID(ctx, clientID)
 			if err != nil {
 				return nil, err
+			}
+
+			// verify the client secret
+			clientSecret := request.GetClientSecret()
+			ok := CompareHashAndPassword(clientSecret, client.Salt, client.SecretHash)
+			if !ok {
+				return nil, errors.New("invalid client secret")
 			}
 
 			poolID, err := uuid.Parse(client.PoolID)

@@ -52,16 +52,13 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 
 	secret := x.GenerateClientSecret()
 	salt := x.GenerateSalt()
-	hash, err := x.HashPassword(secret, salt)
-	if err != nil {
-		return nil, err
-	}
+	hash := x.HashPassword(secret, salt)
 
 	client := model.Client{
 		ID:          uuid.New().String(),
 		PoolID:      pool.ID,
 		Name:        request.GetName(),
-		Secret:      string(hash),
+		SecretHash:  string(hash),
 		Salt:        salt,
 		CreatedByID: userID.String(),
 	}

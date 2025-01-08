@@ -87,19 +87,16 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
-	secret := x.GenerateClientSecret()
-	salt := x.GenerateSalt()
-	hash, err := x.HashPassword(secret, salt)
-	if err != nil {
-		return nil, err
-	}
+	clientSecret := x.GenerateClientSecret()
+	clientSalt := x.GenerateSalt()
+	hash := x.HashPassword(clientSecret, clientSalt)
 
 	client := model.Client{
 		ID:          uuid.New().String(),
 		PoolID:      pool.ID,
 		Name:        "default",
-		Secret:      string(hash),
-		Salt:        salt,
+		SecretHash:  string(hash),
+		Salt:        clientSalt,
 		CreatedByID: user.ID,
 	}
 
@@ -115,7 +112,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		if err != nil {
 			return err
 		}
-
+ 
 		// if password is provided, email verification is not strictly required
 		// FIXME: if the mail server config is provider the email verification will fail with error
 		if password == "" || verifyEmail {
@@ -135,12 +132,8 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 			}
 		} else if password != "" {
 			secret := x.Keygen()
-			hash, err := x.HashPassword(password, secret)
-			if err != nil {
-				return err
-			}
-
-			user.Password = string(hash)
+			hash := x.HashPassword(password, secret)
+			user.PasswordHash = string(hash)
 			user.Salt = secret
 		}
 

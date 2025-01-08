@@ -52,7 +52,7 @@ func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, poolID
 		return nil, errors.New("user account is disabled")
 	}
 
-	ok := CompareHashAndPassword(user.Password, password, user.Salt)
+	ok := CompareHashAndPassword(password, user.Salt, user.PasswordHash)
 	if !ok {
 		return nil, errors.New("invalid password")
 	}

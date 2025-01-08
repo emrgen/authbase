@@ -67,16 +67,13 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 		if request.GetClient() {
 			secret := x.GenerateClientSecret()
 			salt := x.GenerateSalt()
-			hash, err := x.HashPassword(secret, salt)
-			if err != nil {
-				return err
-			}
+			hash := x.HashPassword(secret, salt)
 
 			client := model.Client{
 				ID:          uuid.New().String(),
 				PoolID:      pool.ID,
 				Name:        "default",
-				Secret:      string(hash),
+				SecretHash:  string(hash),
 				Salt:        salt,
 				CreatedByID: accountID.String(),
 			}

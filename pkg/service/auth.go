@@ -105,16 +105,16 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 	}
 
 	salt := x.Keygen()
-	hashedPassword, _ := x.HashPassword(password, salt)
+	hashedPassword := x.HashPassword(password, salt)
 
 	user := &model.Account{
-		ID:        uuid.New().String(),
-		ProjectID: orgID.String(),
-		Username:  username,
-		Email:     email,
-		Password:  string(hashedPassword),
-		Salt:      salt,
-		Verified:  false,
+		ID:           uuid.New().String(),
+		ProjectID:    orgID.String(),
+		Username:     username,
+		Email:        email,
+		PasswordHash: string(hashedPassword),
+		Salt:         salt,
+		Verified:     false,
 	}
 
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
@@ -198,7 +198,8 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 			return nil, status.New(codes.FailedPrecondition, "project is not a master project, need client secret").Err()
 		}
 	} else {
-		yes := x.CompareHashAndPassword(client.Secret, clientSecret, client.Salt)
+		logrus.Infof("client secret: %v, hash: %v, salt: %v", clientSecret, client.SecretHash, client.Salt)
+		yes := x.CompareHashAndPassword(clientSecret, client.Salt, client.SecretHash)
 		if !yes {
 			return nil, errors.New("client secret mismatch")
 		}
@@ -215,7 +216,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, errors.New("account not found")
 	}
 
-	ok := x.CompareHashAndPassword(account.Password, password, account.Salt)
+	ok := x.CompareHashAndPassword(password, account.Salt, account.PasswordHash)
 	if !ok {
 		return nil, errors.New("incorrect password")
 	}
@@ -447,8 +448,8 @@ func (a *AuthService) ResetPassword(ctx context.Context, request *v1.ResetPasswo
 		}
 
 		salt := x.Keygen()
-		hashedPassword, _ := x.HashPassword(password, salt)
-		account.Password = string(hashedPassword)
+		hashedPassword := x.HashPassword(password, salt)
+		account.PasswordHash = string(hashedPassword)
 		account.Salt = salt
 
 		// update the account with the new password
@@ -492,8 +493,8 @@ func (a *AuthService) ChangePassword(ctx context.Context, request *v1.ChangePass
 		}
 
 		salt := x.Keygen()
-		hashedPassword, _ := x.HashPassword(request.GetNewPassword(), salt)
-		account.Password = string(hashedPassword)
+		hashedPassword := x.HashPassword(request.GetNewPassword(), salt)
+		account.PasswordHash = string(hashedPassword)
 		account.Salt = salt
 
 		err = tx.UpdateAccount(ctx, account)
