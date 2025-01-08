@@ -31,6 +31,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 )
 
 // Server is the main server struct
@@ -47,6 +48,7 @@ type Server struct {
 	mux             *runtime.ServeMux
 	httpPort        string
 	grpcPort        string
+	ready           chan struct{}
 }
 
 // NewServerFromEnv creates a new server instance from the environment configuration.
@@ -61,7 +63,7 @@ func NewServerFromEnv() *Server {
 
 // NewServer creates a new server instance.
 func NewServer(config *config.Config) *Server {
-	return &Server{config: config}
+	return &Server{config: config, ready: make(chan struct{})}
 }
 
 // Start the server
@@ -81,6 +83,10 @@ func (s *Server) Start(grpcPort, httpPort string) error {
 	}
 
 	return nil
+}
+
+func (s *Server) Ready() <-chan struct{} {
+	return s.ready
 }
 
 func (s *Server) init(grpcPort, httpPort string) error {
@@ -275,6 +281,12 @@ func (s *Server) run() error {
 			}
 		}
 	}
+
+	go func() {
+		// wait for 1sec
+		time.Sleep(100 * time.Millisecond)
+		s.ready <- struct{}{}
+	}()
 
 	// listen for interrupt signal to gracefully shut down the server
 	sigs := make(chan os.Signal, 1)

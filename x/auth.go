@@ -35,6 +35,28 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTKeyProvider) grpc.Un
 			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(user.ProjectID))
 			ctx = context.WithValue(ctx, PoolIDKey, poolID)
 		default:
+			if info.FullMethod == v1.AuthService_ChangePassword_FullMethodName {
+				request := req.(*v1.ChangePasswordRequest)
+				oldPassword := request.GetOldPassword()
+				email := request.GetEmail()
+				if oldPassword != "" && email != "" {
+					poolID, err := uuid.Parse(request.GetPoolId())
+					if err != nil {
+						return nil, err
+					}
+					user, err := verifier.VerifyEmailPassword(ctx, poolID, email, oldPassword)
+					if err != nil {
+						return nil, err
+					}
+
+					ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(user.ID))
+					ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(user.ProjectID))
+					ctx = context.WithValue(ctx, PoolIDKey, poolID)
+
+					return handler(ctx, req)
+				}
+			}
+			
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication
 			token, err := tokenFromHeader(ctx, "Bearer")

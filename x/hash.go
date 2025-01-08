@@ -12,5 +12,5 @@ func HashPassword(password, salt string) ([]byte, error) {
 
 // CompareHashAndPassword compares the hash with the password and salt
 func CompareHashAndPassword(hash, password, salt string) bool {
-	return fmt.Sprintf("%x", argon2.IDKey([]byte(password), []byte(salt), 1, 64*1024, 4, 32)) == hash
+	return fmt.Sprintf("%s", argon2.IDKey([]byte(password), []byte(salt), 1, 64*1024, 4, 32)) == hash
 }

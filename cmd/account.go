@@ -282,14 +282,14 @@ func listUserCommand() *cobra.Command {
 
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt", "Verified", "Active", "Member"})
+			table.SetHeader([]string{"#", "ID", "Email", "Name", "CreatedAt", "Verified", "Active", "Member"})
 			for i, user := range res.Accounts {
 				verified := user.VerifiedAt.AsTime().Format("2006-01-02 15:04:05") != "1970-01-01 00:00:00"
 				table.Append([]string{
 					strconv.Itoa(i + 1),
 					user.Id,
 					user.Email,
-					user.Username,
+					user.VisibleName,
 					user.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
 					strconv.FormatBool(verified),
 					strconv.FormatBool(!user.Disabled),
