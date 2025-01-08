@@ -4,13 +4,13 @@ import (
 	"context"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/x"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 var _ v1.TokenServiceServer = (*TokenService)(nil)
 
 type TokenService struct {
-	verifier x.TokenVerifier
+	verifier    x.TokenVerifier
+	keyProvider x.JWTKeyProvider
 	v1.UnimplementedTokenServiceServer
 }
 
@@ -38,20 +38,14 @@ func (t TokenService) VerifyToken(ctx context.Context, request *v1.VerifyTokenRe
 	}
 
 	bearerToken := request.GetToken()
-	token, _, err := jwt.NewParser().ParseUnverified(bearerToken, jwt.MapClaims{})
+	claims, err := x.GetTokenClaims(bearerToken)
 	if err != nil {
 		return nil, err
 	}
 
-	claim := token.Claims.(jwt.MapClaims)
-	provider, ok := claim["provider"].(string)
-	if !ok {
-		return nil, err
-	}
-
-	switch provider {
+	switch claims.Provider {
 	case "authbase":
-		res, err := t.verifier.VerifyToken(ctx, bearerToken)
+		res, err := t.verifier.VerifyToken(ctx, bearerToken, claims.PoolID)
 		if err != nil {
 			return nil, err
 		}

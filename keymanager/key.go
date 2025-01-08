@@ -1,8 +1,9 @@
-package keys
+package keymanager
 
 import (
 	"context"
 	"crypto/rsa"
+	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/x"
 	"github.com/golang-jwt/jwt/v5"
@@ -10,6 +11,22 @@ import (
 	"sync"
 	"time"
 )
+
+type StaticKeyProvider struct {
+	key string
+}
+
+func NewStaticKeyProvider(key string) *StaticKeyProvider {
+	return &StaticKeyProvider{key: key}
+}
+
+func (r *StaticKeyProvider) GetSignKey(id string) (interface{}, error) {
+	return r.key, nil
+}
+
+func (r *StaticKeyProvider) GetVerifyKey(id string) (interface{}, error) {
+	return r.key, nil
+}
 
 type PublicKey struct {
 	key      *rsa.PrivateKey
@@ -20,8 +37,9 @@ type PublicKey struct {
 // When the key is expired, it will be removed and get new key from the server.
 type PublicRegistry struct {
 	keys   map[string]*PublicKey
-	client v1.PublicKeyServiceClient
 	mu     sync.Mutex
+	client v1.PublicKeyServiceClient
+	slack  time.Duration
 }
 
 func NewPublicRegistry(client v1.PublicKeyServiceClient) *PublicRegistry {
@@ -29,10 +47,11 @@ func NewPublicRegistry(client v1.PublicKeyServiceClient) *PublicRegistry {
 		client: client,
 		keys:   make(map[string]*PublicKey),
 		mu:     sync.Mutex{},
+		slack:  time.Minute * 10,
 	}
 }
 
-func (r *PublicRegistry) GetKey(id string) (*PublicKey, error) {
+func (r *PublicRegistry) GetSignKey(id string) (*PublicKey, error) {
 	if key, ok := r.keys[id]; ok {
 		return key, nil
 	}
@@ -77,7 +96,6 @@ func (r *PublicRegistry) Run() {
 	for {
 		select {
 		case <-ticker.C:
-			r.mu.Lock()
 			for id, key := range r.keys {
 				r.refresh(id, key)
 			}
@@ -85,8 +103,9 @@ func (r *PublicRegistry) Run() {
 	}
 }
 
+// refresh checks if the token has expired
 func (r *PublicRegistry) refresh(id string, public *PublicKey) {
-	if public.ExpireAt.After(time.Now()) {
+	if public.ExpireAt.Add(r.slack).After(time.Now()) {
 		return
 	}
 
@@ -133,6 +152,15 @@ func NewPrivateRegistry() *PrivateRegistry {
 		keys: make(map[string]*KeyPair),
 		mu:   sync.Mutex{},
 	}
+}
+
+func (r *PrivateRegistry) GetGetSignKey(id string) (*rsa.PrivateKey, error) {
+	key, err := r.GetKey(id)
+	if err != nil {
+		return nil, errors.New("failed to get private key")
+	}
+
+	return key.private, nil
 }
 
 // GetKey function to get key pair

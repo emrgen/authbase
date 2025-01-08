@@ -19,7 +19,7 @@ const (
 	ScheduleRefreshTokenExpiry = 5 * time.Minute
 )
 
-func jwtSecret() string {
+func JWTSecretFromEnv() string {
 	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
 		logrus.Error("jwt is not set")
@@ -29,7 +29,21 @@ func jwtSecret() string {
 	return secretKey
 }
 
+type JWTKeyProvider interface {
+	SignKeyProvider
+	VerifyKeyProvider
+}
+
+type SignKeyProvider interface {
+	GetSignKey(id string) (interface{}, error)
+}
+
+type VerifyKeyProvider interface {
+	GetVerifyKey(id string) (interface{}, error)
+}
+
 type Claims struct {
+	KeyID     string    `json:"key_id"` // public key id
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	ProjectID string    `json:"project_id"`
@@ -53,7 +67,7 @@ type JWTToken struct {
 }
 
 // GenerateJWTToken generates a JWT token for the user
-func GenerateJWTToken(claims Claims) (*JWTToken, error) {
+func GenerateJWTToken(claims *Claims, singKey interface{}) (*JWTToken, error) {
 	claim := jwt.MapClaims{
 		"username":   claims.Username,
 		"email":      claims.Email,
@@ -71,7 +85,7 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 
 	// Generate the access token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	tokenString, err := token.SignedString([]byte(jwtSecret()))
+	tokenString, err := token.SignedString(singKey)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +94,7 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 	claim["exp"] = time.Now().Add(RefreshTokenDuration).Unix()
 	claim["iat"] = time.Now().Unix()
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	refreshToken, err := token.SignedString([]byte(jwtSecret()))
+	refreshToken, err := token.SignedString(singKey)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +107,9 @@ func GenerateJWTToken(claims Claims) (*JWTToken, error) {
 }
 
 // VerifyJWTToken verifies the JWT token
-func VerifyJWTToken(tokenString string) (*Claims, error) {
+func VerifyJWTToken(tokenString string, verifyKey interface{}) (*Claims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(jwtSecret()), nil
+		return verifyKey, nil
 	})
 
 	if err != nil {
@@ -107,7 +121,22 @@ func VerifyJWTToken(tokenString string) (*Claims, error) {
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
+	return intoClaim(claims)
+}
 
+// GetTokenClaims gets the token claims without verifying the token
+func GetTokenClaims(tokenString string) (*Claims, error) {
+	token, _, err := jwt.NewParser().ParseUnverified(tokenString, jwt.MapClaims{})
+	if err != nil {
+		return nil, err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+
+	return intoClaim(claims)
+}
+
+func intoClaim(claims jwt.MapClaims) (*Claims, error) {
 	expireAt, err := claims.GetExpirationTime()
 	if err != nil {
 		return nil, err

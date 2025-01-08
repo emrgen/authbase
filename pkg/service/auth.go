@@ -18,7 +18,7 @@ import (
 )
 
 // NewAuthService creates a new AuthService
-func NewAuthService(store store.Provider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
+func NewAuthService(store store.Provider, singKeyProvider x.JWTKeyProvider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
 	return &AuthService{store: store, perm: perm, mailer: mailer, cache: cache}
 }
 
@@ -26,10 +26,11 @@ var _ v1.AuthServiceServer = new(AuthService)
 
 // AuthService is a service that implements the AuthServiceServer interface
 type AuthService struct {
-	store  store.Provider
-	mailer mail.MailerProvider
-	cache  *cache.Redis
-	perm   permission.AuthBasePermission
+	store       store.Provider
+	mailer      mail.MailerProvider
+	cache       *cache.Redis
+	perm        permission.AuthBasePermission
+	keyProvider x.JWTKeyProvider
 	v1.UnimplementedAuthServiceServer
 }
 
@@ -208,9 +209,14 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	roleNames := set.ToSlice()
 
+	verifyKey, err := a.keyProvider.GetVerifyKey(poolID.String())
+	if err != nil {
+		return nil, err
+	}
+
 	// generate tokens
 	jti := uuid.New().String()
-	token, err := x.GenerateJWTToken(x.Claims{
+	token, err := x.GenerateJWTToken(&x.Claims{
 		Username:  account.Username,
 		Email:     account.Email,
 		ProjectID: account.ProjectID,
@@ -223,7 +229,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		Provider:  "authbase",
 		Scopes:    roleNames, // internal roles
 		Roles:     roleNames,
-	})
+	}, verifyKey)
 	if err != nil {
 		return nil, err
 	}
@@ -289,9 +295,18 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 // Logout logs out a user by deleting the session from the db, and the refresh tokens from the cache
 func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v1.LogoutResponse, error) {
+	poolID, err := x.GetAuthbasePoolID(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// check if the token is still valid
 	accessToken := request.GetAccessToken()
-	claims, err := x.VerifyJWTToken(accessToken)
+	singKey, err := a.keyProvider.GetSignKey(poolID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := x.VerifyJWTToken(accessToken, singKey)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +485,15 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 
 	// check if the refresh token is still valid
 	refreshToken := request.GetRefreshToken()
-	claims, err := x.VerifyJWTToken(refreshToken)
+
+	oldClaims, err := x.GetTokenClaims(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	signKey, err := a.keyProvider.GetSignKey(oldClaims.ClientID)
+
+	claims, err := x.VerifyJWTToken(refreshToken, signKey)
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +539,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	}
 
 	jti := uuid.New().String()
-	token, err := x.GenerateJWTToken(x.Claims{
+	claims = &x.Claims{
 		ProjectID: projectID,
 		AccountID: user.ID,
 		Username:  claims.Username,
@@ -527,7 +550,14 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		IssuedAt:  time.Now(),
 		Provider:  "authbase",
 		Scopes:    claims.Scopes,
-	})
+	}
+
+	verifyKey, err := a.keyProvider.GetVerifyKey(claims.PoolID)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := x.GenerateJWTToken(claims, verifyKey)
 	if err != nil {
 		return nil, err
 	}

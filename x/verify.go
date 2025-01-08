@@ -15,15 +15,16 @@ type TokenVerifier interface {
 	// VerifyEmailPassword verifies the email and password of a user.
 	VerifyEmailPassword(ctx context.Context, poolID uuid.UUID, email, password string) (*model.Account, error)
 	// VerifyToken verifies the token.
-	VerifyToken(ctx context.Context, token string) (*Claims, error)
+	VerifyToken(ctx context.Context, token string, poolID string) (*Claims, error)
 	// VerifyAccessKey verifies the access key.
 	VerifyAccessKey(ctx context.Context, id uuid.UUID, accessKey string) (*Claims, error)
 }
 
 // StoreBasedUserVerifier is a user verifier that uses the store to verify the user.
 type StoreBasedUserVerifier struct {
-	store store.Provider
-	redis *cache.Redis
+	store       store.Provider
+	redis       *cache.Redis
+	keyProvider JWTKeyProvider
 }
 
 // NewStoreBasedTokenVerifier creates a new StoreBasedUserVerifier.
@@ -60,8 +61,13 @@ func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, poolID
 }
 
 // VerifyToken verifies the token.
-func (v *StoreBasedUserVerifier) VerifyToken(ctx context.Context, token string) (*Claims, error) {
-	claims, err := VerifyJWTToken(token)
+func (v *StoreBasedUserVerifier) VerifyToken(ctx context.Context, token string, poolID string) (*Claims, error) {
+	key, err := v.keyProvider.GetVerifyKey(poolID)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := VerifyJWTToken(token, key)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	gatewayfile "github.com/black-06/grpc-gateway-file"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/emrgen/authbase/keymanager"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
 	"github.com/emrgen/authbase/pkg/permission"
@@ -118,11 +119,13 @@ func (s *Server) init(grpcPort, httpPort string) error {
 // register the services with the grpc server
 func (s *Server) registerServices() error {
 	var err error
+	keyProvider := keymanager.NewStaticKeyProvider(x.JWTSecretFromEnv())
 	verifier := x.NewStoreBasedTokenVerifier(s.provider, s.redis)
+
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),
-			x.AuthInterceptor(verifier),
+			x.AuthInterceptor(verifier, keyProvider),
 			UnaryGrpcRequestTimeInterceptor(),
 		)),
 	)
@@ -159,7 +162,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
 	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, redis))
-	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, perm, s.mailer, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, keyProvider, perm, s.mailer, redis))
 	v1.RegisterAccountServiceServer(grpcServer, service.NewAccountService(perm, s.provider, redis))
 	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis))
 	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider))
