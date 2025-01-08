@@ -87,6 +87,22 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
+	secret := x.GenerateClientSecret()
+	salt := x.GenerateSalt()
+	hash, err := x.HashPassword(secret, salt)
+	if err != nil {
+		return nil, err
+	}
+
+	client := model.Client{
+		ID:          uuid.New().String(),
+		PoolID:      pool.ID,
+		Name:        "default",
+		Secret:      string(hash),
+		Salt:        salt,
+		CreatedByID: user.ID,
+	}
+
 	// if this is the first project, make the project is the master project
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		_, total, _ := tx.ListProjects(ctx, 1, 1)
@@ -148,6 +164,11 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 			return err
 		}
 
+		err = tx.CreateClient(ctx, &client)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -160,6 +181,10 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 			Name:   project.Name,
 			Master: project.Master,
 			PoolId: pool.ID,
+		},
+		Client: &v1.Client{
+			Name: client.Name,
+			Id:   client.ID,
 		},
 	}, nil
 }

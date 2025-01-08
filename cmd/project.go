@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var projectCommand = &cobra.Command{
@@ -25,11 +26,10 @@ func init() {
 }
 
 func createProjectCommand() *cobra.Command {
-	var project string
+	var projectName string
 	var password string
-	var username string
+	var visibleName string
 	var email string
-	var master bool
 
 	command := &cobra.Command{
 		Use:   "create",
@@ -42,8 +42,8 @@ func createProjectCommand() *cobra.Command {
 				return
 			}
 
-			if project == "" {
-				logrus.Errorf("missing required flags: --project")
+			if projectName == "" {
+				logrus.Errorf("missing required flags: --name")
 				return
 			}
 
@@ -52,15 +52,14 @@ func createProjectCommand() *cobra.Command {
 				return
 			}
 
-			if username == "" {
-				logrus.Errorf("missing required flags: --username")
-				return
-			}
-
 			if password == "" {
-				logrus.Infof("creating project without password")
+				logrus.Infof("creating projectName without password")
 			}
 
+			if visibleName == "" {
+				visibleName = strings.Split(email, "@")[0]
+			}
+ 
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
@@ -68,44 +67,28 @@ func createProjectCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			ctx := tokenContext()
-
-			// create the master project
-			if master {
-				logrus.Infof("creating master project")
-				project, err := client.CreateAdminProject(ctx, &v1.CreateAdminProjectRequest{
-					Name:        project,
-					VisibleName: username,
-					Email:       email,
-					Password:    &password,
-				})
-				if err != nil {
-					logrus.Errorf("error creating master project: %v", err)
-					return
-				}
-				logrus.Infof("master project created: %v", project)
-			} else {
-				project, err := client.CreateProject(ctx, &v1.CreateProjectRequest{
-					Name:        project,
-					VisibleName: username,
-					Email:       email,
-					Password:    &password,
-				})
-				if err != nil {
-					logrus.Errorf("error creating project: %v", err)
-					return
-				}
-				logrus.Infof("project created: %v", project)
+			res, err := client.CreateProject(tokenContext(), &v1.CreateProjectRequest{
+				Name:        projectName,
+				VisibleName: visibleName,
+				Email:       email,
+				Password:    &password,
+			})
+			if err != nil {
+				logrus.Errorf("error creating project: %v", err)
+				return
 			}
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"ID", "Name", "Pool ID", "Client ID"})
+			table.Append([]string{res.Project.Id, res.Project.Name, res.Project.PoolId, res.Client.Id})
+			table.Render()
 		},
 	}
 
-	command.Flags().StringVarP(&project, "project", "r", "", "project of the project")
-	command.Flags().StringVarP(&username, "username", "u", "", "username of the project")
-	command.Flags().StringVarP(&email, "email", "e", "", "email of the project")
-	command.Flags().StringVarP(&password, "password", "p", "", "password of the project")
-	command.Flags().BoolVarP(&master, "master", "m", false, "master project")
-
+	command.Flags().StringVarP(&projectName, "projectName-name", "n", "", "name of the project")
+	command.Flags().StringVarP(&visibleName, "visibleName", "v", "", "visible name of the project owner")
+	command.Flags().StringVarP(&email, "email", "e", "", "email of the projectName")
+	command.Flags().StringVarP(&password, "password", "p", "", "password of the project owner")
 	return command
 }
 

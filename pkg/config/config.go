@@ -61,6 +61,8 @@ func FromEnv() (*Config, error) {
 	adminOrgConfig.VisibleName = os.Getenv("SUPER_ADMIN_VISIBLE_NAME")
 	adminOrgConfig.Email = os.Getenv("SUPER_ADMIN_EMAIL")
 	adminOrgConfig.Password = os.Getenv("SUPER_ADMIN_PASSWORD")
+	adminOrgConfig.ClientId = os.Getenv("SUPER_ADMIN_CLIENT_ID")
+	adminOrgConfig.ClientSecret = os.Getenv("SUPER_ADMIN_CLIENT_SECRET")
 
 	mode := os.Getenv("APP_MODE")
 	if mode == "" {

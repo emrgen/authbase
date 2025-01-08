@@ -130,7 +130,7 @@ func (s *Server) registerServices() error {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcvalidator.UnaryServerInterceptor(),
-			x.AuthInterceptor(verifier, keyProvider),
+			x.AuthInterceptor(verifier, keyProvider, s.provider),
 			UnaryGrpcRequestTimeInterceptor(),
 		)),
 	)
@@ -277,10 +277,12 @@ func (s *Server) run() error {
 		logrus.Infof("trying to create admin project: %v", s.config.AdminOrg)
 		adminOrgService := service.NewAdminProjectService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminProject(context.TODO(), &v1.CreateAdminProjectRequest{
-			Name:        s.config.AdminOrg.OrgName,
-			VisibleName: s.config.AdminOrg.VisibleName,
-			Email:       s.config.AdminOrg.Email,
-			Password:    &s.config.AdminOrg.Password,
+			Name:         s.config.AdminOrg.OrgName,
+			VisibleName:  s.config.AdminOrg.VisibleName,
+			Email:        s.config.AdminOrg.Email,
+			Password:     &s.config.AdminOrg.Password,
+			ClientId:     s.config.AdminOrg.ClientId,
+			ClientSecret: s.config.AdminOrg.ClientSecret,
 		})
 		if err != nil {
 			if !errors.Is(err, store.ErrProjectExists) {

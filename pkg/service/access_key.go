@@ -55,12 +55,21 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		return nil, err
 	}
 
-	poolID, err := uuid.Parse(request.GetPoolId())
+	clientID, err := uuid.Parse(request.GetClientId())
 	if err != nil {
 		return nil, err
 	}
 
-	//err = t.perm.CheckProjectPermission(ctx, poolID, "write")
+	client, err := as.GetClientByID(ctx, clientID)
+	if err != nil {
+		return nil, err
+	}
+	poolID, err := uuid.Parse(client.PoolID)
+	if err != nil {
+		return nil, err
+	}
+
+	//err = t.perm.CheckProjectPermission(ctx, clientIDpoolID, "write")
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -75,7 +84,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		expireAfter = time.Second * time.Duration(request.GetExpiresIn())
 	}
 
-	//perm, err := as.GetProjectMemberByID(ctx, poolID, accountID)
+	//perm, err := as.GetProjectMemberByID(ctx, clientIDpoolID, accountID)
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -101,7 +110,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 	accessKey := &model.AccessKey{
 		ID:        token.ID.String(),
 		AccountID: accountID.String(),
-		PoolID:    request.GetPoolId(),
+		PoolID:    poolID.String(),
 		ProjectID: project.ID,
 		Name:      request.GetName(),
 		Token:     token.Value,
@@ -294,7 +303,6 @@ func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.
 
 func (t *AccessKeyService) GetTokenFromAccessKey(ctx context.Context, request *v1.GetTokenFromAccessKeyRequest) (*v1.GetTokenFromAccessKeyResponse, error) {
 	accessKey := request.GetAccessKey()
-	logrus.Infof("access key: %v", accessKey)
 	token, err := x.ParseAccessKey(accessKey)
 	if !errors.Is(err, x.ErrInvalidToken) && err != nil {
 		return nil, err
@@ -304,7 +312,6 @@ func (t *AccessKeyService) GetTokenFromAccessKey(ctx context.Context, request *v
 		return nil, err
 	}
 
-	logrus.Infof("access key: %v, value: %v", token.ID, token.Value)
 	claims, err := t.verifier.VerifyAccessKey(ctx, token.ID, token.Value)
 	if err != nil {
 		return nil, err

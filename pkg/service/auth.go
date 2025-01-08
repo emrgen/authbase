@@ -563,7 +563,6 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		foundToken = true
 		accountID = token.AccountID
 		projectID = token.ProjectID
-		logrus.Infof("token: %v", token)
 	}
 
 	user, err := as.GetAccountByID(ctx, uuid.MustParse(accountID))

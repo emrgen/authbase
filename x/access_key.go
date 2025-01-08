@@ -3,7 +3,6 @@ package x
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -27,7 +26,6 @@ func IsAccessKey(key string) bool {
 
 // ParseAccessKey parses an access key
 func ParseAccessKey(key string) (*AccessKey, error) {
-	logrus.Infof("parsing token: %v", key)
 	token, err := ParseToken(key)
 	if err != nil {
 		return nil, err

@@ -12,6 +12,7 @@ type Client struct {
 	Salt             string
 	CreatedByID      string   `gorm:"uuid"`
 	CreatedByAccount *Account `gorm:"foreignKey:CreatedByID"`
+	Default          bool     `gorm:"default:false"`
 }
 
 func (c *Client) TableName() string {

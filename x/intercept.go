@@ -105,7 +105,6 @@ func VerifyTokenInterceptor(keyProvider VerifierProvider, accessKeyService v1.Ac
 				return nil, err
 			}
 
-			logrus.Infof("access key: %s", accessKey.Value)
 			ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
 			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
 			ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))

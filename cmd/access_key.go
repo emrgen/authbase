@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/emrgen/authbase"
 	v1 "github.com/emrgen/authbase/apis/v1"
-	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +22,7 @@ func init() {
 }
 
 func createTokenCommand() *cobra.Command {
-	var poolID string
+	var clientID string
 	var email string
 	var password string
 	var save bool
@@ -32,13 +31,8 @@ func createTokenCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create access key",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" {
-				logrus.Error("missing required flags: --project")
-				return
-			}
-			_, err := uuid.Parse(poolID)
-			if err != nil {
-				logrus.Error("project id must be a valid uuid")
+			if clientID == "" {
+				logrus.Error("missing required flags: --client-id")
 				return
 			}
 
@@ -59,7 +53,7 @@ func createTokenCommand() *cobra.Command {
 			}
 
 			req := &v1.CreateAccessKeyRequest{
-				PoolId:    poolID,
+				ClientId:  clientID,
 				Email:     email,
 				Password:  password,
 				ExpiresIn: nil,
@@ -84,7 +78,7 @@ func createTokenCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&poolID, "pool-id", "r", "", "pool id")
+	command.Flags().StringVarP(&clientID, "client-id", "c", "", "client id")
 	command.Flags().StringVarP(&email, "email", "e", "", "user name")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
 	command.Flags().BoolVarP(&save, "save", "s", false, "set context")

@@ -6,10 +6,12 @@ type ProjectConfig struct {
 }
 
 type AdminProjectConfig struct {
-	OrgName     string
-	VisibleName string
-	Email       string
-	Password    string
+	OrgName      string
+	VisibleName  string
+	Email        string
+	Password     string
+	ClientId     string
+	ClientSecret string
 }
 
 func (a AdminProjectConfig) Valid() bool {

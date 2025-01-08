@@ -86,9 +86,25 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
+	secret := x.GenerateClientSecret()
+	salt := x.GenerateSalt()
+	hash, err := x.HashPassword(secret, salt)
+	if err != nil {
+		return nil, err
+	}
+
+	client := model.Client{
+		ID:          request.GetClientId(),
+		PoolID:      pool.ID,
+		Name:        "default",
+		Secret:      string(hash),
+		Salt:        salt,
+		CreatedByID: account.ID,
+		Default:     true,
+	}
+
 	// Create project and account in a transaction
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-
 		err := tx.CreateProject(ctx, project)
 		if err != nil {
 			return err
@@ -134,6 +150,11 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		}
 
 		err = tx.AddPoolMember(ctx, &poolMember)
+		if err != nil {
+			return err
+		}
+
+		err = tx.CreateClient(ctx, &client)
 		if err != nil {
 			return err
 		}

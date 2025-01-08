@@ -14,6 +14,7 @@ message Project {
   string name = 2;
   bool master = 3;
   string pool_id = 4;
+  string client_id = 5;
   string owner_id = 10 [(validate.rules).string.uuid = true];
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
@@ -39,6 +40,7 @@ message CreateProjectRequest {
 
 message CreateProjectResponse {
   Project project = 1;
+  Client client = 2;
 }
 
 message GetProjectRequest {
@@ -1235,7 +1237,7 @@ message AccessKey {
 }
 
 message CreateAccessKeyRequest {
-  string pool_id = 2;
+  string client_id = 2;
   string email = 3 [
     (validate.rules).string.min_len = 6,
     (validate.rules).string.max_len = 64
@@ -1659,6 +1661,8 @@ message CreateAdminProjectRequest {
     (validate.rules).string.max_len = 64
   ];
   optional bool verify_email = 5;
+  string ClientId = 6;
+  string ClientSecret = 7;
 }
 
 message CreateAdminProjectResponse {
@@ -1727,7 +1731,6 @@ message AdminLoginUsingPasswordResponse {
   AuthToken token = 2;
 }
 
-
 service AdminAuthService {
   // AdminLoginUsingPassword
   rpc AdminLoginUsingPassword(AdminLoginUsingPasswordRequest) returns (AdminLoginUsingPasswordResponse) {
@@ -1737,8 +1740,6 @@ service AdminAuthService {
     };
   }
 }
-
-
 
 enum Permission {
   UNKNOWN = 0; // default
