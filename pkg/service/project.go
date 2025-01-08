@@ -327,12 +327,12 @@ func (o *ProjectService) DeleteProject(ctx context.Context, request *v1.DeletePr
 }
 
 func (o *ProjectService) AddOauthProvider(ctx context.Context, request *v1.AddOauthProviderRequest) (*v1.AddOauthProviderResponse, error) {
-	orgID, err := uuid.Parse(request.GetProjectId())
+	poolID, err := uuid.Parse(request.GetPoolId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = o.perm.CheckProjectPermission(ctx, orgID, "write")
+	err = o.perm.CheckProjectPermission(ctx, poolID, "write")
 	if err != nil {
 		return nil, err
 	}
@@ -345,20 +345,21 @@ func (o *ProjectService) AddOauthProvider(ctx context.Context, request *v1.AddOa
 	provider := request.GetProvider()
 
 	m := make(map[string]interface{})
-	m["provider"] = provider.GetName()
+	m["provider"] = provider.GetProvider()
 	m["client_id"] = provider.GetClientId()
 	m["client_secret"] = provider.GetClientSecret()
 	oauthConfig := model.OAuthConfig{
-		Provider:     provider.GetName(),
+		Provider:     provider.GetProvider().String(),
 		ClientID:     provider.GetClientId(),
 		ClientSecret: provider.GetClientSecret(),
 		Scopes:       "openid profile email",
 	}
 
 	providerModel := model.OauthProvider{
-		ID:        uuid.New().String(),
-		ProjectID: orgID.String(),
-		Config:    oauthConfig,
+		ID:       uuid.New().String(),
+		Provider: provider.GetProvider().String(),
+		PoolID:   poolID.String(),
+		Config:   oauthConfig,
 	}
 
 	err = as.CreateOauthProvider(ctx, &providerModel)
@@ -392,10 +393,15 @@ func (o *ProjectService) GetOauthProvider(ctx context.Context, request *v1.GetOa
 		return nil, err
 	}
 
+	idpProvider, ok := v1.Idp_value[provider.Provider]
+	if !ok {
+		return nil, errors.New("invalid provider")
+	}
+
 	return &v1.GetOauthProviderResponse{
 		Provider: &v1.OAuthProvider{
 			Id:           provider.ID,
-			Name:         provider.Config.Provider,
+			Provider:     v1.Idp(idpProvider),
 			ClientId:     provider.Config.ClientID,
 			ClientSecret: provider.Config.ClientSecret,
 		},
@@ -427,9 +433,13 @@ func (o *ProjectService) ListOauthProviders(ctx context.Context, request *v1.Lis
 
 	var oauthProviders []*v1.OAuthProvider
 	for _, provider := range providers {
+		idp, ok := v1.Idp_value[provider.Provider]
+		if !ok {
+			return nil, errors.New("invalid provider")
+		}
 		oauthProviders = append(oauthProviders, &v1.OAuthProvider{
 			Id:       provider.ID,
-			Name:     provider.Config.Provider,
+			Provider: v1.Idp(idp),
 			ClientId: provider.Config.ClientID,
 		})
 	}

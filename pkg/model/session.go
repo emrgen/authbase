@@ -8,8 +8,8 @@ import (
 
 type Session struct {
 	gorm.Model
-	ID        string `gorm:"primaryKey"`
-	AccountID string
+	ID        string   `gorm:"primaryKey"`
+	AccountID string   `gorm:"not null;index"`
 	Account   *Account `gorm:"foreignKey:AccountID;OnDelete:CASCADE;"`
 	PoolID    string   `gorm:"not null;index"`
 	Pool      *Pool    `gorm:"foreignKey:PoolID;OnDelete:CASCADE;"`

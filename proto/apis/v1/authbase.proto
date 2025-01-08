@@ -1316,16 +1316,27 @@ service AccessKeyService {
 
 // Provider service
 
+enum Idp {
+  IDP_UNKNOWN = 0;
+  IDP_GOOGLE = 1;
+  IDP_FACEBOOK = 2;
+  IDP_GITHUB = 3;
+  IDP_TWITTER = 4;
+  IDP_LINKEDIN = 5;
+  IDP_MICROSOFT = 6;
+}
+
 message OAuthProvider {
   string id = 1 [(validate.rules).string.uuid = true];
-  string name = 2;
+  Idp provider = 2;
   string client_id = 3;
   string client_secret = 4;
   repeated string redirect_uris = 5;
+  string pool_id = 6 [(validate.rules).string.uuid = true];
 }
 
 message AddOauthProviderRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
+  string pool_id = 1 [(validate.rules).string.uuid = true];
   OAuthProvider provider = 2;
 }
 
@@ -1353,11 +1364,8 @@ message ListOauthProvidersResponse {
 }
 
 message UpdateOauthProviderRequest {
-  string project_id = 1 [(validate.rules).string.uuid = true];
-  string provider = 2;
-  string client_id = 3;
-  string client_secret = 4;
-  repeated string redirect_uris = 5;
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  OAuthProvider provider = 2;
 }
 
 message UpdateOauthProviderResponse {
@@ -1365,7 +1373,7 @@ message UpdateOauthProviderResponse {
 }
 
 message DeleteOauthProviderRequest {
-  string id = 1 [(validate.rules).string.uuid = true];
+  Idp provider = 1;
 }
 
 message DeleteOauthProviderResponse {
@@ -1496,7 +1504,7 @@ service ProjectService {
   // AddOauthProvider
   rpc AddOauthProvider(AddOauthProviderRequest) returns (AddOauthProviderResponse) {
     option (google.api.http) = {
-      post: "/v1/projects/{project_id}/oauth-providers"
+      post: "/v1/idp"
       body: "*"
     };
   }
@@ -1514,14 +1522,14 @@ service ProjectService {
   // UpdateOauthProvider
   rpc UpdateOauthProvider(UpdateOauthProviderRequest) returns (UpdateOauthProviderResponse) {
     option (google.api.http) = {
-      put: "/v1/projects/{project_id}/oauth-providers/{provider}"
+      put: "/v1/idp"
       body: "*"
     };
   }
 
   // DeleteOauthProvider
   rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
-    option (google.api.http) = {delete: "/v1/projects/{id}/oauth-providers"};
+    option (google.api.http) = {delete: "/v1/idp/{provider}"};
   }
 }
 

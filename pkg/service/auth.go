@@ -254,6 +254,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		// this will allow multiple sessions for a account at the same time
 		err = as.CreateSession(ctx, &model.Session{
 			ID:        jti,
+			PoolID:    account.PoolID,
 			AccountID: account.ID,
 			ProjectID: account.ProjectID,
 		})

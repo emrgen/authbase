@@ -19,11 +19,6 @@ var userCommand = &cobra.Command{
 	Short: "account commands",
 }
 
-var permCommand = &cobra.Command{
-	Use:   "perm",
-	Short: "permission commands",
-}
-
 func init() {
 	userCommand.AddCommand(createUserCommand())
 	userCommand.AddCommand(getUserCommand())
