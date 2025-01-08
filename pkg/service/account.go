@@ -32,6 +32,9 @@ func NewAccountService(perm permission.AuthBasePermission, store store.Provider,
 // CreateAccount creates a new user.
 func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAccountRequest) (*v1.CreateAccountResponse, error) {
 	var err error
+	if request.GetPoolId() == "" && request.GetClientId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "pool_id or client_id is required")
+	}
 
 	// create a new user
 	as, err := store.GetProjectStore(ctx, u.store)
@@ -39,19 +42,46 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 		return nil, err
 	}
 
-	clientID, err := uuid.Parse(request.GetClientId())
-	if err != nil {
-		return nil, err
+	projectID := uuid.Nil
+	poolID := uuid.Nil
+
+	if request.GetPoolId() != "" {
+		poolID, err := uuid.Parse(request.GetPoolId())
+		if err != nil {
+			return nil, err
+		}
+		pool, err := as.GetPoolByID(ctx, poolID)
+		if err != nil {
+			return nil, err
+		}
+		projectID = uuid.MustParse(pool.ProjectID)
+		poolID = uuid.MustParse(pool.ID)
 	}
 
-	client, err := as.GetClientByID(ctx, clientID)
-	if err != nil {
-		return nil, err
+	if request.GetClientId() != "" {
+		if request.GetClientSecret() == "" {
+			return nil, status.Error(codes.InvalidArgument, "client_secret is required")
+		}
+
+		clientID, err := uuid.Parse(request.GetClientId())
+		if err != nil {
+			return nil, err
+		}
+
+		client, err := as.GetClientByID(ctx, clientID)
+		if err != nil {
+			return nil, err
+		}
+
+		projectID, err = uuid.Parse(client.Pool.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+		poolID = uuid.MustParse(client.PoolID)
 	}
 
-	projectID, err := uuid.Parse(client.Pool.ProjectID)
-	if err != nil {
-		return nil, err
+	if projectID != uuid.Nil {
+		return nil, status.Error(codes.InvalidArgument, "pool_id and client_id cannot be used together")
 	}
 
 	visibleName := request.GetVisibleName()
@@ -71,7 +101,7 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 		Email:       request.GetEmail(),
 		VisibleName: request.GetVisibleName(),
 		ProjectID:   projectID.String(),
-		PoolID:      client.PoolID,
+		PoolID:      poolID.String(),
 	}
 
 	password := request.GetPassword()
@@ -90,10 +120,13 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 	}
 
 	return &v1.CreateAccountResponse{
-		Id:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		CreatedAt: timestamppb.New(user.CreatedAt),
+		Account: &v1.Account{
+			Id:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			PoolId:    poolID.String(),
+			CreatedAt: timestamppb.New(user.CreatedAt),
+		},
 	}, nil
 }
 

@@ -495,8 +495,8 @@ func (g *GormStore) UpdateProject(ctx context.Context, org *model.Project) error
 
 // DeleteProject deletes an organization from the database
 func (g *GormStore) DeleteProject(ctx context.Context, id uuid.UUID) error {
-	org := model.Project{ID: id.String()}
-	return g.db.Delete(&org).Error
+	project := model.Project{ID: id.String()}
+	return g.db.Delete(&project).Error
 }
 
 func (g *GormStore) CreateKeypair(ctx context.Context, keypair *model.Keypair) error {

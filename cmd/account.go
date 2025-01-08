@@ -101,8 +101,9 @@ func createUserCommand() *cobra.Command {
 			// print response in table
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader([]string{"#", "ID", "Email", "Username", "CreatedAt"})
+			account := user.Account
 			table.Append([]string{
-				"1", user.Id, user.Email, user.Username, user.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
+				"1", account.Id, account.Email, account.Username, account.CreatedAt.AsTime().Format("2006-01-02 15:04:05"),
 			})
 			table.Render()
 		},

@@ -317,7 +317,7 @@ func (o *ProjectService) DeleteProject(ctx context.Context, request *v1.DeletePr
 			return errors.New("cannot delete master project")
 		}
 
-		err = as.DeleteProject(ctx, projectID)
+		err = tx.DeleteProject(ctx, projectID)
 		if err != nil {
 			return err
 		}

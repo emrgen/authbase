@@ -102,3 +102,21 @@ func TestProjectService_UpdateProject(t *testing.T) {
 
 	assert.Equal(t, projectRes.Project.Name, "test-project-4", "project name is not correct")
 }
+
+func TestProjectService_DeleteProject(t *testing.T) {
+	tester.RemoveDBFile()
+	tester.Setup()
+	ab, projectService, project := createProject(t, "test-project-1", "Test Project 1", testEmail1, "password")
+
+	// delete the project
+	_, err := projectService.DeleteProject(ab.ctx, &v1.DeleteProjectRequest{
+		Id: project.Id,
+	})
+	assert.NoError(t, err, "failed to delete project: %v", err)
+
+	// get the project
+	_, err = projectService.GetProject(ab.ctx, &v1.GetProjectRequest{
+		Id: project.Id,
+	})
+	assert.Error(t, err, "project should not exist")
+}
