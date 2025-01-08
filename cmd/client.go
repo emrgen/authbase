@@ -55,8 +55,8 @@ func clientCreateCmd() *cobra.Command {
 			}
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
-			table.SetHeader([]string{"ID", "Pool ID", "Name", "Created By"})
-			table.Append([]string{res.Client.Id, res.Client.PoolId, res.Client.Name, res.Client.CreatedByUser.VisibleName})
+			table.SetHeader([]string{"Client ID", "Client Secret", "Pool ID", "Name", "Created By"})
+			table.Append([]string{res.Client.Id, res.Client.ClientSecret, res.Client.PoolId, res.Client.Name, res.Client.CreatedByUser.VisibleName})
 			table.Render()
 
 		},
@@ -113,17 +113,17 @@ func clientListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List clients",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" {
-				logrus.Error("missing required flags: --pool-id")
-				return
-			}
-
 			client, err := authbase.NewClient("4000")
 			if err != nil {
 				logrus.Error(err)
 				return
 			}
 			defer client.Close()
+
+			if poolID == "" {
+				account := getAccount(client)
+				poolID = account.PoolId
+			}
 
 			res, err := client.ListClients(tokenContext(), &v1.ListClientsRequest{
 				PoolId: poolID,
@@ -147,13 +147,37 @@ func clientListCmd() *cobra.Command {
 }
 
 func clientDeleteCmd() *cobra.Command {
+	var clientID string
+
 	command := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a client",
 		Run: func(cmd *cobra.Command, args []string) {
-			//TODO implement me
+			if clientID == "" {
+				logrus.Error("missing required flags: --client-id")
+				return
+			}
+
+			client, err := authbase.NewClient("4000")
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.DeleteClient(tokenContext(), &v1.DeleteClientRequest{
+				ClientId: clientID,
+			})
+			if err != nil {
+				logrus.Error(err)
+				return
+			}
+
+			logrus.Infof("Client %s deleted", clientID)
 		},
 	}
+
+	command.Flags().StringVarP(&clientID, "client-id", "c", "", "Client ID")
 
 	return command
 }

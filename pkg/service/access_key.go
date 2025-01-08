@@ -50,15 +50,15 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		return nil, err
 	}
 
-	orgID, err := uuid.Parse(request.GetProjectId())
+	poolID, err := uuid.Parse(request.GetPoolId())
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.perm.CheckProjectPermission(ctx, orgID, "write")
-	if err != nil {
-		return nil, err
-	}
+	//err = t.perm.CheckProjectPermission(ctx, poolID, "write")
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
@@ -70,7 +70,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		expireAfter = time.Second * time.Duration(request.GetExpiresIn())
 	}
 
-	//perm, err := as.GetProjectMemberByID(ctx, orgID, accountID)
+	//perm, err := as.GetProjectMemberByID(ctx, poolID, accountID)
 	//if err != nil {
 	//	return nil, err
 	//}
@@ -82,16 +82,22 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 	}
 
 	// custom permissions from the downstream service
-	roles := request.GetPermissions()
+	roles := request.GetRoles()
 
 	expireAt := time.Now().Add(expireAfter)
 	token := x.NewAccessKey()
+
+	project, err := as.GetPoolByID(ctx, poolID)
+	if err != nil {
+		return nil, err
+	}
 
 	// create a new token
 	accessKey := &model.AccessKey{
 		ID:        token.ID.String(),
 		AccountID: accountID.String(),
-		ProjectID: request.GetProjectId(),
+		PoolID:    request.GetPoolId(),
+		ProjectID: project.ID,
 		Name:      request.GetName(),
 		Token:     token.Value,
 		Scopes:    strings.Join(scopes, ","),
@@ -101,7 +107,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 
 	// save the token into the database
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err = t.cache.Set(token.ID.String(), accessKey.ProjectID, defaultAccessKeyExpireIn)
+		err = t.cache.Set(token.ID.String(), accessKey.Token, defaultAccessKeyExpireIn)
 		if err != nil {
 			return err
 		}
@@ -120,7 +126,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 	return &v1.CreateAccessKeyResponse{
 		Token: &v1.AccessKey{
 			Id:        accessKey.ID,
-			AccessKey: token.Value,
+			AccessKey: token.String(),
 			ProjectId: accessKey.ProjectID,
 			CreatedAt: timestamppb.New(time.Now()),
 			ExpiresAt: timestamppb.New(expireAt),
@@ -276,6 +282,7 @@ func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.
 			VisibleName: account.VisibleName,
 			Member:      account.ProjectMember,
 			ProjectId:   account.ProjectID,
+			PoolId:      account.PoolID,
 		},
 	}, nil
 }

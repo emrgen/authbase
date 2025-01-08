@@ -1223,19 +1223,19 @@ message AccessKey {
 }
 
 message CreateAccessKeyRequest {
-  string project_id = 1;
-  string email = 2 [
+  string pool_id = 2;
+  string email = 3 [
     (validate.rules).string.min_len = 6,
     (validate.rules).string.max_len = 64
   ];
-  string password = 3 [
+  string password = 4 [
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 64
   ];
-  optional int64 expires_in = 4; // in seconds
-  optional string name = 5;
-  repeated string scopes = 6;
-  repeated string permissions = 7;
+  optional int64 expires_in = 5; // in seconds
+  optional string name = 6;
+  repeated string scopes = 7;
+  repeated string roles = 8;
 }
 
 message CreateAccessKeyResponse {
@@ -1289,7 +1289,7 @@ service AccessKeyService {
   // CreateAccessKey
   rpc CreateAccessKey(CreateAccessKeyRequest) returns (CreateAccessKeyResponse) {
     option (google.api.http) = {
-      post: "/v1/tokens/projects/{project_id}"
+      post: "/v1/tokens"
       body: "*"
     };
   }

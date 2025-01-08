@@ -34,11 +34,20 @@ func whoamiCommand() *cobra.Command {
 
 			// print claims
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Project ID", "User ID", "Email", "Username", "Member"})
-			table.Append([]string{res.Account.ProjectId, res.Account.Id, res.Account.Email, res.Account.VisibleName, strconv.FormatBool(res.Account.Member)})
+			table.SetHeader([]string{"Pool ID", "User ID", "Email", "Username", "Member"})
+			table.Append([]string{res.Account.PoolId, res.Account.Id, res.Account.Email, res.Account.VisibleName, strconv.FormatBool(res.Account.Member)})
 			table.Render()
 		},
 	}
 
 	return command
+}
+
+func getAccount(client authbase.Client) *v1.Account {
+	res, err := client.GetAccessKeyAccount(tokenContext(), &v1.GetAccessKeyAccountRequest{})
+	if err != nil {
+		panic(err)
+	}
+
+	return res.Account
 }

@@ -244,20 +244,22 @@ func listUserCommand() *cobra.Command {
 		Short: "list account",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
-
-			logrus.Info("list users ", projectID, poolID)
-
-			if projectID == "" && poolID == "" {
-				logrus.Errorf("missing required flags: --project-id or --pool-id")
-				return
-			}
-
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
 			defer client.Close()
+
+			if projectID == "" && poolID == "" {
+				if Token != "" {
+					account := getAccount(client)
+					poolID = account.PoolId
+				} else {
+					logrus.Errorf("missing required flags: --project-id or --pool-id")
+					return
+				}
+			}
 
 			req := &v1.ListAccountsRequest{}
 

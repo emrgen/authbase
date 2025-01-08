@@ -263,8 +263,7 @@ func (g *GormStore) UpdateClient(ctx context.Context, client *model.Client) erro
 }
 
 func (g *GormStore) DeleteClient(ctx context.Context, id uuid.UUID) error {
-	client := model.Client{ID: id.String()}
-	return g.db.Delete(&client).Error
+	return g.db.WithContext(ctx).Unscoped().Delete(&model.Client{ID: id.String()}).Error
 }
 
 // DeleteSessionByAccountID expire and delete all sessions for a user which not deleted or expired already

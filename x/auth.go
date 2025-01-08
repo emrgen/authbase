@@ -5,7 +5,6 @@ import (
 	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"strings"
@@ -23,23 +22,22 @@ func AuthInterceptor(verifier TokenVerifier) grpc.UnaryServerInterceptor {
 			break
 		case v1.AccessKeyService_CreateAccessKey_FullMethodName:
 			request := req.(*v1.CreateAccessKeyRequest)
-			orgID, err := uuid.Parse(request.GetProjectId())
+			poolID, err := uuid.Parse(request.GetPoolId())
 			if err != nil {
 				return nil, err
 			}
-			user, err := verifier.VerifyEmailPassword(ctx, orgID, request.Email, request.Password)
+			user, err := verifier.VerifyEmailPassword(ctx, poolID, request.Email, request.Password)
 			if err != nil {
 				return nil, err
 			}
 
 			ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(user.ID))
-			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(request.GetProjectId()))
+			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(user.ProjectID))
+			ctx = context.WithValue(ctx, PoolIDKey, poolID)
 		default:
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication
 			token, err := tokenFromHeader(ctx, "Bearer")
-
-			logrus.Infof("token: %v", token)
 
 			accessKey, err := ParseAccessKey(token)
 			if !errors.Is(err, ErrInvalidToken) && err != nil {

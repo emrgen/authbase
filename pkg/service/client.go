@@ -210,6 +210,21 @@ func (c *ClientService) UpdateClient(ctx context.Context, request *v1.UpdateClie
 }
 
 func (c *ClientService) DeleteClient(ctx context.Context, request *v1.DeleteClientRequest) (*v1.DeleteClientResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	as, err := store.GetProjectStore(ctx, c.store)
+	if err != nil {
+		return nil, err
+	}
+
+	clientID, err := uuid.Parse(request.GetClientId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = as.DeleteClient(ctx, clientID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DeleteClientResponse{}, nil
+
 }
