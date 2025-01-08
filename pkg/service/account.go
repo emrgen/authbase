@@ -158,7 +158,7 @@ func (u *AccountService) ListAccounts(ctx context.Context, request *v1.ListAccou
 	var projectID uuid.UUID
 	var poolID uuid.UUID
 	if request.GetPoolId() != "" {
-		poolID, err := uuid.Parse(request.GetPoolId())
+		poolID, err = uuid.Parse(request.GetPoolId())
 		if err != nil {
 			return nil, err
 		}
@@ -182,6 +182,7 @@ func (u *AccountService) ListAccounts(ctx context.Context, request *v1.ListAccou
 	page := x.GetPageFromRequest(request)
 	var users []*model.Account
 	var total int
+
 	if poolID != uuid.Nil {
 		users, total, err = as.ListPoolAccounts(ctx, false, poolID, int(page.Page), int(page.Size))
 	} else {

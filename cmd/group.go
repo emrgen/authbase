@@ -15,6 +15,7 @@ var groupCommand = &cobra.Command{
 	Use:   "group",
 	Short: "Group commands",
 }
+
 var groupMemberCommand = &cobra.Command{
 	Use:   "member",
 	Short: "Group member commands",

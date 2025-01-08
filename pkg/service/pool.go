@@ -76,6 +76,7 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 				PoolID:      pool.ID,
 				Name:        "default",
 				SecretHash:  string(hash),
+				Secret:      secret,
 				Salt:        salt,
 				CreatedByID: accountID.String(),
 			}

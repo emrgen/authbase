@@ -44,6 +44,7 @@ func refreshTokenCommand() *cobra.Command {
 				return
 			}
 
+			cmd.Printf("----------\n")
 			cmd.Printf("AccessToken: %v\n", res.Tokens.AccessToken)
 			cmd.Printf("RefreshToken: %v\n", res.Tokens.RefreshToken)
 		},
