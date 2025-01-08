@@ -36,10 +36,10 @@ func (g *GormStore) ListApplications(ctx context.Context, projectID uuid.UUID, p
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Application{}).Where("project_id = ?", projectID).Count(&total).Error; err != nil {
+		if err := tx.Model(&model.Application{}).Where("pool_id = ?", projectID).Count(&total).Error; err != nil {
 			return err
 		}
-		return tx.Limit(perPage).Offset(page*perPage).Find(&apps, "project_id = ?", projectID).Error
+		return tx.Limit(perPage).Offset(page*perPage).Find(&apps, "pool_id = ?", projectID).Error
 	})
 
 	return apps, int(total), err

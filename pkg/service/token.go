@@ -9,8 +9,7 @@ import (
 var _ v1.TokenServiceServer = (*TokenService)(nil)
 
 type TokenService struct {
-	verifier    x.TokenVerifier
-	keyProvider x.JWTKeyProvider
+	verifier x.TokenVerifier
 	v1.UnimplementedTokenServiceServer
 }
 

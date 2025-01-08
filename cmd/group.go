@@ -53,22 +53,21 @@ func groupCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a group",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" {
-				logrus.Errorf("missing required flag: --pool-id")
-				return
-			}
-
-			if name == "" {
-				logrus.Errorf("missing required flag: --name")
-				return
-			}
-
 			client, err := authbase.NewClient("4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
 			defer client.Close()
+
+			if poolID == "" {
+				poolID = getAccountPoolID(client)
+			}
+
+			if name == "" {
+				logrus.Errorf("missing required flag: --name")
+				return
+			}
 
 			res, err := client.CreateGroup(tokenContext(), &v1.CreateGroupRequest{
 				PoolId:    poolID,
@@ -149,24 +148,29 @@ func groupListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List groups",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" && accountID == "" {
-				logrus.Errorf("pool-id or account-id is required")
-				return
-			}
-
 			client, err := authbase.NewClient("4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
 			defer client.Close()
+			if poolID == "" {
+				poolID = getAccountPoolID(client)
+			}
 
 			req := &v1.ListGroupsRequest{}
-			if poolID != "" {
-				req.PoolId = &poolID
-			}
+
 			if accountID != "" {
 				req.AccountId = &accountID
+			}
+
+			if accountID == "" && poolID != "" {
+				req.PoolId = &poolID
+			}
+
+			if req.PoolId == nil && req.AccountId == nil {
+				logrus.Errorf("missing required flag: --pool-id or --account-id")
+				return
 			}
 
 			res, err := client.ListGroups(tokenContext(), req)

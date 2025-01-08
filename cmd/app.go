@@ -23,6 +23,7 @@ func init() {
 
 func applicationCreateCommand() *cobra.Command {
 	var poolID string
+	var name string
 
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -30,6 +31,11 @@ func applicationCreateCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if poolID == "" {
 				logrus.Error("missing required flags: --pool-id")
+				return
+			}
+
+			if name == "" {
+				logrus.Error("missing required flags: --name")
 				return
 			}
 
@@ -41,8 +47,8 @@ func applicationCreateCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.CreateApplication(tokenContext(), &v1.CreateApplicationRequest{
-				PoolId: "",
-				Name:   "",
+				PoolId: poolID,
+				Name:   name,
 			})
 			if err != nil {
 				logrus.Error(err)
@@ -56,12 +62,15 @@ func applicationCreateCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&poolID, "pool-id", "", "The pool id")
+	cmd.Flags().StringVarP(&poolID, "pool-id", "p", "", "The pool id")
+	cmd.Flags().StringVarP(&name, "name", "n", "", "The application name")
 
 	return cmd
 }
 
 func applicationListCommand() *cobra.Command {
+	var poolID string
+
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List applications",
@@ -73,7 +82,13 @@ func applicationListCommand() *cobra.Command {
 			}
 			defer client.Close()
 
-			res, err := client.ListApplications(tokenContext(), &v1.ListApplicationsRequest{})
+			if poolID == "" {
+				poolID = getAccountPoolID(client)
+			}
+
+			res, err := client.ListApplications(tokenContext(), &v1.ListApplicationsRequest{
+				PoolId: poolID,
+			})
 			if err != nil {
 				logrus.Error(err)
 				return
@@ -87,6 +102,8 @@ func applicationListCommand() *cobra.Command {
 			table.Render()
 		},
 	}
+
+	cmd.Flags().StringVarP(&poolID, "pool-id", "p", "", "The pool id")
 
 	return cmd
 }
@@ -124,8 +141,8 @@ func applicationUpdateCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&appID, "app-id", "", "The application id")
-	cmd.Flags().StringVar(&name, "name", "", "The application name")
+	cmd.Flags().StringVarP(&appID, "app-id", "a", "", "The application id")
+	cmd.Flags().StringVarP(&name, "name", "n", "", "The application name")
 
 	return cmd
 }
@@ -159,7 +176,7 @@ func applicationDeleteCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&appID, "app-id", "", "The application id")
+	cmd.Flags().StringVarP(&appID, "app-id", "a", "", "The application id")
 
 	return cmd
 }

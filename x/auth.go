@@ -14,7 +14,7 @@ import (
 
 // AuthInterceptor authenticates the request using the provided verifier.
 // on success, it sets the accountID and projectID and account permission in the context.
-func AuthInterceptor(verifier TokenVerifier, keyProvider JWTKeyProvider) grpc.UnaryServerInterceptor {
+func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvider) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		switch info.FullMethod {
 		case
@@ -88,12 +88,12 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTKeyProvider) grpc.Un
 					return nil, err
 				}
 
-				verifyKey, err := keyProvider.GetVerifyKey(claims.PoolID)
+				verifier, err := keyProvider.GetVerifier(claims.PoolID)
 				if err != nil {
 					return nil, err
 				}
 
-				_, err = VerifyJWTToken(token, verifyKey)
+				_, err = VerifyJWTToken(token, verifier)
 				if err != nil {
 					return nil, err
 				}

@@ -32,8 +32,8 @@ func NewAccountService(perm permission.AuthBasePermission, store store.Provider,
 // CreateAccount creates a new user.
 func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAccountRequest) (*v1.CreateAccountResponse, error) {
 	var err error
-	if request.GetPoolId() == "" && request.GetClientId() == "" {
-		return nil, status.Error(codes.InvalidArgument, "pool_id or client_id is required")
+	if request.GetClientId() == "" || request.GetClientSecret() == "" {
+		return nil, status.Error(codes.InvalidArgument, "client_id and client_secret is required")
 	}
 
 	// create a new user
@@ -42,47 +42,21 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 		return nil, err
 	}
 
-	projectID := uuid.Nil
-	poolID := uuid.Nil
-
-	if request.GetPoolId() != "" {
-		poolID, err := uuid.Parse(request.GetPoolId())
-		if err != nil {
-			return nil, err
-		}
-		pool, err := as.GetPoolByID(ctx, poolID)
-		if err != nil {
-			return nil, err
-		}
-		projectID = uuid.MustParse(pool.ProjectID)
-		poolID = uuid.MustParse(pool.ID)
+	clientID, err := uuid.Parse(request.GetClientId())
+	if err != nil {
+		return nil, err
 	}
 
-	if request.GetClientId() != "" {
-		if request.GetClientSecret() == "" {
-			return nil, status.Error(codes.InvalidArgument, "client_secret is required")
-		}
-
-		clientID, err := uuid.Parse(request.GetClientId())
-		if err != nil {
-			return nil, err
-		}
-
-		client, err := as.GetClientByID(ctx, clientID)
-		if err != nil {
-			return nil, err
-		}
-
-		projectID, err = uuid.Parse(client.Pool.ProjectID)
-		if err != nil {
-			return nil, err
-		}
-		poolID = uuid.MustParse(client.PoolID)
+	client, err := as.GetClientByID(ctx, clientID)
+	if err != nil {
+		return nil, err
 	}
 
-	if projectID != uuid.Nil {
-		return nil, status.Error(codes.InvalidArgument, "pool_id and client_id cannot be used together")
+	projectID, err := uuid.Parse(client.Pool.ProjectID)
+	if err != nil {
+		return nil, err
 	}
+	poolID := uuid.MustParse(client.PoolID)
 
 	visibleName := request.GetVisibleName()
 	userName := request.GetUsername()

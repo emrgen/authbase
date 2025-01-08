@@ -29,17 +29,30 @@ func JWTSecretFromEnv() string {
 	return secretKey
 }
 
-type JWTKeyProvider interface {
-	SignKeyProvider
-	VerifyKeyProvider
+type JWTSignerVerifierProvider interface {
+	SignerProvider
+	VerifierProvider
 }
 
-type SignKeyProvider interface {
-	GetSignKey(id string) (interface{}, error)
+type SignerProvider interface {
+	GetSigner(id string) (JWTSigner, error)
 }
 
-type VerifyKeyProvider interface {
-	GetVerifyKey(id string) (interface{}, error)
+type VerifierProvider interface {
+	GetVerifier(id string) (JWTVerifier, error)
+}
+
+type JWTSignerVerifier interface {
+	JWTSigner
+	JWTVerifier
+}
+
+type JWTSigner interface {
+	Sign(claims jwt.MapClaims) (string, error)
+}
+
+type JWTVerifier interface {
+	Verify(tokenString string) (jwt.MapClaims, error)
 }
 
 type Claims struct {
@@ -67,7 +80,7 @@ type JWTToken struct {
 }
 
 // GenerateJWTToken generates a JWT token for the user
-func GenerateJWTToken(claims *Claims, singKey interface{}) (*JWTToken, error) {
+func GenerateJWTToken(claims *Claims, signer JWTSigner) (*JWTToken, error) {
 	claim := jwt.MapClaims{
 		"username":   claims.Username,
 		"email":      claims.Email,
@@ -83,9 +96,7 @@ func GenerateJWTToken(claims *Claims, singKey interface{}) (*JWTToken, error) {
 		"roles":      claims.Roles,
 	}
 
-	// Generate the access token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	tokenString, err := token.SignedString(singKey)
+	tokenString, err := signer.Sign(claim)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +104,9 @@ func GenerateJWTToken(claims *Claims, singKey interface{}) (*JWTToken, error) {
 	// Generate the refresh token
 	claim["exp"] = time.Now().Add(RefreshTokenDuration).Unix()
 	claim["iat"] = time.Now().Unix()
-	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	refreshToken, err := token.SignedString(singKey)
+	//token = jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	//refreshToken, err := token.SignedString(singKey)
+	refreshToken, err := signer.Sign(claim)
 	if err != nil {
 		return nil, err
 	}
@@ -107,20 +119,12 @@ func GenerateJWTToken(claims *Claims, singKey interface{}) (*JWTToken, error) {
 }
 
 // VerifyJWTToken verifies the JWT token
-func VerifyJWTToken(tokenString string, verifyKey interface{}) (*Claims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return verifyKey, nil
-	})
-
+func VerifyJWTToken(tokenString string, verifier JWTVerifier) (*Claims, error) {
+	claims, err := verifier.Verify(tokenString)
 	if err != nil {
 		return nil, err
 	}
 
-	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	claims := token.Claims.(jwt.MapClaims)
 	return intoClaim(claims)
 }
 

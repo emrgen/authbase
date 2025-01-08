@@ -441,6 +441,7 @@ func registerUserCommand() *cobra.Command {
 
 func loginUserCommand() *cobra.Command {
 	var clientID string
+	var clientSecret string
 	var email string
 	var password string
 
@@ -450,6 +451,11 @@ func loginUserCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if clientID == "" {
 				logrus.Errorf("missing required flag: --client-id")
+				return
+			}
+
+			if clientSecret == "" {
+				logrus.Errorf("missing required flag: --client-secret")
 				return
 			}
 
@@ -471,9 +477,10 @@ func loginUserCommand() *cobra.Command {
 			defer client.Close()
 
 			res, err := client.LoginUsingPassword(context.Background(), &v1.LoginUsingPasswordRequest{
-				Email:    email,
-				Password: password,
-				ClientId: clientID,
+				Email:        email,
+				Password:     password,
+				ClientId:     clientID,
+				ClientSecret: clientSecret,
 			})
 			if err != nil {
 				logrus.Errorf("failed to login user: %v", err)
@@ -489,6 +496,7 @@ func loginUserCommand() *cobra.Command {
 
 	bindContextFlags(command)
 	command.Flags().StringVarP(&clientID, "client-id", "c", "", "client id")
+	command.Flags().StringVarP(&clientSecret, "client-secret", "s", "", "client secret")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")
 

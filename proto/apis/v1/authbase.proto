@@ -1006,6 +1006,7 @@ message LoginUsingPasswordRequest {
     (validate.rules).string.max_len = 64
   ];
   string client_id = 4 [(validate.rules).string.uuid = true];
+  string client_secret = 5;
 }
 
 message LoginUsingPasswordResponse {
@@ -1465,7 +1466,6 @@ message CreateAccountRequest {
     (validate.rules).string.min_len = 3,
     (validate.rules).string.max_len = 11
   ];
-  string pool_id = 7 [(validate.rules).string.uuid = true];
 }
 
 message CreateAccountResponse {

@@ -29,19 +29,18 @@ func roleCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a role",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" {
-				logrus.Errorf("missing required flag: --pool-id")
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
 				return
+			}
+
+			if poolID == "" {
+				poolID = getAccountPoolID(client)
 			}
 
 			if name == "" {
 				logrus.Errorf("missing required flag: --name")
-				return
-			}
-
-			client, err := authbase.NewClient(":4000")
-			if err != nil {
-				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
 

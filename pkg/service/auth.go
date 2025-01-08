@@ -18,8 +18,8 @@ import (
 )
 
 // NewAuthService creates a new AuthService
-func NewAuthService(store store.Provider, singKeyProvider x.JWTKeyProvider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
-	return &AuthService{store: store, perm: perm, mailer: mailer, cache: cache}
+func NewAuthService(store store.Provider, keyProvider x.JWTSignerVerifierProvider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
+	return &AuthService{store: store, keyProvider: keyProvider, perm: perm, mailer: mailer, cache: cache}
 }
 
 var _ v1.AuthServiceServer = new(AuthService)
@@ -30,7 +30,7 @@ type AuthService struct {
 	mailer      mail.MailerProvider
 	cache       *cache.Redis
 	perm        permission.AuthBasePermission
-	keyProvider x.JWTKeyProvider
+	keyProvider x.JWTSignerVerifierProvider
 	v1.UnimplementedAuthServiceServer
 }
 
@@ -171,6 +171,12 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, err
 	}
 
+	clientSecret := request.GetClientSecret()
+	yes := x.CompareHashAndPassword(client.Secret, clientSecret, client.Salt)
+	if !yes {
+		return nil, errors.New("client secret mismatch")
+	}
+
 	poolID := uuid.MustParse(client.PoolID)
 
 	account, err := as.GetAccountByEmail(ctx, poolID, email)
@@ -209,7 +215,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	roleNames := set.ToSlice()
 
-	verifyKey, err := a.keyProvider.GetVerifyKey(poolID.String())
+	signer, err := a.keyProvider.GetSigner(poolID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +235,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		Provider:  "authbase",
 		Scopes:    roleNames, // internal roles
 		Roles:     roleNames,
-	}, verifyKey)
+	}, signer)
 	if err != nil {
 		return nil, err
 	}
@@ -301,12 +307,12 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 	}
 	// check if the token is still valid
 	accessToken := request.GetAccessToken()
-	singKey, err := a.keyProvider.GetSignKey(poolID.String())
+	verifier, err := a.keyProvider.GetVerifier(poolID.String())
 	if err != nil {
 		return nil, err
 	}
 
-	claims, err := x.VerifyJWTToken(accessToken, singKey)
+	claims, err := x.VerifyJWTToken(accessToken, verifier)
 	if err != nil {
 		return nil, err
 	}
@@ -491,9 +497,9 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		return nil, err
 	}
 
-	signKey, err := a.keyProvider.GetSignKey(oldClaims.ClientID)
+	verifier, err := a.keyProvider.GetVerifier(oldClaims.ClientID)
 
-	claims, err := x.VerifyJWTToken(refreshToken, signKey)
+	claims, err := x.VerifyJWTToken(refreshToken, verifier)
 	if err != nil {
 		return nil, err
 	}
@@ -552,12 +558,12 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 		Scopes:    claims.Scopes,
 	}
 
-	verifyKey, err := a.keyProvider.GetVerifyKey(claims.PoolID)
+	signer, err := a.keyProvider.GetSigner(claims.PoolID)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := x.GenerateJWTToken(claims, verifyKey)
+	token, err := x.GenerateJWTToken(claims, signer)
 	if err != nil {
 		return nil, err
 	}

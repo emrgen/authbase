@@ -24,7 +24,7 @@ type TokenVerifier interface {
 type StoreBasedUserVerifier struct {
 	store       store.Provider
 	redis       *cache.Redis
-	keyProvider JWTKeyProvider
+	keyProvider JWTSignerVerifierProvider
 }
 
 // NewStoreBasedTokenVerifier creates a new StoreBasedUserVerifier.
@@ -62,12 +62,12 @@ func (v *StoreBasedUserVerifier) VerifyEmailPassword(ctx context.Context, poolID
 
 // VerifyToken verifies the token.
 func (v *StoreBasedUserVerifier) VerifyToken(ctx context.Context, token string, poolID string) (*Claims, error) {
-	key, err := v.keyProvider.GetVerifyKey(poolID)
+	verifier, err := v.keyProvider.GetVerifier(poolID)
 	if err != nil {
 		return nil, err
 	}
 
-	claims, err := VerifyJWTToken(token, key)
+	claims, err := VerifyJWTToken(token, verifier)
 	if err != nil {
 		return nil, err
 	}

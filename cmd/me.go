@@ -43,6 +43,10 @@ func whoamiCommand() *cobra.Command {
 	return command
 }
 
+func getAccountPoolID(client authbase.Client) string {
+	return getAccount(client).PoolId
+}
+
 func getAccount(client authbase.Client) *v1.Account {
 	res, err := client.GetAccessKeyAccount(tokenContext(), &v1.GetAccessKeyAccountRequest{})
 	if err != nil {
