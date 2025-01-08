@@ -28,22 +28,21 @@ func clientCreateCmd() *cobra.Command {
 		Use:   "create",
 		Short: "Create a client",
 		Run: func(cmd *cobra.Command, args []string) {
-			if poolID == "" {
-				logrus.Error("missing required flags: --pool-id")
-				return
-			}
-
-			if name == "" {
-				logrus.Error("missing required flags: --name")
-				return
-			}
-
 			client, err := authbase.NewClient("4000")
 			if err != nil {
 				logrus.Error(err)
 				return
 			}
 			defer client.Close()
+
+			if poolID == "" {
+				poolID = getAccount(client).PoolId
+			}
+
+			if name == "" {
+				logrus.Error("missing required flags: --name")
+				return
+			}
 
 			res, err := client.CreateClient(tokenContext(), &v1.CreateClientRequest{
 				PoolId: poolID,

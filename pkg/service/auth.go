@@ -13,6 +13,8 @@ import (
 	"github.com/emrgen/authbase/x/mail"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
@@ -157,6 +159,7 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 
 // LoginUsingPassword logs in a user and returns an access token and a refresh token
 // TODO: should be rate limited to prevent brute force attacks
+// TODO: /admin/login should we separate the admin login url the user login?
 func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	password := request.GetPassword()
@@ -171,10 +174,34 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, err
 	}
 
+	if client == nil {
+		return nil, errors.New("client not found")
+	}
+
+	// client secret is optional for master project
 	clientSecret := request.GetClientSecret()
-	yes := x.CompareHashAndPassword(client.Secret, clientSecret, client.Salt)
-	if !yes {
-		return nil, errors.New("client secret mismatch")
+	if clientSecret == "" {
+		project, err := as.GetProjectByID(ctx, uuid.MustParse(client.Pool.ProjectID))
+		if err != nil {
+			return nil, err
+		}
+
+		if project == nil {
+			return nil, errors.New("project not found for the client")
+		}
+
+		if !client.Pool.Default {
+			return nil, status.New(codes.FailedPrecondition, "client is not for default project pool, need client secret").Err()
+		}
+
+		if !project.Master {
+			return nil, status.New(codes.FailedPrecondition, "project is not a master project, need client secret").Err()
+		}
+	} else {
+		yes := x.CompareHashAndPassword(client.Secret, clientSecret, client.Salt)
+		if !yes {
+			return nil, errors.New("client secret mismatch")
+		}
 	}
 
 	poolID := uuid.MustParse(client.PoolID)

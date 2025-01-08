@@ -222,10 +222,12 @@ message CreatePoolRequest {
     (validate.rules).string.max_len = 64
   ];
   repeated PoolMember members = 3;
+  bool client = 4;
 }
 
 message CreatePoolResponse {
   Pool pool = 1;
+  optional Client client = 2;
 }
 
 message GetPoolRequest {
@@ -793,7 +795,9 @@ message ListAccountsRequest {
   optional string project_id = 1 [(validate.rules).string.uuid = true];
   optional string pool_id = 3 [(validate.rules).string.uuid = true];
   optional string role_name = 4;
-  Page page = 5;
+  repeated string account_ids = 5;
+
+  Page page = 10;
 }
 
 message ListAccountsResponse {
@@ -1709,6 +1713,32 @@ service TokenService {
     };
   }
 }
+
+message AdminLoginUsingPasswordRequest {
+  string email = 1 [(validate.rules).string.email = true];
+  string password = 2 [
+    (validate.rules).string.min_len = 3,
+    (validate.rules).string.max_len = 64
+  ];
+}
+
+message AdminLoginUsingPasswordResponse {
+  Account account = 1;
+  AuthToken token = 2;
+}
+
+
+service AdminAuthService {
+  // AdminLoginUsingPassword
+  rpc AdminLoginUsingPassword(AdminLoginUsingPasswordRequest) returns (AdminLoginUsingPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/signin/password"
+      body: "*"
+    };
+  }
+}
+
+
 
 enum Permission {
   UNKNOWN = 0; // default

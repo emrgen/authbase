@@ -27,8 +27,11 @@ func IsAccessKey(key string) bool {
 
 // ParseAccessKey parses an access key
 func ParseAccessKey(key string) (*AccessKey, error) {
-	logrus.Infof("token: %v", key)
-	token := ParseToken(key)
+	logrus.Infof("parsing token: %v", key)
+	token, err := ParseToken(key)
+	if err != nil {
+		return nil, err
+	}
 	if !token.IsAccessToken() {
 		return nil, ErrInvalidToken
 	}

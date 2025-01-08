@@ -5,6 +5,7 @@ import (
 	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -66,6 +67,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 
 			accessKey, err := ParseAccessKey(token)
 			if !errors.Is(err, ErrInvalidToken) && err != nil {
+				logrus.Errorf("authbase: interceptor error parsing access key: %v", err)
 				return nil, err
 			}
 

@@ -24,6 +24,7 @@ func init() {
 func createPoolCommand() *cobra.Command {
 	var projectID string
 	var name string
+	var defaultClient bool
 
 	command := &cobra.Command{
 		Use:   "create",
@@ -49,6 +50,7 @@ func createPoolCommand() *cobra.Command {
 			res, err := client.CreatePool(tokenContext(), &v1.CreatePoolRequest{
 				ProjectId: projectID,
 				Name:      name,
+				Client:    defaultClient,
 			})
 			if err != nil {
 				logrus.Errorf("error creating pool: %v", err)
@@ -62,6 +64,7 @@ func createPoolCommand() *cobra.Command {
 		},
 	}
 
+	command.Flags().BoolVarP(&defaultClient, "client", "c", false, "create client")
 	command.Flags().StringVarP(&projectID, "project", "r", "", "project id")
 	command.Flags().StringVarP(&name, "name", "n", "", "name of the pool")
 

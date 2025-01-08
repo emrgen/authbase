@@ -294,7 +294,7 @@ func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.
 
 func (t *AccessKeyService) GetTokenFromAccessKey(ctx context.Context, request *v1.GetTokenFromAccessKeyRequest) (*v1.GetTokenFromAccessKeyResponse, error) {
 	accessKey := request.GetAccessKey()
-
+	logrus.Infof("access key: %v", accessKey)
 	token, err := x.ParseAccessKey(accessKey)
 	if !errors.Is(err, x.ErrInvalidToken) && err != nil {
 		return nil, err

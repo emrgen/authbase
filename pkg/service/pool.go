@@ -7,6 +7,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -59,6 +60,30 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 		err = tx.AddPoolMember(ctx, member)
 		if err != nil {
 			return err
+		}
+
+		logrus.Infof("pool created: %s", request.Client)
+
+		if request.GetClient() {
+			secret := x.GenerateClientSecret()
+			salt := x.GenerateSalt()
+			hash, err := x.HashPassword(secret, salt)
+			if err != nil {
+				return err
+			}
+
+			client := model.Client{
+				ID:          uuid.New().String(),
+				PoolID:      pool.ID,
+				Name:        "default",
+				Secret:      string(hash),
+				Salt:        salt,
+				CreatedByID: accountID.String(),
+			}
+			err = tx.CreateClient(ctx, &client)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

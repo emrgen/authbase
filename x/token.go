@@ -1,6 +1,9 @@
 package x
 
-import "fmt"
+import (
+	"fmt"
+	"runtime/debug"
+)
 
 const (
 	AccessTokenPrefix  = "aba"
@@ -15,11 +18,16 @@ type Token struct {
 	Value string
 }
 
-func ParseToken(token string) *Token {
+func ParseToken(token string) (*Token, error) {
+	if len(token) < 4 {
+		debug.PrintStack()
+		return nil, fmt.Errorf("invalid token")
+	}
+
 	return &Token{
 		Kind:  token[:3],
 		Value: token[3:],
-	}
+	}, nil
 }
 
 func NewToken(kind, value string) *Token {

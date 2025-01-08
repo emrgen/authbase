@@ -94,7 +94,7 @@ func VerifyTokenInterceptor(keyProvider VerifierProvider, accessKeyService v1.Ac
 
 		if accessKey != nil {
 			res, err := accessKeyService.GetTokenFromAccessKey(ctx, &v1.GetTokenFromAccessKeyRequest{
-				AccessKey: accessKey.Value,
+				AccessKey: accessKey.String(),
 			})
 			if err != nil {
 				return nil, err
