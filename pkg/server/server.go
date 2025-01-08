@@ -135,6 +135,7 @@ func (s *Server) registerServices() error {
 			UnaryGrpcRequestTimeInterceptor(),
 		)),
 	)
+	s.grpcServer = grpcServer
 
 	cookieStore := NewCookieStore(s.redis)
 
@@ -176,6 +177,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(x.NewStoreBasedTokenVerifier(s.provider, redis)))
 	v1.RegisterGroupServiceServer(grpcServer, service.NewGroupService(s.provider))
 	v1.RegisterRoleServiceServer(grpcServer, service.NewRoleService(s.provider))
+	v1.RegisterApplicationServiceServer(grpcServer, service.NewApplicationService(s.provider))
 
 	// Register the http gateway
 	if err = v1.RegisterAdminProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -205,8 +207,17 @@ func (s *Server) registerServices() error {
 	if err = v1.RegisterTokenServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
+	if err = v1.RegisterGroupServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
 
-	s.grpcServer = grpcServer
+	if err = v1.RegisterRoleServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+
+	if err = v1.RegisterApplicationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
 
 	return err
 }

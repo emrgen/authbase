@@ -1538,6 +1538,91 @@ service ProjectService {
   }
 }
 
+message Application {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+  string pool_id = 3;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreateApplicationRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+}
+
+message CreateApplicationResponse {
+  Application application = 1;
+}
+
+message GetApplicationRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetApplicationResponse {
+  Application application = 1;
+}
+
+message ListApplicationsRequest {
+  string pool_id = 1 [(validate.rules).string.uuid = true];
+  Page page = 2;
+}
+
+message ListApplicationsResponse {
+  repeated Application applications = 1;
+  Meta meta = 2;
+}
+
+message UpdateApplicationRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2;
+}
+
+message UpdateApplicationResponse {
+  Application application = 1;
+}
+
+message DeleteApplicationRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message DeleteApplicationResponse {
+  string message = 1;
+}
+
+service ApplicationService {
+  // CreateApplication
+  rpc CreateApplication(CreateApplicationRequest) returns (CreateApplicationResponse) {
+    option (google.api.http) = {
+      post: "/v1/applications"
+      body: "*"
+    };
+  }
+
+  // GetApplication
+  rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse) {
+    option (google.api.http) = {get: "/v1/applications/{id}"};
+  }
+
+  // ListApplications
+  rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse) {
+    option (google.api.http) = {get: "/v1/applications"};
+  }
+
+  // UpdateApplication
+  rpc UpdateApplication(UpdateApplicationRequest) returns (UpdateApplicationResponse) {
+    option (google.api.http) = {
+      put: "/v1/applications/{id}"
+      body: "*"
+    };
+  }
+
+  // DeleteApplication
+  rpc DeleteApplication(DeleteApplicationRequest) returns (DeleteApplicationResponse) {
+    option (google.api.http) = {delete: "/v1/applications/{id}"};
+  }
+}
+
 message CreateAdminProjectRequest {
   string name = 1 [
     (validate.rules).string.min_len = 3,

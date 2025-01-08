@@ -30,6 +30,7 @@ type AuthBaseStore interface {
 	PoolMemberStore
 	GroupStore
 	RoleStore
+	ApplicationStore
 	Migrate() error
 	Transaction(func(AuthBaseStore) error) error
 }
@@ -244,4 +245,17 @@ type RoleStore interface {
 	UpdateRole(ctx context.Context, role *model.Role) error
 	// DeleteRole deletes a role from the database.
 	DeleteRole(ctx context.Context, poolID uuid.UUID, name string) error
+}
+
+type ApplicationStore interface {
+	// CreateApplication creates a new application in the database.
+	CreateApplication(ctx context.Context, app *model.Application) error
+	// GetApplication retrieves an application by its ID.
+	GetApplication(ctx context.Context, id uuid.UUID) (*model.Application, error)
+	// ListApplications retrieves a list of applications.
+	ListApplications(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Application, int, error)
+	// UpdateApplication updates an application in the database.
+	UpdateApplication(ctx context.Context, app *model.Application) error
+	// DeleteApplication deletes an application from the database.
+	DeleteApplication(ctx context.Context, id uuid.UUID) error
 }

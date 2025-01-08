@@ -21,6 +21,38 @@ type GormStore struct {
 	db *gorm.DB
 }
 
+func (g *GormStore) CreateApplication(ctx context.Context, app *model.Application) error {
+	return g.db.Create(app).Error
+}
+
+func (g *GormStore) GetApplication(ctx context.Context, id uuid.UUID) (*model.Application, error) {
+	var app model.Application
+	err := g.db.Where("id = ?", id).First(&app).Error
+	return &app, err
+}
+
+func (g *GormStore) ListApplications(ctx context.Context, projectID uuid.UUID, page, perPage int) ([]*model.Application, int, error) {
+	var apps []*model.Application
+	var total int64
+
+	err := g.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.Application{}).Where("project_id = ?", projectID).Count(&total).Error; err != nil {
+			return err
+		}
+		return tx.Limit(perPage).Offset(page*perPage).Find(&apps, "project_id = ?", projectID).Error
+	})
+
+	return apps, int(total), err
+}
+
+func (g *GormStore) UpdateApplication(ctx context.Context, app *model.Application) error {
+	return g.db.Save(app).Error
+}
+
+func (g *GormStore) DeleteApplication(ctx context.Context, id uuid.UUID) error {
+	return g.db.Delete(&model.Application{ID: id.String()}).Error
+}
+
 func (g *GormStore) ListRolesByNames(ctx context.Context, poolID uuid.UUID, names []string) ([]*model.Role, error) {
 	var roles []*model.Role
 	err := g.db.Find(&roles, "pool_id = ? AND name IN ?", poolID.String(), names).Error
@@ -495,8 +527,8 @@ func (g *GormStore) UpdateProject(ctx context.Context, org *model.Project) error
 
 // DeleteProject deletes an organization from the database
 func (g *GormStore) DeleteProject(ctx context.Context, id uuid.UUID) error {
-	project := model.Project{ID: id.String()}
-	return g.db.Delete(&project).Error
+	org := model.Project{ID: id.String()}
+	return g.db.Delete(&org).Error
 }
 
 func (g *GormStore) CreateKeypair(ctx context.Context, keypair *model.Keypair) error {
