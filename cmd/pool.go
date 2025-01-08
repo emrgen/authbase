@@ -29,22 +29,22 @@ func createPoolCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create pool",
 		Run: func(cmd *cobra.Command, args []string) {
-			if projectID == "" {
-				logrus.Error("missing required flags: --project")
-				return
-			}
-
-			if name == "" {
-				logrus.Error("missing required flags: --name")
-				return
-			}
-
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
 				return
 			}
 			defer client.Close()
+
+			if projectID == "" {
+				account := getAccount(client)
+				projectID = account.ProjectId
+			}
+
+			if name == "" {
+				logrus.Error("missing required flags: --name")
+				return
+			}
 
 			res, err := client.CreatePool(tokenContext(), &v1.CreatePoolRequest{
 				ProjectId: projectID,
@@ -75,15 +75,14 @@ func listPoolCommand() *cobra.Command {
 		Use:   "list",
 		Short: "list pools",
 		Run: func(cmd *cobra.Command, args []string) {
-			if projectID == "" {
-				logrus.Error("missing required flags: --project")
-				return
-			}
-
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
 				return
+			}
+			if projectID == "" {
+				account := getAccount(client)
+				projectID = account.ProjectId
 			}
 
 			res, err := client.ListPools(tokenContext(), &v1.ListPoolsRequest{
@@ -157,12 +156,37 @@ func updatePoolCommand() *cobra.Command {
 }
 
 func deletePoolCommand() *cobra.Command {
+	var poolID string
+
 	command := &cobra.Command{
 		Use:   "delete",
 		Short: "delete pool",
 		Run: func(cmd *cobra.Command, args []string) {
+			if poolID == "" {
+				logrus.Error("missing required flags: --pool-id")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("error creating client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.DeletePool(tokenContext(), &v1.DeletePoolRequest{
+				PoolId: poolID,
+			})
+			if err != nil {
+				logrus.Errorf("error deleting pool: %v", err)
+				return
+			}
+
+			logrus.Info("pool deleted")
 		},
 	}
+
+	command.Flags().StringVarP(&poolID, "pool-id", "p", "", "id of the pool")
 
 	return command
 }

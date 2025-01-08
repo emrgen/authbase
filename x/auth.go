@@ -6,7 +6,9 @@ import (
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"strings"
 )
 
@@ -46,7 +48,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTKeyProvider) grpc.Un
 					}
 					user, err := verifier.VerifyEmailPassword(ctx, poolID, email, oldPassword)
 					if err != nil {
-						return nil, err
+						return nil, status.Error(codes.PermissionDenied, "old password is invalid")
 					}
 
 					ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(user.ID))
@@ -56,7 +58,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTKeyProvider) grpc.Un
 					return handler(ctx, req)
 				}
 			}
-			
+
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication
 			token, err := tokenFromHeader(ctx, "Bearer")

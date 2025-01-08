@@ -138,6 +138,16 @@ func (p *PoolService) UpdatePool(ctx context.Context, request *v1.UpdatePoolRequ
 }
 
 func (p *PoolService) DeletePool(ctx context.Context, request *v1.DeletePoolRequest) (*v1.DeletePoolResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	as, err := store.GetProjectStore(ctx, p.store)
+	if err != nil {
+		return nil, err
+	}
+
+	poolID := uuid.MustParse(request.GetPoolId())
+	err = as.DeletePool(ctx, poolID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.DeletePoolResponse{}, nil
 }
