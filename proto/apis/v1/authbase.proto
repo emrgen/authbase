@@ -1617,3 +1617,25 @@ message Meta {
   int32 page = 2;
   int32 size = 3;
 }
+
+message PublicKey {
+  string id = 1 [(validate.rules).string.uuid = true];
+  string key = 2;
+  string project_id = 3 [(validate.rules).string.uuid = true];
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message GetPublicKeyRequest {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
+message GetPublicKeyResponse {
+  PublicKey public = 1;
+  google.protobuf.Timestamp expire_at = 10;
+}
+
+service PublicKeyService {
+  rpc GetPublicKey(GetPublicKeyRequest) returns (GetPublicKeyResponse) {
+    option (google.api.http) = {get: "/v1/public-keys/{id}"};
+  }
+}
