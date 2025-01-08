@@ -155,8 +155,12 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	}
 
 	return &v1.CreateProjectResponse{
-		Id:   project.ID,
-		Name: project.Name,
+		Project: &v1.Project{
+			Id:     project.ID,
+			Name:   project.Name,
+			Master: project.Master,
+			PoolId: pool.ID,
+		},
 	}, nil
 }
 
