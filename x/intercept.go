@@ -23,6 +23,7 @@ const (
 	AccountIDKey = "authbase_account_id"
 	// ScopesKey is the key to store the scopes in the context
 	ScopesKey = "authbase_scopes"
+	RolesKey  = "authbase_roles"
 )
 
 type ProjectID interface {
@@ -74,6 +75,67 @@ func InjectPermissionInterceptor(member v1.ProjectMemberServiceClient) grpc.Unar
 
 		ctx = context.WithValue(ctx, ProjectPermissionKey, res.ProjectMember.Permission)
 		ctx = context.WithValue(ctx, ProjectIDKey, projectUUID)
+
+		return handler(ctx, req)
+	}
+}
+
+func VerifyTokenInterceptor(keyProvider VerifierProvider, accessKeyService v1.AccessKeyServiceClient) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		token, err := tokenFromHeader(ctx, "Bearer")
+		if err != nil {
+			return nil, err
+		}
+
+		accessKey, err := ParseAccessKey(token)
+		if !errors.Is(err, ErrInvalidToken) && err != nil {
+			return nil, err
+		}
+
+		if accessKey != nil {
+			res, err := accessKeyService.GetTokenFromAccessKey(ctx, &v1.GetTokenFromAccessKeyRequest{
+				AccessKey: accessKey.Value,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			claims, err := GetTokenClaims(res.GetAccessToken())
+			if err != nil {
+				return nil, err
+			}
+
+			logrus.Infof("access key: %s", accessKey.Value)
+			ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
+			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
+			ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))
+			ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
+			ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
+		} else {
+			if err != nil {
+				return nil, err
+			}
+
+			claims, err := GetTokenClaims(token)
+			if err != nil {
+				return nil, err
+			}
+
+			verifier, err := keyProvider.GetVerifier(claims.PoolID)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = VerifyJWTToken(token, verifier)
+			if err != nil {
+				return nil, err
+			}
+
+			ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
+			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
+			ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))
+			ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
+		}
 
 		return handler(ctx, req)
 	}

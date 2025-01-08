@@ -20,6 +20,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 		case
 			v1.AuthService_LoginUsingPassword_FullMethodName,
 			v1.AuthService_Refresh_FullMethodName,
+			v1.AccessKeyService_GetTokenFromAccessKey_FullMethodName,
 			v1.TokenService_VerifyToken_FullMethodName:
 			break
 		case v1.AccessKeyService_CreateAccessKey_FullMethodName:

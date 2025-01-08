@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -22,11 +23,13 @@ const (
 )
 
 // NewAccessKeyService creates new an offline token service
-func NewAccessKeyService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis) v1.AccessKeyServiceServer {
+func NewAccessKeyService(perm permission.AuthBasePermission, store store.Provider, cache *cache.Redis, keyProvider x.JWTSignerVerifierProvider, verifier x.TokenVerifier) v1.AccessKeyServiceServer {
 	return &AccessKeyService{
-		perm:  perm,
-		store: store,
-		cache: cache,
+		perm:        perm,
+		store:       store,
+		cache:       cache,
+		verifier:    verifier,
+		keyProvider: keyProvider,
 	}
 }
 
@@ -34,9 +37,11 @@ var _ v1.AccessKeyServiceServer = new(AccessKeyService)
 
 // AccessKeyService is a service for token
 type AccessKeyService struct {
-	perm  permission.AuthBasePermission
-	store store.Provider
-	cache *cache.Redis
+	perm        permission.AuthBasePermission
+	store       store.Provider
+	cache       *cache.Redis
+	verifier    x.TokenVerifier
+	keyProvider x.JWTSignerVerifierProvider
 	v1.UnimplementedAccessKeyServiceServer
 }
 
@@ -284,5 +289,47 @@ func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.
 			ProjectId:   account.ProjectID,
 			PoolId:      account.PoolID,
 		},
+	}, nil
+}
+
+func (t *AccessKeyService) GetTokenFromAccessKey(ctx context.Context, request *v1.GetTokenFromAccessKeyRequest) (*v1.GetTokenFromAccessKeyResponse, error) {
+	accessKey := request.GetAccessKey()
+
+	token, err := x.ParseAccessKey(accessKey)
+	if !errors.Is(err, x.ErrInvalidToken) && err != nil {
+		return nil, err
+	}
+
+	if token == nil {
+		return nil, err
+	}
+
+	logrus.Infof("access key: %v, value: %v", token.ID, token.Value)
+	claims, err := t.verifier.VerifyAccessKey(ctx, token.ID, token.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	claims.Jti = uuid.New().String()
+	claims.IssuedAt = time.Now()
+	claims.ExpireAt = time.Now().Add(x.AccessTokenDuration)
+
+	signer, err := t.keyProvider.GetSigner(claims.PoolID)
+	if err != nil {
+		return nil, err
+	}
+
+	claims.ExpireAt = time.Now().Add(x.RefreshTokenDuration)
+
+	// get the token from the access key
+	jwtToken, err := x.GenerateJWTToken(claims, signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetTokenFromAccessKeyResponse{
+		AccessToken:  jwtToken.AccessToken,
+		RefreshToken: jwtToken.RefreshToken,
+		ExpiresAt:    timestamppb.New(jwtToken.ExpireAt),
 	}, nil
 }

@@ -13,68 +13,6 @@ import (
 	"time"
 )
 
-type staticVerifier struct {
-	key []byte
-}
-
-func newStaticVerifier(key []byte) *staticVerifier {
-	return &staticVerifier{key: key}
-}
-
-func (v *staticVerifier) Verify(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return v.key, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, errors.New("token is invalid")
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, errors.New("failed to get claims")
-	}
-
-	return claims, nil
-}
-
-type staticSigner struct {
-	key []byte
-}
-
-func newStaticSigner(key []byte) *staticSigner {
-	return &staticSigner{key: []byte(key)}
-}
-
-func (s *staticSigner) Sign(claims jwt.MapClaims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(s.key)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-type StaticKeyProvider struct {
-	key []byte
-}
-
-func NewStaticKeyProvider(key string) *StaticKeyProvider {
-	return &StaticKeyProvider{key: []byte(key)}
-}
-
-func (r *StaticKeyProvider) GetSigner(id string) (x.JWTSigner, error) {
-	return newStaticSigner(r.key), nil
-}
-
-func (r *StaticKeyProvider) GetVerifier(id string) (x.JWTVerifier, error) {
-	return newStaticVerifier(r.key), nil
-}
-
 type PublicKey struct {
 	key      *rsa.PrivateKey
 	ExpireAt time.Time

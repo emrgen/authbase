@@ -1293,6 +1293,18 @@ message GetAccessKeyAccountResponse {
   Account account = 1;
 }
 
+message GetTokenFromAccessKeyRequest {
+  string access_key = 1;
+}
+
+message GetTokenFromAccessKeyResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  google.protobuf.Timestamp issued_at = 4;
+  google.protobuf.Timestamp refresh_expires_at = 5;
+}
+
 service AccessKeyService {
   // CreateAccessKey
   rpc CreateAccessKey(CreateAccessKeyRequest) returns (CreateAccessKeyResponse) {
@@ -1319,6 +1331,14 @@ service AccessKeyService {
 
   rpc GetAccessKeyAccount(GetAccessKeyAccountRequest) returns (GetAccessKeyAccountResponse) {
     option (google.api.http) = {delete: "/v1/tokens/-/account"};
+  }
+
+  // GetTokenFromAccessKey
+  rpc GetTokenFromAccessKey(GetTokenFromAccessKeyRequest) returns (GetTokenFromAccessKeyResponse) {
+    option (google.api.http) = {
+      post: "/v1/tokens/-/access-key"
+      body: "*"
+    };
   }
 }
 

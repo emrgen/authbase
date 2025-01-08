@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 )
 
 var _ v1.AccountServiceServer = new(AccountService)
@@ -60,8 +61,13 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 
 	visibleName := request.GetVisibleName()
 	userName := request.GetUsername()
+
+	// if visibleName is empty, use the username or the email prefix as the visible name
 	if visibleName == "" && userName != "" {
 		visibleName = userName
+	}
+	if visibleName == "" {
+		visibleName = strings.Split(request.GetEmail(), "@")[0]
 	}
 
 	err = u.perm.CheckProjectPermission(ctx, projectID, "write")
