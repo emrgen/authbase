@@ -219,6 +219,9 @@ func (t *AccessKeyService) ListAccessKeys(ctx context.Context, request *v1.ListA
 		keys = append(keys, &v1.AccessKey{
 			Id:        token.ID,
 			AccessKey: token.Token,
+			AccountId: accountID.String(),
+			ProjectId: projectID.String(),
+			PoolId:    token.PoolID,
 		})
 	}
 

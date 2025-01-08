@@ -26,13 +26,12 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			v1.TokenService_VerifyToken_FullMethodName:
 			break
 		case v1.AccessKeyService_CreateAccessKey_FullMethodName:
+			logrus.Infof("authbase: interceptor create access key")
 			token, err := tokenFromHeader(ctx, "Bearer")
-			if err != nil {
-				return nil, err
-			}
 
+			logrus.Info(token, err)
 			// check if the token present in the header
-			if token != "" {
+			if err == nil && token != "" {
 				accessKey, err := ParseAccessKey(token)
 				if !errors.Is(err, ErrInvalidToken) && err != nil {
 					logrus.Errorf("authbase: interceptor error parsing access key: %v", err)

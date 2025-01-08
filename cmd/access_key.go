@@ -28,15 +28,11 @@ func createTokenCommand() *cobra.Command {
 	var password string
 	var save bool
 
+	// when client id is not provided, it will try to the token from the context
 	command := &cobra.Command{
 		Use:   "create",
 		Short: "create access key",
 		Run: func(cmd *cobra.Command, args []string) {
-			if clientID == "" {
-				logrus.Error("missing required flags: --client-id")
-				return
-			}
-
 			if email == "" {
 				logrus.Error("missing required flags: --email")
 				return
@@ -62,12 +58,17 @@ func createTokenCommand() *cobra.Command {
 				Name:         nil,
 			}
 
-			token, err := client.CreateAccessKey(tokenContext(), req)
+			ctx := context.Background()
+			if clientSecret == "" && clientID == "" {
+				ctx = tokenContext()
+			}
+
+			token, err := client.CreateAccessKey(ctx, req)
 			if err != nil {
 				logrus.Errorf("failed to create token %v", err)
 				return
 			}
- 
+
 			logrus.Infof("token created successfully")
 			fmt.Printf("Token: %v\n", token.Token.AccessKey)
 
@@ -104,14 +105,6 @@ func listTokenCommand() *cobra.Command {
 				return
 			}
 
-			if projectID == "" {
-				logrus.Error("missing required flags: --projectID")
-			}
-
-			if userId == "" {
-				logrus.Error("missing required flags: --userId")
-			}
-
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
@@ -135,7 +128,8 @@ func listTokenCommand() *cobra.Command {
 			}
 
 			for _, token := range res.Tokens {
-				fmt.Printf("AccountID: %v\n", userId)
+				fmt.Printf("AccountID: %v\n", token.AccountId)
+				fmt.Printf("PoolId: %v\n", token.PoolId)
 				fmt.Printf("ID: %v\n", token.Id)
 				fmt.Printf("Token: %v\n", token.AccessKey)
 				fmt.Printf("------\n")

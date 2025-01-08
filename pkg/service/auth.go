@@ -198,7 +198,6 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 			return nil, status.New(codes.FailedPrecondition, "project is not a master project, need client secret").Err()
 		}
 	} else {
-		logrus.Infof("client secret: %v, hash: %v, salt: %v", clientSecret, client.SecretHash, client.Salt)
 		yes := x.CompareHashAndPassword(clientSecret, client.Salt, client.SecretHash)
 		if !yes {
 			return nil, errors.New("client secret mismatch")

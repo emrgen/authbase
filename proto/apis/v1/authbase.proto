@@ -1229,9 +1229,12 @@ message AccessKey {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   string access_key = 3;
-  string client_id = 5;
-  string project_id = 6;
-  repeated string scopes = 7;
+  string client_id = 4;
+  string project_id = 5;
+  string pool_id = 6;
+  string account_id = 7;
+  repeated string scopes = 8;
+  repeated string roes = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp expires_at = 11;
 }
@@ -1664,7 +1667,7 @@ message CreateAdminProjectRequest {
   optional bool verify_email = 5;
   string client_id = 6;
   string client_secret = 7;
-} 
+}
 
 message CreateAdminProjectResponse {
   Project project = 1;
