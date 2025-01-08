@@ -15,12 +15,13 @@ type PasswordPolicy struct {
 // Project represents an project
 type Project struct {
 	gorm.Model
-	ID                string         `gorm:"primaryKey;uuid;not null;"`
-	ParentProjectID   string         `gorm:"uuid;default:null"`
-	Name              string         `gorm:"not null;unique;index:idx_project_name"` // unique project name
-	DisplayName       string         `gorm:"not null"`
-	OwnerID           string         `gorm:"not null"`
-	Owner             *Account       `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE"`
+	ID                string `gorm:"primaryKey;uuid;not null;"`
+	ParentProjectID   string `gorm:"uuid;default:null"`
+	Name              string `gorm:"not null;unique;index:idx_project_name"` // unique project name
+	PoolID            string `gorm:"uuid"`
+	DisplayName       string `gorm:"not null"`
+	OwnerID           string `gorm:"not null"`
+	Owner             *Account
 	Master            bool           `gorm:"not null;default:false"`
 	AllowedDomains    string         `gorm:"not null;default:''"`
 	EmailVerification bool           `gorm:"not null;default:false"`

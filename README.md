@@ -21,21 +21,20 @@ func main() {
     }
 
     // Create a new project. need token to create an organization.
-    project, err := client.CreateProject(context.Background(), &protos.Project{
+    project, err := client.CreateProject(context.Background(), &v1.CreateProjectRequest{
         Name: "org",
-        Username: "admin",
         Email:    "admin@gmail.com",
+        Password: "password",
     })
     if err != nil {
         log.Fatal(err)
     }
 
     // Create a new user. (the user is crated within the organization)
-    user, err := client.CreateUser(context.Background(), &protos.CreateUserRequest{
-        Username: "user",
+    user, err := client.CreateAccount(context.Background(), &v1.CreateAccessKeyRequest{
         Email:    "user@mail.com",
         Passowrd: "password",
-		ProjectId: project.Id,
+		PoolID: "pool-id",
     })
     if err != nil {
         log.Fatal(err)

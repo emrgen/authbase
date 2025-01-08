@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	testPath = "../.test/"
+	testPath = "../../.test/"
 )
 
 var (

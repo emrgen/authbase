@@ -13,6 +13,7 @@ message Project {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
   bool master = 3;
+  string pool_id = 4;
   string owner_id = 10 [(validate.rules).string.uuid = true];
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
@@ -1078,7 +1079,7 @@ message AccountEmailExistsResponse {
 
 message ForgotPasswordRequest {
   string email = 1 [(validate.rules).string.email = true];
-  string pool_id = 2 [(validate.rules).string.uuid = true];
+  string client_id = 2 [(validate.rules).string.uuid = true];
 }
 
 message ForgotPasswordResponse {
@@ -1549,6 +1550,7 @@ message CreateAdminProjectRequest {
 
 message CreateAdminProjectResponse {
   Project project = 1;
+  Account account = 2;
 }
 
 message CreateMigrationRequest {

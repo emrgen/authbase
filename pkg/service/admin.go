@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/ratelimit"
 	"os"
-	"time"
 )
 
 var _ v1.AdminProjectServiceServer = (*AdminProjectService)(nil)
@@ -40,17 +39,17 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 
 	as := a.provider.Default()
 
-	// check if the master org already exists
-	org, err := as.GetMasterProject(ctx)
+	// check if the master project already exists
+	project, err := as.GetMasterProject(ctx)
 	if err != nil && !errors.Is(err, store.ErrProjectNotFound) {
 		return nil, err
 	}
 
-	if org != nil {
+	if project != nil {
 		return nil, x.ErrProjectExists
 	}
 
-	user := model.Account{
+	account := model.Account{
 		ID:            uuid.New().String(),
 		Email:         request.GetEmail(),
 		VisibleName:   request.GetVisibleName(),
@@ -58,57 +57,55 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		ProjectMember: true,
 	}
 
-	org = &model.Project{
+	project = &model.Project{
 		ID:      uuid.New().String(),
 		Name:    request.GetName(),
-		OwnerID: user.ID,
+		OwnerID: account.ID,
 		Master:  true,
 	}
-	user.ProjectID = org.ID
+	account.ProjectID = project.ID
 
 	perm := model.ProjectMember{
-		ProjectID:  org.ID,
-		AccountID:  user.ID,
+		ProjectID:  project.ID,
+		AccountID:  account.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
 	pool := model.Pool{
 		ID:        uuid.New().String(),
-		ProjectID: org.ID,
+		ProjectID: project.ID,
 		Name:      "default",
 		Default:   true,
 	}
-	user.PoolID = pool.ID
+	account.PoolID = pool.ID
+	project.PoolID = pool.ID
 
 	poolMember := model.PoolMember{
-		AccountID:  user.ID,
+		AccountID:  account.ID,
 		PoolID:     pool.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
-	// Create project and user in a transaction
+	// Create project and account in a transaction
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		err := tx.CreateProject(ctx, org)
+
+		err := tx.CreateProject(ctx, project)
 		if err != nil {
 			return err
 		}
 
 		// if the mail server is configured, send a verification email anyway
-		// verification email will be sent if the user is created successfully
-		if request.GetVerifyEmail() {
-			verificationCode := x.GenerateVerificationCode()
-			err := a.cache.Set("email:"+user.Email, verificationCode, time.Hour)
-			if err != nil {
-				return err
-			}
-			defer func() {
-				if err == nil {
-					// send verification email
-				}
-			}()
-		}
+		// verification email will be sent if the account is created successfully
+		//		if request.GetVerifyEmail() {
+		//			verificationCode := x.GenerateVerificationCode()
+		//			err := a.cache.Set("email:"+account.Email, verificationCode, time.Hour)
+		//			if err != nil {
+		//				return err
+		//			}
+		//)
+		//		}
 
-		// if password is provided, hash it and provider it
+		//// if password is provided, hash it and provider it
 		password := request.GetPassword()
 		if password != "" {
 			secret := x.Keygen()
@@ -117,11 +114,11 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 				return err
 			}
 
-			user.Password = string(hash)
-			user.Salt = secret
+			account.Password = string(hash)
+			account.Salt = secret
 		}
 
-		err = tx.CreateAccount(ctx, &user)
+		err = tx.CreateAccount(ctx, &account)
 		if err != nil {
 			return err
 		}
@@ -149,8 +146,15 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 
 	return &v1.CreateAdminProjectResponse{
 		Project: &v1.Project{
-			Id:   org.ID,
-			Name: org.Name,
+			Id:     project.ID,
+			Name:   project.Name,
+			PoolId: pool.ID,
+		},
+		Account: &v1.Account{
+			Id:        account.ID,
+			Email:     account.Email,
+			ProjectId: account.ProjectID,
+			PoolId:    pool.ID,
 		},
 	}, nil
 }

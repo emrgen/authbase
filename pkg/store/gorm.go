@@ -448,8 +448,8 @@ func (g *GormStore) AccountExists(ctx context.Context, orgID uuid.UUID, username
 	return users, err
 }
 
-func (g *GormStore) CreateProject(ctx context.Context, org *model.Project) error {
-	err := g.db.Create(org).Error
+func (g *GormStore) CreateProject(ctx context.Context, project *model.Project) error {
+	err := g.db.Create(project).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrCheckConstraintViolated) {

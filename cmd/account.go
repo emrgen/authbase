@@ -26,6 +26,9 @@ func init() {
 	userCommand.AddCommand(registerUserCommand())
 	userCommand.AddCommand(loginUserCommand())
 	userCommand.AddCommand(logoutUserCommand())
+	userCommand.AddCommand(forgotPasswordCommand())
+	userCommand.AddCommand(resetPasswordCommand())
+	userCommand.AddCommand(changePasswordCommand())
 	userCommand.AddCommand(revokeUserSessionsCommand())
 	userCommand.AddCommand(listUserCommand())
 	userCommand.AddCommand(updateUserCommand())
@@ -522,6 +525,139 @@ func logoutUserCommand() *cobra.Command {
 
 	return command
 
+}
+
+func forgotPasswordCommand() *cobra.Command {
+	var clientID string
+	var email string
+
+	command := &cobra.Command{
+		Use:   "forgot",
+		Short: "forgot password",
+		Run: func(cmd *cobra.Command, args []string) {
+			if clientID == "" {
+				logrus.Errorf("missing required flag: --client-id")
+				return
+			}
+
+			if email == "" {
+				logrus.Errorf("missing required flag: --email")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.ForgotPassword(context.Background(), &v1.ForgotPasswordRequest{
+				ClientId: clientID,
+				Email:    email,
+			})
+			if err != nil {
+				logrus.Errorf("failed to forgot password: %v", err)
+				return
+			}
+
+			logrus.Infof("password reset code sent successfully")
+		},
+	}
+
+	command.Flags().StringVarP(&email, "email", "e", "", "email")
+
+	return command
+}
+
+func resetPasswordCommand() *cobra.Command {
+	var code string
+	var password string
+
+	command := &cobra.Command{
+		Use:   "reset",
+		Short: "reset password",
+		Run: func(cmd *cobra.Command, args []string) {
+			if code == "" {
+				logrus.Errorf("missing required flag: --code")
+				return
+			}
+
+			if password == "" {
+				logrus.Errorf("missing required flag: --password")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.ResetPassword(context.Background(), &v1.ResetPasswordRequest{
+				Code:        code,
+				NewPassword: password,
+			})
+			if err != nil {
+				logrus.Errorf("failed to reset password: %v", err)
+				return
+			}
+
+			logrus.Infof("password reset successfully")
+		},
+	}
+
+	command.Flags().StringVarP(&code, "code", "c", "", "reset code")
+	command.Flags().StringVarP(&password, "password", "p", "", "new password")
+
+	return command
+}
+
+func changePasswordCommand() *cobra.Command {
+	var accountID string
+	var newPassword string
+
+	command := &cobra.Command{
+		Use:   "change",
+		Short: "change password",
+		Run: func(cmd *cobra.Command, args []string) {
+			if accountID == "" {
+				logrus.Errorf("missing required flag: --account-id")
+				return
+			}
+
+			if newPassword == "" {
+				logrus.Errorf("missing required flag: --new-password")
+				return
+			}
+
+			client, err := authbase.NewClient(":4000")
+			if err != nil {
+				logrus.Errorf("failed to create client: %v", err)
+				return
+			}
+			defer client.Close()
+
+			_, err = client.ChangePassword(tokenContext(), &v1.ChangePasswordRequest{
+				AccountId:   accountID,
+				NewPassword: newPassword,
+			})
+			if err != nil {
+				logrus.Errorf("failed to change password: %v", err)
+				return
+			}
+
+			logrus.Infof("password changed successfully")
+		},
+	}
+
+	bindContextFlags(command)
+
+	command.Flags().StringVarP(&accountID, "account-id", "a", "", "account id")
+	command.Flags().StringVarP(&newPassword, "new-password", "n", "", "new password")
+
+	return command
 }
 
 func revokeUserSessionsCommand() *cobra.Command {

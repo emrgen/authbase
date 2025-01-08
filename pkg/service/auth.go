@@ -241,8 +241,8 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, err
 	}
 
-	// save the token to the db
-	// TODO: save the token to the db in encrypted form
+	// save the token to the provider
+	// TODO: save the token to the provider in encrypted form
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		err = as.CreateRefreshToken(ctx, &model.RefreshToken{
 			Token:     token.RefreshToken,
@@ -293,7 +293,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	}, nil
 }
 
-// Logout logs out a user by deleting the session from the db, and the refresh tokens from the cache
+// Logout logs out a user by deleting the session from the provider, and the refresh tokens from the cache
 func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v1.LogoutResponse, error) {
 	poolID, err := x.GetAuthbasePoolID(ctx)
 	if err != nil {
@@ -323,7 +323,7 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 		return nil, err
 	}
 
-	// delete the session from the db
+	// delete the session from the provider
 	err = as.DeleteSession(ctx, jti)
 	if err != nil {
 		return nil, err
@@ -334,7 +334,7 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 
 // ForgotPassword sends a password reset link to the user's email or phone number to reset their password
 func (a *AuthService) ForgotPassword(ctx context.Context, request *v1.ForgotPasswordRequest) (*v1.ForgotPasswordResponse, error) {
-	projectID, err := x.GetAuthbaseProjectID(ctx)
+	poolID, err := x.GetAuthbaseProjectID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -344,10 +344,10 @@ func (a *AuthService) ForgotPassword(ctx context.Context, request *v1.ForgotPass
 		return nil, err
 	}
 
-	mailer := a.mailer.Provide(projectID)
+	mailer := a.mailer.Provide(poolID)
 	email := request.GetEmail()
 
-	account, err := as.GetAccountByEmail(ctx, projectID, email)
+	account, err := as.GetAccountByEmail(ctx, poolID, email)
 	if err != nil {
 		return nil, err
 	}
@@ -501,7 +501,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	// check if the token is in the cache
 	tokenStr, err := a.cache.Get(claims.Jti)
 	if err != nil {
-		// if no value in cache check the db
+		// if no value in cache check the provider
 		return nil, err
 	}
 
@@ -517,7 +517,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	}
 
 	if !foundToken {
-		// check the db
+		// check the provider
 		token, err := as.GetRefreshTokenByID(ctx, claims.Jti)
 		if err != nil {
 			return nil, err

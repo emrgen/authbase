@@ -73,8 +73,13 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 		return x.ErrNotProjectMember
 	}
 
+	project, err := as.GetProjectByID(ctx, uuid.MustParse(user.ProjectID))
+	if err != nil {
+		return err
+	}
+
 	// if the user is a member of the master project
-	if user.Project.Master {
+	if project.Master {
 		permission, err := as.GetProjectMemberByID(ctx, uuid.MustParse(user.ProjectID), accountID)
 		if err != nil {
 			return err

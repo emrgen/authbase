@@ -57,16 +57,16 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		ProjectMember: true,
 	}
 
-	org := model.Project{
+	project := model.Project{
 		ID:      uuid.New().String(),
 		Name:    request.GetName(),
 		OwnerID: user.ID,
 	}
-	user.ProjectID = org.ID
+	user.ProjectID = project.ID
 
 	// create project member permission
 	projectMember := model.ProjectMember{
-		ProjectID:  org.ID,
+		ProjectID:  project.ID,
 		AccountID:  user.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
@@ -74,10 +74,11 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	pool := model.Pool{
 		ID:        uuid.New().String(),
 		Name:      "default",
-		ProjectID: org.ID,
+		ProjectID: project.ID,
 		Default:   true,
 	}
 	user.PoolID = pool.ID
+	project.PoolID = pool.ID
 
 	// create pool member permission
 	poolMember := model.PoolMember{
@@ -90,11 +91,11 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
 		_, total, _ := tx.ListProjects(ctx, 1, 1)
 		if total == 0 {
-			org.Master = true
+			project.Master = true
 			user.SassAdmin = true
 		}
 
-		err := tx.CreateProject(ctx, &org)
+		err := tx.CreateProject(ctx, &project)
 		if err != nil {
 			return err
 		}
@@ -103,7 +104,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		// FIXME: if the mail server config is provider the email verification will fail with error
 		if password == "" || verifyEmail {
 			verificationCode := x.GenerateVerificationCode()
-			// save the code to the db
+			// save the code to the provider
 			err := o.cache.Set("email:"+user.Email, verificationCode, time.Hour)
 			if err != nil {
 				return err
@@ -154,8 +155,8 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	}
 
 	return &v1.CreateProjectResponse{
-		Id:   org.ID,
-		Name: org.Name,
+		Id:   project.ID,
+		Name: project.Name,
 	}, nil
 }
 

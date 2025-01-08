@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	v1 "github.com/emrgen/authbase/apis/v1"
+	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
@@ -143,14 +144,16 @@ type KeyPair struct {
 // PrivateRegistry struct to store private key pair and manage it
 // When the key pair is expired, it will be removed and generate new key pair
 type PrivateRegistry struct {
-	keys map[string]*KeyPair
-	mu   sync.Mutex
+	keys  map[string]*KeyPair
+	mu    sync.Mutex
+	store store.Provider // save key pair to the store
 }
 
-func NewPrivateRegistry() *PrivateRegistry {
+func NewPrivateRegistry(store store.Provider) *PrivateRegistry {
 	return &PrivateRegistry{
-		keys: make(map[string]*KeyPair),
-		mu:   sync.Mutex{},
+		keys:  make(map[string]*KeyPair),
+		mu:    sync.Mutex{},
+		store: store,
 	}
 }
 
