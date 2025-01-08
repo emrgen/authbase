@@ -12,7 +12,6 @@ func TestCompareHashAndPassword(t *testing.T) {
 	if !CompareHashAndPassword(password, salt, string(hash)) {
 		t.Errorf("CompareHashAndPassword() = false; want true")
 	}
-
 }
 
 func TestHashPassword(t *testing.T) {

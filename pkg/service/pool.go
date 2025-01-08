@@ -8,6 +8,8 @@ import (
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -166,7 +168,22 @@ func (p *PoolService) DeletePool(ctx context.Context, request *v1.DeletePoolRequ
 	}
 
 	poolID := uuid.MustParse(request.GetPoolId())
-	err = as.DeletePool(ctx, poolID)
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		pool, err := tx.GetPoolByID(ctx, poolID)
+		if err != nil {
+			return err
+		}
+		if pool.Default {
+			return status.Error(codes.FailedPrecondition, "cannot delete default pool")
+		}
+
+		err = tx.DeletePool(ctx, poolID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
