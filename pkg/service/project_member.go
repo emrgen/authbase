@@ -257,9 +257,13 @@ func (m *ProjectMemberService) AddProjectMember(ctx context.Context, request *v1
 	}
 	user.ProjectMember = true
 
-	err = m.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "write")
+	pool, err := as.GetPoolByID(ctx, uuid.MustParse(user.PoolID))
 	if err != nil {
 		return nil, err
+	}
+
+	if !pool.Default || pool.ProjectID != orgID.String() {
+		return nil, errors.New("user does not belong to the project default pool")
 	}
 
 	perm, err := as.GetProjectMemberByID(ctx, orgID, userID)

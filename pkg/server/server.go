@@ -279,6 +279,7 @@ func (s *Server) run() error {
 
 	// if an admin project is provided, create the org and the super admin user
 	if s.config.AdminOrg.Valid() {
+		//TODO: remove this check as this logs the client secret
 		logrus.Infof("trying to create admin project: %v", s.config.AdminOrg)
 		adminOrgService := service.NewAdminProjectService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminProject(context.TODO(), &v1.CreateAdminProjectRequest{

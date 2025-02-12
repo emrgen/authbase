@@ -59,7 +59,6 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 		PoolID:      pool.ID,
 		Name:        request.GetName(),
 		SecretHash:  string(hash),
-		Secret:      secret,
 		Salt:        salt,
 		CreatedByID: userID.String(),
 	}

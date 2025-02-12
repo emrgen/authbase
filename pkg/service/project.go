@@ -64,13 +64,14 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	}
 	user.ProjectID = project.ID
 
-	// create project member permission
+	// create project member permission (owner)
 	projectMember := model.ProjectMember{
 		ProjectID:  project.ID,
 		AccountID:  user.ID,
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
+	// create the default pool for the project
 	pool := model.Pool{
 		ID:        uuid.New().String(),
 		Name:      "default",
@@ -80,7 +81,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 	user.PoolID = pool.ID
 	project.PoolID = pool.ID
 
-	// create pool member permission
+	// create pool member permission (owner)
 	poolMember := model.PoolMember{
 		AccountID:  user.ID,
 		PoolID:     pool.ID,
@@ -112,7 +113,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		if err != nil {
 			return err
 		}
- 
+
 		// if password is provided, email verification is not strictly required
 		// FIXME: if the mail server config is provider the email verification will fail with error
 		if password == "" || verifyEmail {
