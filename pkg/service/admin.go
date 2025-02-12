@@ -103,6 +103,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		PoolID:      pool.ID,
 		Name:        "default",
 		SecretHash:  string(clientSecretHash),
+		Secret:      clientSecret,
 		Salt:        clientSalt,
 		CreatedByID: account.ID,
 		Default:     true,

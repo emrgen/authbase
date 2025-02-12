@@ -1024,6 +1024,7 @@ message LoginUsingPasswordResponse {
 message LoginUsingIdpRequest {
   string provider = 1;
   string client_id = 2;
+  string client_secret = 3;
 }
 
 message LoginUsingIdpResponse {
@@ -1035,6 +1036,7 @@ message GetIdpTokenRequest {
   string provider = 1;
   string code = 2;
   string client_id = 3 [(validate.rules).string.uuid = true];
+  string client_secret = 4;
 }
 
 message GetIdpTokenResponse {

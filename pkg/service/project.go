@@ -98,6 +98,7 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		Name:        "default",
 		SecretHash:  string(hash),
 		Salt:        clientSalt,
+		Secret:      clientSecret,
 		CreatedByID: user.ID,
 	}
 

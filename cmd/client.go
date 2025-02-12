@@ -54,8 +54,8 @@ func clientCreateCmd() *cobra.Command {
 			}
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
-			table.SetHeader([]string{"Client ID", "Client Secret", "Pool ID", "Name", "Created By"})
-			table.Append([]string{res.Client.Id, res.Client.ClientSecret, res.Client.PoolId, res.Client.Name, res.Client.CreatedByUser.VisibleName})
+			table.SetHeader([]string{"Pool ID", "Client ID", "Client Secret", "Name", "Created By"})
+			table.Append([]string{res.Client.PoolId, res.Client.Id, res.Client.ClientSecret, res.Client.Name, res.Client.CreatedByUser.VisibleName})
 			table.Render()
 
 		},
