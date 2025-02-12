@@ -177,6 +177,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterGroupServiceServer(grpcServer, service.NewGroupService(s.provider))
 	v1.RegisterRoleServiceServer(grpcServer, service.NewRoleService(s.provider))
 	v1.RegisterApplicationServiceServer(grpcServer, service.NewApplicationService(s.provider))
+	v1.RegisterProjectMemberServiceServer(grpcServer, service.NewProjectMemberService(perm, s.provider, redis))
 
 	// Register the http gateway
 	if err = v1.RegisterAdminProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -215,6 +216,10 @@ func (s *Server) registerServices() error {
 	}
 
 	if err = v1.RegisterApplicationServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+
+	if err = v1.RegisterProjectMemberServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
 		return err
 	}
 

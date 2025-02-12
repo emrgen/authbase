@@ -27,6 +27,7 @@ func init() {
 func createMemberCommand() *cobra.Command {
 	var username string
 	var email string
+	var projectID string
 
 	command := &cobra.Command{
 		Use:   "create",
@@ -34,6 +35,11 @@ func createMemberCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 			assertToken()
+
+			if projectID == "" {
+				logrus.Errorf("missing required flag: --project")
+				return
+			}
 
 			if username == "" {
 				logrus.Errorf("missing required flag: --username")
@@ -45,18 +51,33 @@ func createMemberCommand() *cobra.Command {
 				return
 			}
 
-			_, err := authbase.NewClient(":4000")
+			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)
 				return
 			}
 
-			logrus.Infof("org member created successfully %v", "")
+			member, err := client.CreateProjectMember(tokenContext(), &v1.CreateProjectMemberRequest{
+				ProjectId:  projectID,
+				Username:   username,
+				Email:      email,
+				Permission: v1.Permission_VIEWER,
+			})
+			if err != nil {
+				logrus.Errorf("failed to create member: %v", err)
+				return
+			}
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"ID"})
+			table.Append([]string{member.Id})
+			table.Render()
 		},
 	}
 
 	bindContextFlags(command)
 
+	command.Flags().StringVarP(&projectID, "project-id", "r", "", "project id")
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 
@@ -127,7 +148,7 @@ func listMemberCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "list",
-		Short: "list user",
+		Short: "list members",
 		Run: func(cmd *cobra.Command, args []string) {
 			loadToken()
 			assertToken()

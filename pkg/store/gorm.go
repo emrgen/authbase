@@ -252,7 +252,7 @@ func (g *GormStore) GetMemberCount(ctx context.Context, projectID uuid.UUID) (ui
 
 func (g *GormStore) ListProjectMembersByAccountIDs(ctx context.Context, projectID uuid.UUID, accountIDs []uuid.UUID) ([]*model.ProjectMember, error) {
 	var permissions []*model.ProjectMember
-	err := g.db.Find(&permissions, "project_id = ? AND user_id IN ?", projectID, accountIDs).Error
+	err := g.db.Find(&permissions, "project_id = ? AND account_id IN ?", projectID, accountIDs).Error
 	return permissions, err
 }
 
@@ -301,7 +301,7 @@ func (g *GormStore) DeleteClient(ctx context.Context, id uuid.UUID) error {
 // DeleteSessionByAccountID expire and delete all sessions for a user which not deleted or expired already
 func (g *GormStore) DeleteSessionByAccountID(ctx context.Context, userID uuid.UUID) error {
 	return g.db.Model(&model.Session{}).
-		Where("user_id = ? AND expired_at > ?", userID, time.Now()).
+		Where("account_id = ? AND expired_at > ?", userID, time.Now()).
 		Update("expired_at", time.Now()).
 		Error
 }
@@ -403,7 +403,7 @@ func (g *GormStore) ListProjectAccounts(ctx context.Context, member bool, projec
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
 		if member {
-			if err := tx.Model(&model.Account{}).Where("project_id = ? AND member = ?", projectID.String(), member).Count(&total).Error; err != nil {
+			if err := tx.Model(&model.Account{}).Where("project_id = ? AND project_member = ?", projectID.String(), member).Count(&total).Error; err != nil {
 				return err
 			}
 

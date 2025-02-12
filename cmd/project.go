@@ -59,7 +59,7 @@ func createProjectCommand() *cobra.Command {
 			if visibleName == "" {
 				visibleName = strings.Split(email, "@")[0]
 			}
- 
+
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("error creating client: %v", err)
