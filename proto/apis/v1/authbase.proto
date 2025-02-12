@@ -1013,6 +1013,7 @@ message LoginUsingPasswordRequest {
   ];
   string client_id = 4 [(validate.rules).string.uuid = true];
   string client_secret = 5;
+  optional string provider = 6; // idp
 }
 
 message LoginUsingPasswordResponse {
@@ -1027,13 +1028,13 @@ message LoginUsingIdpRequest {
 
 message LoginUsingIdpResponse {
   string message = 1;
-  string redirect_url = 2;
+  OAuthProvider provider = 2;
 }
 
 message GetIdpTokenRequest {
   string provider = 1;
   string code = 2;
-  string project_id = 3 [(validate.rules).string.uuid = true];
+  string client_id = 3 [(validate.rules).string.uuid = true];
 }
 
 message GetIdpTokenResponse {
@@ -1150,7 +1151,7 @@ service AuthService {
   }
 
   // LoginUsingIdp
-  rpc LoginUsingIdp(LoginUsingPasswordRequest) returns (LoginUsingPasswordResponse) {
+  rpc LoginUsingIdp(LoginUsingIdpRequest) returns (LoginUsingIdpResponse) {
     option (google.api.http) = {
       post: "/v1/auth/signin/idp"
       body: "*"

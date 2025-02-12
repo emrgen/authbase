@@ -66,12 +66,33 @@ func (a *AuthService) AccountEmailExists(ctx context.Context, request *v1.Accoun
 }
 
 // LoginUsingIdp redirects the user to the identity provider for login
-func (a *AuthService) LoginUsingIdp(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (a *AuthService) LoginUsingIdp(ctx context.Context, request *v1.LoginUsingIdpRequest) (*v1.LoginUsingIdpResponse, error) {
+	// get the provider details and redirect to the provider
+	as, err := store.GetProjectStore(ctx, a.store)
+	if err != nil {
+		return nil, err
+	}
+
+	clientID, err := uuid.Parse(request.GetClientId())
+
+	provider, err := as.GetOauthProviderByName(ctx, clientID, request.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	// this payload will not reach the client
+	// TODO: grpc interceptors will handle the redirect with additional http.Cookie with the oauthstate
+	// ref: https://github.com/douglasmakey/oauth2-example
+	return &v1.LoginUsingIdpResponse{
+		Provider: &v1.OAuthProvider{
+			ClientId:     provider.Config.ClientID,
+			ClientSecret: provider.Config.ClientSecret,
+			RedirectUris: nil,
+		},
+	}, nil
 }
 
-// GetIdpToken gets the token from the identity provider
+// GetIdpToken gets the token from the identity provider code
 func (a *AuthService) GetIdpToken(ctx context.Context, request *v1.GetIdpTokenRequest) (*v1.GetIdpTokenResponse, error) {
 	//TODO implement me
 	panic("implement me")
