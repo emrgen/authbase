@@ -9,6 +9,7 @@ import (
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/config"
 	"github.com/emrgen/authbase/pkg/permission"
+	"github.com/emrgen/authbase/pkg/secret"
 	"github.com/emrgen/authbase/pkg/service"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
@@ -164,10 +165,12 @@ func (s *Server) registerServices() error {
 	redis := s.redis
 	perm := s.permission
 
+	secrets := secret.NewMemStore()
+
 	// Register the grpc services
 	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
-	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, redis))
+	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, secrets))
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, keyProvider, perm, s.mailer, redis))
 	v1.RegisterAccountServiceServer(grpcServer, service.NewAccountService(perm, s.provider, redis))
 	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis, keyProvider, verifier))

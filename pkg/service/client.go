@@ -3,24 +3,25 @@ package service
 import (
 	"context"
 	v1 "github.com/emrgen/authbase/apis/v1"
-	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/permission"
+	"github.com/emrgen/authbase/pkg/secret"
 	"github.com/emrgen/authbase/pkg/store"
 	x "github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
 )
 
 // NewClientService creates a new ClientService.
-func NewClientService(perm permission.MemberPermission, store store.Provider, cache *cache.Redis) *ClientService {
-	return &ClientService{store: store, perm: perm}
+func NewClientService(perm permission.MemberPermission, store store.Provider, secrets secret.Store) *ClientService {
+	return &ClientService{store: store, perm: perm, secret: secrets}
 }
 
 var _ v1.ClientServiceServer = new(ClientService)
 
 type ClientService struct {
-	perm  permission.MemberPermission
-	store store.Provider
+	perm   permission.MemberPermission
+	store  store.Provider
+	secret secret.Store
 	v1.UnimplementedClientServiceServer
 }
 
