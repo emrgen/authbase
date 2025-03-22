@@ -1,5 +1,7 @@
 # authbase is a simple authentication service.
 
+**NOTE**: This is a side project. Not to be meant for production.
+
 ## API Usage
 
 ```go
