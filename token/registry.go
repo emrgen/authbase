@@ -7,12 +7,14 @@ import (
 	"time"
 )
 
+// Token is a wrapper for a JWT token
 type Token struct {
 	id    string
 	token *v1.Tokens
 	index int
 }
 
+// NewToken creates a new JWT token wrapper with an ID and token
 func NewToken(id string, token *v1.Tokens) *Token {
 	return &Token{
 		id:    id,
