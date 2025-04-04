@@ -42,10 +42,10 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 
 	// check if the master project already exists
 	project, err := as.GetMasterProject(ctx)
-	if !errors.Is(err, store.ErrProjectNotFound) && err != nil {
+	if !errors.Is(err, store.ErrMasterProjectNotFound) && err != nil {
 		return nil, err
 	}
-	err = nil
+	err = nil // ignore the error if the project is not found
 	if project != nil {
 		return nil, x.ErrProjectExists
 	}
@@ -87,6 +87,7 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
+	// TODO: if clientSecret is not provided, generate a random one
 	clientSecret := request.GetClientSecret()
 	clientSalt := x.GenerateSalt()
 	clientSecretHash := x.HashPassword(clientSecret, clientSalt)
@@ -117,17 +118,6 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		if err != nil {
 			return err
 		}
-
-		// if the mail server is configured, send a verification email anyway
-		// verification email will be sent if the account is created successfully
-		//		if request.GetVerifyEmail() {
-		//			verificationCode := x.GenerateVerificationCode()
-		//			err := a.cache.Set("email:"+account.Email, verificationCode, time.Hour)
-		//			if err != nil {
-		//				return err
-		//			}
-		//)
-		//		}
 
 		//// if password is provided, clientSecretHash it and provider it
 		password := request.GetPassword()
@@ -168,6 +158,17 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 	if err != nil {
 		return nil, err
 	}
+
+	// if the mail server is configured, send a verification email anyway
+	// verification email will be sent if the account is created successfully
+	//if request.GetVerifyEmail() {
+	//	verificationCode := x.GenerateVerificationCode()
+	//	err := a.cache.Set("email:"+account.Email, verificationCode, time.Hour)
+	//	if err != nil {
+	//		logrus.Errorf("failed to set verification code in cache: %v", err)
+	//		return nil, err
+	//	}
+	//}
 
 	return &v1.CreateAdminProjectResponse{
 		Project: &v1.Project{

@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrProjectExists           = errors.New("project already exists")
+	ErrMasterProjectNotFound   = errors.New("master project not found")
 	ErrProjectNotFound         = errors.New("project not found")
 	ErrPermissionNotFound      = errors.New("permission not found")
 	ErrPermissionAlreadyExists = errors.New("permission already exists")

@@ -301,6 +301,8 @@ func (s *Server) run() error {
 				return err
 			}
 		}
+	} else {
+		logrus.Infof("no admin project provided, skipping creation")
 	}
 
 	go func() {

@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// PublicKey struct to store public key with expiration time
 type PublicKey struct {
 	key      *rsa.PrivateKey
 	ExpireAt time.Time
@@ -27,6 +28,7 @@ type PublicRegistry struct {
 	slack  time.Duration
 }
 
+// NewPublicRegistry function to create a new public key registry
 func NewPublicRegistry(client v1.PublicKeyServiceClient) *PublicRegistry {
 	return &PublicRegistry{
 		client: client,
@@ -88,7 +90,7 @@ func (r *PublicRegistry) Run() {
 	}
 }
 
-// refresh checks if the token has expired
+// refresh checks if the token has expired and if so, it will remove the key from the registry
 func (r *PublicRegistry) refresh(id string, public *PublicKey) {
 	if public.ExpireAt.Add(r.slack).After(time.Now()) {
 		return
@@ -133,6 +135,7 @@ type PrivateRegistry struct {
 	store store.Provider // save key pair to the store
 }
 
+// NewPrivateRegistry function to create a new private key registry
 func NewPrivateRegistry(store store.Provider) *PrivateRegistry {
 	return &PrivateRegistry{
 		keys:  make(map[string]*KeyPair),
@@ -141,13 +144,14 @@ func NewPrivateRegistry(store store.Provider) *PrivateRegistry {
 	}
 }
 
-func (r *PrivateRegistry) GetGetSignKey(id string) (*rsa.PrivateKey, error) {
-	key, err := r.GetKey(id)
+// GetSignKey function to get private key for signing
+func (r *PrivateRegistry) GetSignKey(id string) (*rsa.PrivateKey, error) {
+	pair, err := r.GetKey(id)
 	if err != nil {
-		return nil, errors.New("failed to get private key")
+		return nil, errors.New("failed to get private pair")
 	}
 
-	return key.private, nil
+	return pair.private, nil
 }
 
 // GetKey function to get key pair
@@ -165,22 +169,27 @@ func (r *PrivateRegistry) GetKey(id string) (*KeyPair, error) {
 	return r.keys[id], nil
 }
 
+// AddKey function to add key pair to the registry
 func (r *PrivateRegistry) AddKey(id string, key *KeyPair) {
 	r.keys[id] = key
 }
 
+// RemoveKey function to remove key pair from the registry
 func (r *PrivateRegistry) RemoveKey(id string) {
 	delete(r.keys, id)
 }
 
+// Reset function to reset the registry, removing all key pairs
 func (r *PrivateRegistry) Reset() {
 	r.keys = make(map[string]*KeyPair)
 }
 
+// Size function to get the size of the registry
 func (r *PrivateRegistry) Size() int {
 	return len(r.keys)
 }
 
+// GenerateKeyPair function to generate a new key pair and add it to the registry
 func (r *PrivateRegistry) GenerateKeyPair(id string) error {
 	private, public, err := x.GenerateKeyPair(2048)
 	if err != nil {
@@ -195,6 +204,7 @@ func (r *PrivateRegistry) GenerateKeyPair(id string) error {
 	return nil
 }
 
+// Run function to run the registry, checking for expired keys and generating new ones
 func (r *PrivateRegistry) Run() {
 	ticker := time.NewTicker(time.Minute)
 	for {
@@ -213,6 +223,7 @@ func (r *PrivateRegistry) Run() {
 	}
 }
 
+// refresh checks if the token has expired and if so, it will remove the key from the registry
 func (r *PrivateRegistry) refresh(id string, key *KeyPair) {
 	if key.ExpireAt.After(time.Now()) {
 		return
