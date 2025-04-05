@@ -174,7 +174,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, keyProvider, perm, s.mailer, redis))
 	v1.RegisterAccountServiceServer(grpcServer, service.NewAccountService(perm, s.provider, redis))
 	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis, keyProvider, verifier))
-	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider))
+	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider, perm))
 	v1.RegisterPoolMemberServiceServer(grpcServer, service.NewPoolMemberService(s.provider))
 	v1.RegisterTokenServiceServer(grpcServer, service.NewTokenService(verifier))
 	v1.RegisterGroupServiceServer(grpcServer, service.NewGroupService(s.provider))

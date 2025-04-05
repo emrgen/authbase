@@ -18,6 +18,7 @@ func NewClientService(perm permission.MemberPermission, store store.Provider, se
 
 var _ v1.ClientServiceServer = new(ClientService)
 
+// ClientService is the service for managing clients for a account pool.
 type ClientService struct {
 	perm   permission.MemberPermission
 	store  store.Provider
@@ -25,19 +26,20 @@ type ClientService struct {
 	v1.UnimplementedClientServiceServer
 }
 
+// CreateClient creates a new client for the given pool.
 func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClientRequest) (*v1.CreateClientResponse, error) {
 	as, err := store.GetProjectStore(ctx, c.store)
 	if err != nil {
 		return nil, err
 	}
 
-	userID, err := x.GetAuthbaseAccountID(ctx)
+	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// check if the user has the permission to create a client
-	err = c.perm.CheckProjectPermission(ctx, userID, "write")
+	// check if the user has permission to create a client for the pool
+	err = c.perm.CheckProjectPermission(ctx, accountID, permission.ProjectPermissionWrite)
 	if err != nil {
 		return nil, err
 	}
@@ -51,37 +53,38 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 		return nil, err
 	}
 
-	secret := x.GenerateClientSecret()
+	clientSecret := x.GenerateClientSecret()
 	salt := x.GenerateSalt()
-	hash := x.HashPassword(secret, salt)
+	hash := x.HashPassword(clientSecret, salt)
 
 	client := model.Client{
 		ID:          uuid.New().String(),
 		PoolID:      pool.ID,
 		Name:        request.GetName(),
 		SecretHash:  string(hash),
-		Secret:      secret,
+		Secret:      clientSecret,
 		Salt:        salt,
-		CreatedByID: userID.String(),
+		CreatedByID: accountID.String(),
 	}
 	err = as.CreateClient(ctx, &client)
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := as.GetAccountByID(ctx, userID)
+	account, err := as.GetAccountByID(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: should we return the client secret to the user?
 	return &v1.CreateClientResponse{
 		Client: &v1.Client{
 			Id:           client.ID,
 			PoolId:       request.GetPoolId(),
-			ClientSecret: secret,
+			ClientSecret: clientSecret,
 			Name:         client.Name,
 			CreatedByUser: &v1.Account{
-				Id:          userID.String(),
+				Id:          accountID.String(),
 				VisibleName: account.VisibleName,
 			},
 		},

@@ -9,6 +9,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type ProjectPermission string
+
+const (
+	// ProjectPermissionRead is the permission to read the project
+	ProjectPermissionRead ProjectPermission = "read"
+	// ProjectPermissionWrite is the permission to write to the project
+	ProjectPermissionWrite ProjectPermission = "write"
+)
+
 type Definition struct {
 	Name   string
 	Scopes []string
@@ -19,9 +28,9 @@ type Definitions []Definition
 // MemberPermission is an interface representing the member permissions that are used in the service layer
 type MemberPermission interface {
 	// CheckMasterProjectPermission checks if the user has the permission to perform
-	CheckMasterProjectPermission(ctx context.Context, relation string) error
+	CheckMasterProjectPermission(ctx context.Context, relation ProjectPermission) error
 	// CheckProjectPermission checks if the user has the permission to perform the action on the project
-	CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation string) error
+	CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation ProjectPermission) error
 }
 
 // AuthBasePermission is an interface representing the authbase permissions that are used in the service layer
@@ -50,7 +59,7 @@ func NewStoreBasedPermission(store store.Provider) *StoreBasedPermission {
 }
 
 // CheckMasterProjectPermission checks if the user has the permission to perform the action on the master project
-func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context, relation string) error {
+func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context, relation ProjectPermission) error {
 	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
 		return err
@@ -85,7 +94,7 @@ func (s *StoreBasedPermission) CheckMasterProjectPermission(ctx context.Context,
 			return err
 		}
 
-		perm := permissionMap[relation]
+		perm := permissionMap[string(relation)]
 		if permission.Permission >= perm {
 			return nil
 		}
@@ -103,7 +112,7 @@ var permissionMap = map[string]uint32{
 }
 
 // CheckProjectPermission checks if the user has the permission to perform the action on the project
-func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, projectID uuid.UUID, relation string) error {
+func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, projectID uuid.UUID, relation ProjectPermission) error {
 	//scopes, err := x.GetAuthbaseScopes(ctx)
 	//if err != nil {
 	//	return err
@@ -124,12 +133,12 @@ var _ AuthBasePermission = new(NullAuthbasePermission)
 
 // CheckMasterProjectPermission checks if the user has the permission to perform
 // for NullAuthbasePermission it always returns nil, meaning the user has the permission
-func (n *NullAuthbasePermission) CheckMasterProjectPermission(ctx context.Context, relation string) error {
+func (n *NullAuthbasePermission) CheckMasterProjectPermission(ctx context.Context, relation ProjectPermission) error {
 	return nil
 }
 
 // CheckProjectPermission checks if the user has the permission to perform the action on the project
 // for NullAuthbasePermission it always returns nil, meaning the user has the permission
-func (n *NullAuthbasePermission) CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation string) error {
+func (n *NullAuthbasePermission) CheckProjectPermission(ctx context.Context, orgID uuid.UUID, relation ProjectPermission) error {
 	return nil
 }

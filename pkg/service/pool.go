@@ -4,6 +4,7 @@ import (
 	"context"
 	v1 "github.com/emrgen/authbase/apis/v1"
 	"github.com/emrgen/authbase/pkg/model"
+	"github.com/emrgen/authbase/pkg/permission"
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
@@ -13,20 +14,24 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// NewPoolService creates a new pool service.
-func NewPoolService(store store.Provider) v1.PoolServiceServer {
+// NewPoolService creates a new account pool service.
+func NewPoolService(store store.Provider, perm permission.MemberPermission) v1.PoolServiceServer {
 	return &PoolService{
 		store: store,
+		perm:  perm,
 	}
 }
 
 var _ v1.PoolServiceServer = new(PoolService)
 
+// PoolService is the service for managing account pools.
 type PoolService struct {
 	store store.Provider
+	perm  permission.MemberPermission
 	v1.UnimplementedPoolServiceServer
 }
 
+// CreatePool creates a new pool for the given project. A pool is a group of accounts that can be managed together.
 func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequest) (*v1.CreatePoolResponse, error) {
 	var err error
 	as, err := store.GetProjectStore(ctx, p.store)
@@ -34,6 +39,12 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 		return nil, err
 	}
 	accountID, err := x.GetAuthbaseAccountID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the user has permission to create a pool for the project
+	err = p.perm.CheckProjectPermission(ctx, accountID, permission.ProjectPermissionWrite)
 	if err != nil {
 		return nil, err
 	}
@@ -66,11 +77,16 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 
 		logrus.Infof("pool created: %s", request.Client)
 
+		// NOTE: once the pool is created it cant be used to create new accounts
+		// first the owner needs to create a client for the pool
+		// if the request is to create a client for the newly created pool
 		if request.GetClient() {
 			secret := x.GenerateClientSecret()
 			salt := x.GenerateSalt()
 			hash := x.HashPassword(secret, salt)
 
+			// we are saving the secret in the database,
+			// so that the user can check it later as client config
 			client := model.Client{
 				ID:          uuid.New().String(),
 				PoolID:      pool.ID,
@@ -100,6 +116,7 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 	}, nil
 }
 
+// GetPool gets the pool by ID.
 func (p *PoolService) GetPool(ctx context.Context, request *v1.GetPoolRequest) (*v1.GetPoolResponse, error) {
 	poolID := uuid.MustParse(request.GetPoolId())
 	as, err := store.GetProjectStore(ctx, p.store)
@@ -108,6 +125,13 @@ func (p *PoolService) GetPool(ctx context.Context, request *v1.GetPoolRequest) (
 	}
 
 	pool, err := as.GetPoolByID(ctx, poolID)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the user has permission to get the pool
+	projectID := uuid.MustParse(pool.ProjectID)
+	err = p.perm.CheckProjectPermission(ctx, projectID, permission.ProjectPermissionRead)
 	if err != nil {
 		return nil, err
 	}
@@ -123,6 +147,7 @@ func (p *PoolService) GetPool(ctx context.Context, request *v1.GetPoolRequest) (
 
 }
 
+// ListPools lists all pools for the given project.
 func (p *PoolService) ListPools(ctx context.Context, request *v1.ListPoolsRequest) (*v1.ListPoolsResponse, error) {
 	projectID := uuid.MustParse(request.GetProjectId())
 	as, err := store.GetProjectStore(ctx, p.store)
@@ -157,11 +182,59 @@ func (p *PoolService) ListPools(ctx context.Context, request *v1.ListPoolsReques
 	}, nil
 }
 
+// UpdatePool updates the pool with the given ID.
 func (p *PoolService) UpdatePool(ctx context.Context, request *v1.UpdatePoolRequest) (*v1.UpdatePoolResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	poolID := uuid.MustParse(request.GetPoolId())
+	as, err := store.GetProjectStore(ctx, p.store)
+	if err != nil {
+		return nil, err
+	}
+
+	// check if the user has permission to update the pool
+	accountID, err := x.GetAuthbaseAccountID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.perm.CheckProjectPermission(ctx, accountID, permission.ProjectPermissionWrite)
+	if err != nil {
+		return nil, err
+	}
+
+	err = as.Transaction(func(tx store.AuthBaseStore) error {
+		pool, err := tx.GetPoolByID(ctx, poolID)
+		if err != nil {
+			return err
+		}
+
+		// check if the user has permission to update the pool
+		projectID := uuid.MustParse(pool.ProjectID)
+		err = p.perm.CheckProjectPermission(ctx, projectID, permission.ProjectPermissionWrite)
+		if err != nil {
+			return err
+		}
+
+		pool.Name = request.GetName()
+		err = tx.UpdatePool(ctx, pool)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.UpdatePoolResponse{
+		Pool: &v1.Pool{
+			Id:   poolID.String(),
+			Name: request.GetName(),
+		},
+	}, nil
 }
 
+// DeletePool deletes the pool with the given ID.
 func (p *PoolService) DeletePool(ctx context.Context, request *v1.DeletePoolRequest) (*v1.DeletePoolResponse, error) {
 	as, err := store.GetProjectStore(ctx, p.store)
 	if err != nil {

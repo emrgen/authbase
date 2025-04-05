@@ -92,7 +92,7 @@ func (m *ProjectMemberService) GetProjectMember(ctx context.Context, request *v1
 	}
 
 	// check if the user has the read permission
-	err = m.perm.CheckProjectPermission(ctx, orgID, "read")
+	err = m.perm.CheckProjectPermission(ctx, orgID, permission.ProjectPermissionRead)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (m *ProjectMemberService) ListProjectMember(ctx context.Context, request *v
 		return nil, err
 	}
 
-	err = m.perm.CheckProjectPermission(ctx, orgID, "read")
+	err = m.perm.CheckProjectPermission(ctx, orgID, permission.ProjectPermissionRead)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (m *ProjectMemberService) UpdateProjectMember(ctx context.Context, request 
 		return nil, err
 	}
 
-	err = m.perm.CheckProjectPermission(ctx, orgID, "write")
+	err = m.perm.CheckProjectPermission(ctx, orgID, permission.ProjectPermissionWrite)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (m *ProjectMemberService) AddProjectMember(ctx context.Context, request *v1
 		return nil, err
 	}
 
-	err = m.perm.CheckProjectPermission(ctx, orgID, "write")
+	err = m.perm.CheckProjectPermission(ctx, orgID, permission.ProjectPermissionWrite)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (m *ProjectMemberService) RemoveProjectMember(ctx context.Context, request 
 		return nil, err
 	}
 
-	err = m.perm.CheckProjectPermission(ctx, orgID, "write")
+	err = m.perm.CheckProjectPermission(ctx, orgID, permission.ProjectPermissionWrite)
 	if err != nil {
 		return nil, err
 	}
