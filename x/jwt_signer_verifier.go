@@ -67,8 +67,10 @@ func (r *StaticKeyProvider) GetVerifier(id string) (JWTVerifier, error) {
 	return newStaticVerifier(r.key), nil
 }
 
+// UnverifiedKeyProvider is a key provider that does not verify the key.
 type UnverifiedKeyProvider struct{}
 
+// NewUnverifiedKeyProvider creates a new UnverifiedKeyProvider.
 func NewUnverifiedKeyProvider() *UnverifiedKeyProvider {
 	return &UnverifiedKeyProvider{}
 }

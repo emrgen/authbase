@@ -236,7 +236,9 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, errors.New("account not found")
 	}
 
+	// disabled accounts should not be able to login
 	if account.Disabled {
+		// TODO: should we return a different error code, may be permission denied, or message?
 		return nil, errors.New("account is disabled")
 	}
 
@@ -244,13 +246,6 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	if !ok {
 		return nil, errors.New("incorrect password")
 	}
-
-	//if account.ProjectMember {
-	//	perm, err = as.GetProjectMemberByID(ctx, clientID, uuid.MustParse(account.ID))
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
 
 	// get the account scopes from the group memberships
 	accountID := uuid.MustParse(account.ID)
@@ -273,7 +268,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	}
 
 	// generate tokens for the account
-	jti := uuid.New().String()
+	jti := uuid.New().String() // unique id for the token
 	token, err := x.GenerateJWTToken(&x.Claims{
 		Username:  account.Username,
 		Email:     account.Email,

@@ -29,6 +29,8 @@ func JWTSecretFromEnv() string {
 	return secretKey
 }
 
+// JWTSignerVerifierProvider is a provider for JWT signer and verifier.
+// It is used to sign and verify JWT tokens.
 type JWTSignerVerifierProvider interface {
 	SignerProvider
 	VerifierProvider
@@ -42,19 +44,24 @@ type VerifierProvider interface {
 	GetVerifier(id string) (JWTVerifier, error)
 }
 
+// JWTSignerVerifier is a combination of JWTSigner and JWTVerifier.
 type JWTSignerVerifier interface {
 	JWTSigner
 	JWTVerifier
 }
 
 type JWTSigner interface {
+	// Sign signs the claims and returns the token string. Sign may use private key or secret key
 	Sign(claims jwt.MapClaims) (string, error)
 }
 
+// JWTVerifier verifies the token and returns the claims.
 type JWTVerifier interface {
+	// Verify verifies the token and returns the claims. Verify may use public key or secret key
 	Verify(tokenString string) (jwt.MapClaims, error)
 }
 
+// Claims is the claims for the JWT token.
 type Claims struct {
 	KeyID     string    `json:"key_id"` // public key id
 	Username  string    `json:"username"`
@@ -72,6 +79,7 @@ type Claims struct {
 	Roles     []string  `json:"roles"`
 }
 
+// JWTToken is combination of access token and refresh token
 type JWTToken struct {
 	AccessToken  string
 	RefreshToken string

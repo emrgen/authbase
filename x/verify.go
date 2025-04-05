@@ -8,6 +8,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/google/uuid"
 	"strings"
+	"time"
 )
 
 // TokenVerifier is an interface to verify the token.
@@ -16,7 +17,7 @@ type TokenVerifier interface {
 	VerifyEmailPassword(ctx context.Context, poolID uuid.UUID, email, password string) (*model.Account, error)
 	// VerifyToken verifies the token.
 	VerifyToken(ctx context.Context, token string, poolID string) (*Claims, error)
-	// VerifyAccessKey verifies the access key.
+	// VerifyAccessKey verifies the access key and returns the claims.
 	VerifyAccessKey(ctx context.Context, id uuid.UUID, accessKey string) (*Claims, error)
 }
 
@@ -85,6 +86,11 @@ func (v *StoreBasedUserVerifier) VerifyAccessKey(ctx context.Context, id uuid.UU
 	accessKey, err := as.GetAccessKeyByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	// check if the access key is expired
+	if accessKey.ExpireAt.Before(time.Now()) {
+		return nil, errors.New("access key expired on " + accessKey.ExpireAt.String())
 	}
 
 	if accessKey.Token != key {

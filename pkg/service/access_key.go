@@ -35,7 +35,7 @@ func NewAccessKeyService(perm permission.AuthBasePermission, store store.Provide
 
 var _ v1.AccessKeyServiceServer = new(AccessKeyService)
 
-// AccessKeyService is a service for token
+// AccessKeyService is a service for token. AccessKey is an offline token.
 type AccessKeyService struct {
 	perm        permission.AuthBasePermission
 	store       store.Provider
@@ -60,10 +60,7 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		return nil, err
 	}
 
-	//err = t.perm.CheckProjectPermission(ctx, clientIDpoolID, "write")
-	//if err != nil {
-	//	return nil, err
-	//}
+	// TODO: check if the user has the permission to create the access key for the pool
 
 	accountID, err := x.GetAuthbaseAccountID(ctx)
 	if err != nil {
@@ -72,6 +69,11 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 
 	expireAfter := defaultAccessKeyExpireIn
 	if request.GetExpiresIn() != 0 {
+		// expiry time can not be more than 120 days
+		// TODO: this should be configurable in the future
+		if request.GetExpiresIn() > 60*24*60*60 {
+			return nil, errors.New("expires_in can not be more than 60 days")
+		}
 		expireAfter = time.Second * time.Duration(request.GetExpiresIn())
 	}
 
@@ -295,6 +297,7 @@ func (t *AccessKeyService) GetAccessKeyAccount(ctx context.Context, request *v1.
 	}, nil
 }
 
+// GetTokenFromAccessKey gets a token from the access key
 func (t *AccessKeyService) GetTokenFromAccessKey(ctx context.Context, request *v1.GetTokenFromAccessKeyRequest) (*v1.GetTokenFromAccessKeyResponse, error) {
 	accessKey := request.GetAccessKey()
 	token, err := x.ParseAccessKey(accessKey)
@@ -320,9 +323,7 @@ func (t *AccessKeyService) GetTokenFromAccessKey(ctx context.Context, request *v
 		return nil, err
 	}
 
-	claims.ExpireAt = time.Now().Add(x.RefreshTokenDuration)
-
-	// get the token from the access key
+	// generate the token from the claims
 	jwtToken, err := x.GenerateJWTToken(claims, signer)
 	if err != nil {
 		return nil, err
