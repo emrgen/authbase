@@ -7,12 +7,16 @@ import (
 
 var _ Provider = new(GoogleProvider)
 
+// GoogleProvider is an implementation of the Provider interface for Google OAuth2
 type GoogleProvider struct {
 	config oauth2.Config
 }
 
-func NewGoogleProvider() *GoogleProvider {
-	return &GoogleProvider{}
+// NewGoogleProvider creates a new GoogleProvider instance
+func NewGoogleProvider(config oauth2.Config) *GoogleProvider {
+	return &GoogleProvider{
+		config: config,
+	}
 }
 
 func (g *GoogleProvider) GetName() string {

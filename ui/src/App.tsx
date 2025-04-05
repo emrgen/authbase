@@ -7,6 +7,7 @@ import {Sidebar} from "./components/authbase/Sidebar";
 import {SidebarItem} from "./components/authbase/SidebarItem.tsx";
 import {Users} from "./pages/Users.tsx";
 
+// This is the main entry point of the application
 function App() {
 
   return (

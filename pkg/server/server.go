@@ -281,6 +281,7 @@ func (s *Server) run() error {
 	logrus.Infof("Press Ctrl+C to stop the server")
 
 	// if an admin project is provided, create the org and the super admin user
+	// TODO: there are some issues with the admin project creation, need to fix it.
 	if s.config.AdminOrg.Valid() {
 		//TODO: remove this check as this logs the client secret
 		logrus.Infof("trying to create admin project: %v", s.config.AdminOrg)

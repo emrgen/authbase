@@ -11,8 +11,10 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/emrgen/authbase/x/mail"
+	"github.com/emrgen/authbase/x/oauth"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -94,8 +96,49 @@ func (a *AuthService) LoginUsingIdp(ctx context.Context, request *v1.LoginUsingI
 
 // GetIdpToken gets the token from the identity provider code
 func (a *AuthService) GetIdpToken(ctx context.Context, request *v1.GetIdpTokenRequest) (*v1.GetIdpTokenResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	as, err := store.GetProjectStore(ctx, a.store)
+	if err != nil {
+		return nil, err
+	}
+	// get the client id and secret from the request
+	clientID, err := uuid.Parse(request.GetClientId())
+	if err != nil {
+		return nil, err
+	}
+	client, err := as.GetClientByID(ctx, clientID)
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return nil, errors.New("client not found")
+	}
+
+	// get the provider details
+	provider, err := as.GetOauthProviderByName(ctx, clientID, request.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	oauthProvider, err := oauth.GetProvider(provider.Provider, oauth2.Config{
+		ClientID:     provider.Config.ClientID,
+		ClientSecret: provider.Config.ClientSecret,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// get the token from the provider
+	token, err := oauthProvider.GetToken(ctx, request.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetIdpTokenResponse{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiresAt:    timestamppb.New(time.Now().Add(time.Duration(token.ExpiresIn))),
+		IssuedAt:     timestamppb.New(time.Now()),
+	}, nil
 }
 
 // RegisterUsingPassword registers a user using a username, email, and password
