@@ -281,7 +281,7 @@ func (u *AccountService) DeleteAccount(ctx context.Context, request *v1.DeleteAc
 	}, nil
 }
 
-// ListActiveAccounts lists active users.
+// ListActiveAccounts lists active users. Users that have logged in recently and the session is still valid.
 func (u *AccountService) ListActiveAccounts(ctx context.Context, request *v1.ListActiveAccountsRequest) (*v1.ListActiveAccountsResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
@@ -333,7 +333,7 @@ func (u *AccountService) ListActiveAccounts(ctx context.Context, request *v1.Lis
 	return &v1.ListActiveAccountsResponse{Accounts: userProtos, Meta: &v1.Meta{Total: 0, Page: 0, Size: 0}}, nil
 }
 
-// ListInactiveAccounts lists inactive users.
+// ListInactiveAccounts lists inactive users. Users that have not logged in for a while and the session is expired.
 func (u *AccountService) ListInactiveAccounts(ctx context.Context, request *v1.ListInactiveAccountsRequest) (*v1.ListInactiveAccountsResponse, error) {
 	//as, err := store.GetProjectStore(ctx, u.store)
 	//if err != nil {
@@ -375,7 +375,7 @@ func (u *AccountService) ListInactiveAccounts(ctx context.Context, request *v1.L
 	return &v1.ListInactiveAccountsResponse{}, nil
 }
 
-// DisableAccount activates a user.
+// DisableAccount activates a user. Disabled users cannot log in.
 func (u *AccountService) DisableAccount(ctx context.Context, request *v1.DisableAccountRequest) (*v1.DisableAccountResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {
@@ -408,7 +408,7 @@ func (u *AccountService) DisableAccount(ctx context.Context, request *v1.Disable
 	}, nil
 }
 
-// EnableAccount activates a user.
+// EnableAccount activates a user. Enabled users can log in.
 func (u *AccountService) EnableAccount(ctx context.Context, request *v1.EnableAccountRequest) (*v1.EnableAccountResponse, error) {
 	as, err := store.GetProjectStore(ctx, u.store)
 	if err != nil {

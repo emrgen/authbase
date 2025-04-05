@@ -3,6 +3,8 @@ package model
 import "gorm.io/gorm"
 
 // Group represents a group of accounts with a common purpose (scopes).
+// Groups have associated roles that define the permissions for the group.
+// Accounts with group membership inherit the roles of the group.
 type Group struct {
 	gorm.Model
 	ID       string  `gorm:"uuid;not null"`

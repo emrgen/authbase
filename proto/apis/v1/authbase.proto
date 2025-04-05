@@ -768,6 +768,7 @@ service ClientService {
 
 // Account service
 
+// Account represents a user account in the system.
 message Account {
   string id = 1 [(validate.rules).string.uuid = true];
   string email = 2 [(validate.rules).string.email = true];

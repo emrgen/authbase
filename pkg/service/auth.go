@@ -236,6 +236,10 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, errors.New("account not found")
 	}
 
+	if account.Disabled {
+		return nil, errors.New("account is disabled")
+	}
+
 	ok := x.CompareHashAndPassword(password, account.Salt, account.PasswordHash)
 	if !ok {
 		return nil, errors.New("incorrect password")
@@ -248,7 +252,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	//	}
 	//}
 
-	// get the account scopes from the memberships
+	// get the account scopes from the group memberships
 	accountID := uuid.MustParse(account.ID)
 	memberships, err := as.ListGroupMemberByAccount(ctx, accountID)
 	if err != nil {
@@ -268,7 +272,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		return nil, err
 	}
 
-	// generate tokens
+	// generate tokens for the account
 	jti := uuid.New().String()
 	token, err := x.GenerateJWTToken(&x.Claims{
 		Username:  account.Username,
@@ -276,12 +280,12 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		ProjectID: account.ProjectID,
 		PoolID:    account.PoolID,
 		AccountID: account.ID,
-		Audience:  "", // the target website or app that will use the token
+		Audience:  "", // TODO: the target website or app that will use the token
 		Jti:       jti,
 		ExpireAt:  time.Now().Add(x.AccessTokenDuration),
 		IssuedAt:  time.Now(),
-		Provider:  "authbase",
-		Scopes:    roleNames, // internal roles
+		Provider:  "authbase", // TODO: what should this be?
+		Scopes:    roleNames,  // internal roles
 		Roles:     roleNames,
 	}, signer)
 	if err != nil {
@@ -290,6 +294,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	refreshExpireAt := time.Now().Add(x.RefreshTokenDuration)
 	// save refresh token to cache, it will be used to validate the refresh token request
+	// on cache miss, it will check the provider for the refresh token
 	err = a.cache.Set(jti, token.RefreshToken, x.RefreshTokenDuration)
 	if err != nil {
 		return nil, err
@@ -310,8 +315,9 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 		}
 
 		// create a new session
-		// account the jti as the session id
+		// use the jti as the session id
 		// this will allow multiple sessions for a account at the same time
+		// TODO: should we limit the number of sessions?
 		err = as.CreateSession(ctx, &model.Session{
 			ID:        jti,
 			PoolID:    account.PoolID,
@@ -373,6 +379,12 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 
 	// delete the token from the cache
 	err = a.cache.Del(claims.Jti)
+	if err != nil {
+		return nil, err
+	}
+
+	// delete the refresh token from the provider
+	err = as.DeleteRefreshToken(ctx, claims.Jti)
 	if err != nil {
 		return nil, err
 	}
