@@ -9,7 +9,7 @@ import {
   SelectValueText,
 } from "../ui/select";
 
-export const PooltSelect = () => {
+export const PoolSelect = () => {
   return (
     <SelectRoot collection={frameworks} size="sm" width="full" border={'1px solid #aaa'} borderRadius={6}>
       <SelectTrigger>

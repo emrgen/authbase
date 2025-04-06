@@ -24,8 +24,14 @@ type AdminAuthService struct {
 	v1.UnimplementedAdminAuthServiceServer
 }
 
-func NewAdminAuthService(store store.Provider, cfg *config.AdminProjectConfig) *AdminAuthService {
-	return &AdminAuthService{provider: store, cfg: cfg}
+func NewAdminAuthService(store store.Provider, cfg *config.AdminProjectConfig, keyProvider x.JWTSignerVerifierProvider, cache *cache.Redis,
+) *AdminAuthService {
+	return &AdminAuthService{
+		provider:    store,
+		cfg:         cfg,
+		cache:       cache,
+		keyProvider: keyProvider,
+	}
 }
 
 var _ v1.AdminAuthServiceServer = (*AdminAuthService)(nil)
@@ -155,8 +161,15 @@ func (a AdminAuthService) AdminLoginUsingPassword(ctx context.Context, request *
 	// return the token
 	return &v1.AdminLoginUsingPasswordResponse{
 		Account: &v1.Account{
-			Id:       account.ID,
-			Username: account.Username,
+			Id:          account.ID,
+			Username:    account.Username,
+			Email:       account.Email,
+			ProjectId:   account.ProjectID,
+			PoolId:      account.PoolID,
+			Member:      account.ProjectMember,
+			VisibleName: account.VisibleName,
+			CreatedAt:   timestamppb.New(account.CreatedAt),
+			UpdatedAt:   timestamppb.New(account.UpdatedAt),
 		},
 		Token: &v1.AuthToken{
 			AccessToken:      token.AccessToken,

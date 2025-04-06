@@ -14,7 +14,7 @@ const (
 	RefreshTokenDuration = 7 * 24 * time.Hour
 	// AccessTokenDuration is the duration for the access token
 	// TODO: this should be configurable in the future
-	AccessTokenDuration = 15 * time.Minute
+	AccessTokenDuration = 24 * 60 * time.Minute
 	// ScheduleRefreshTokenExpiry is the duration to schedule the refresh token expiry
 	ScheduleRefreshTokenExpiry = 5 * time.Minute
 )

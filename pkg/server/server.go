@@ -25,7 +25,9 @@ import (
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/protobuf/encoding/protojson"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -181,7 +183,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterRoleServiceServer(grpcServer, service.NewRoleService(s.provider))
 	v1.RegisterApplicationServiceServer(grpcServer, service.NewApplicationService(s.provider))
 	v1.RegisterProjectMemberServiceServer(grpcServer, service.NewProjectMemberService(perm, s.provider, redis))
-	v1.RegisterAdminAuthServiceServer(grpcServer, service.NewAdminAuthService(s.provider, s.config.AdminOrg))
+	v1.RegisterAdminAuthServiceServer(grpcServer, service.NewAdminAuthService(s.provider, s.config.AdminOrg, keyProvider, redis))
 
 	// Register the http gateway
 	if err = v1.RegisterAdminProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
@@ -227,6 +229,10 @@ func (s *Server) registerServices() error {
 		return err
 	}
 
+	if err = v1.RegisterAdminAuthServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {
+		return err
+	}
+
 	return err
 }
 
@@ -238,12 +244,18 @@ func (s *Server) run() error {
 	apiMux.Handle(docsPath, http.StripPrefix(docsPath, http.FileServer(openapiDocs)))
 	apiMux.Handle("/", s.mux)
 
+	logger := logrus.New()
+	logger.SetReportCaller(true)
+
+	grpclog.SetLoggerV2(grpclog.NewLoggerV2(io.Discard, io.Discard, io.Discard))
+
 	// CORS middleware
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"}, // All origins are allowed
-		AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT"},
-		AllowedHeaders:   []string{"Authorization"},
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
+		Logger:           logger,
 	})
 
 	restServer := &http.Server{

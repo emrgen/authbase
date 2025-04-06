@@ -9,6 +9,19 @@ import "validate/validate.proto";
 
 option go_package = "github.com/emrgen/authbase/proto/v1";
 
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  security_definitions: {
+    security: {
+      key: "OAuth2PasswordBearer",
+      value: {
+        type: TYPE_OAUTH2
+        flow: FLOW_PASSWORD
+        token_url: "/v1/auth/token",
+      }
+    }
+  }
+};
+
 message Project {
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2;
@@ -1525,6 +1538,14 @@ service ProjectService {
   // ListProjects
   rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
     option (google.api.http) = {get: "/v1/projects"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateProject

@@ -1,7 +1,8 @@
 import {Box, Flex, Heading, Input, Stack, Field as FormField} from "@chakra-ui/react";
 import {Field, Formik} from "formik";
-import {useNavigate} from "react-router";
+import {authbase} from "../api/client.ts";
 import {Button} from "../components/ui/button";
+import {useNavigate}  from "react-router";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -29,16 +30,42 @@ export function LoginPage() {
           </Stack>
           <Formik
             initialValues={{
+              project: "",
               email: "",
               password: "",
             }}
             onSubmit={(
-              values: { email: string; password: string },
+              values: { project: string, email: string; password: string },
               {setSubmitting},
             ) => {
-              const {email, password} = values;
-              console.log(email, password)
-              setSubmitting(false);
+              const {project, email, password} = values;
+              console.log(project,email, password)
+              setSubmitting(true);
+              authbase.admin.adminLoginUsingPassword({
+                body:{
+                  projectName: project,
+                  email,
+                  password
+                }
+              }).then((res) => {
+                const {data} = res;
+                const {token = {}} = data;
+                const {accessToken = '', refreshToken = ''} = token;
+                localStorage.setItem("accessToken", accessToken.toString());
+                localStorage.setItem("refreshToken", refreshToken.toString());
+                navigate("/");
+              }).catch((err) => {
+                console.log(err);
+                // toast({
+                //   title: "Error",
+                //   description: err.response.data.message,
+                //   status: "error",
+                //   duration: 5000,
+                //   isClosable: true,
+                // });
+              }).finally(() => {
+                setSubmitting(false);
+              })
             }}
           >
             {({
@@ -51,13 +78,28 @@ export function LoginPage() {
                   <Box rounded={"lg"} boxShadow={"lg"} p={8}>
                     <Stack gap={4}>
                       <FormField.Root
+                        id="project"
+                        // isInvalid={Boolean(errors.email) && touched.email}
+                      >
+                        <FormField.Label>Project</FormField.Label>
+                        <Field
+                          as={Input}
+                          type="text"
+                          id="project"
+                          name="project"
+                          // isDisabled={isSubmitting}
+                          // validate={emailValidator}
+                        />
+                      </FormField.Root>
+
+                      <FormField.Root
                         id="email"
                         // isInvalid={Boolean(errors.email) && touched.email}
                       >
                         <FormField.Label>Email</FormField.Label>
                         <Field
                           as={Input}
-                          type="text"
+                          type="email"
                           id="email"
                           name="email"
                           // isDisabled={isSubmitting}

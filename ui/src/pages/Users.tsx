@@ -35,7 +35,7 @@ export const Users = () => {
 
               <Table.Body>
                 {Array.from({length: 100}).map(() => (
-                  <Table.Row>
+                  <Table.Row key={Math.random()}>
                     <Table.Cell>
                       admin
                     </Table.Cell>

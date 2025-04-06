@@ -70,7 +70,7 @@ generate-client: proto
 		-g typescript-axios \
 		-o ./clients/gen/ts/authbase-client-gen \
 		--additional-properties=npmName=@emrgen/authbase-client-gen,npmVersion=${CLIENT_VERSION},useSingleRequestParameter=true,supportsES6=true,modelPropertyNaming=snake_case,paramNaming=snake_case,enumPropertyNaming=snake_case,removeOperationIdPrefix=true \
-		--type-mappings=string=String
+
 
 	# cd ./clients/firstime-gen-client/ts && yarn
 

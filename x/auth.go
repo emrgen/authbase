@@ -18,8 +18,10 @@ import (
 // on success, it sets the accountID and projectID and account permission in the context.
 func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvider, provider store.Provider) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		logrus.Infof("authbase: interceptor method: %s", info.FullMethod)
 		switch info.FullMethod {
 		case
+			v1.AdminAuthService_AdminLoginUsingPassword_FullMethodName,
 			v1.AuthService_LoginUsingPassword_FullMethodName,
 			v1.AuthService_Refresh_FullMethodName,
 			v1.AccessKeyService_GetTokenFromAccessKey_FullMethodName,

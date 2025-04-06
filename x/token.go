@@ -2,7 +2,6 @@ package x
 
 import (
 	"fmt"
-	"runtime/debug"
 )
 
 const (
@@ -20,7 +19,7 @@ type Token struct {
 
 func ParseToken(token string) (*Token, error) {
 	if len(token) < 4 {
-		debug.PrintStack()
+		//debug.PrintStack()
 		return nil, fmt.Errorf("invalid token")
 	}
 

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/emrgen/authbase/pkg/cache"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 // InjectCookie injects a cookie into the response based on the message type
 func InjectCookie(store CookieStore) func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
 	return func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
+		logrus.Infof("authbase: inject cookie: %T", m)
 		//m = m.ProtoReflect().Interface()
 		//switch m.(type) {
 		//case *v1.LoginResponse:
@@ -64,6 +66,7 @@ func InjectCookie(store CookieStore) func(ctx context.Context, w http.ResponseWr
 // ExtractCookie extracts a cookie from the request and check if the cookie is valid
 func ExtractCookie(store CookieStore) func(ctx context.Context, r *http.Request) metadata.MD {
 	return func(ctx context.Context, r *http.Request) metadata.MD {
+		logrus.Infof("authbase: extract cookie: %T", r)
 		cookie, err := r.Cookie("oauthstate")
 		if err != nil {
 			return metadata.Pairs()
