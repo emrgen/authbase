@@ -1,6 +1,7 @@
-import {Box, Flex, Heading, Input, Stack, Text, Button, Field as FormField} from "@chakra-ui/react";
+import {Box, Flex, Heading, Input, Stack, Field as FormField} from "@chakra-ui/react";
 import {Field, Formik} from "formik";
 import {useNavigate} from "react-router";
+import {Button} from "../components/ui/button";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -36,7 +37,8 @@ export function LoginPage() {
               {setSubmitting},
             ) => {
               const {email, password} = values;
-              console.log(setSubmitting, email, password)
+              console.log(email, password)
+              setSubmitting(false);
             }}
           >
             {({
@@ -99,7 +101,7 @@ export function LoginPage() {
                             // }}
                             type="submit"
                             // isDisabled={isSubmitting}
-                            // isLoading={isSubmitting}
+                            loading={isSubmitting}
                           >
                             Sign in
                           </Button>

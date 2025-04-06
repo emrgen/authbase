@@ -33,8 +33,8 @@ type AuthService struct {
 	store       store.Provider
 	mailer      mail.MailerProvider
 	cache       *cache.Redis
-	perm        permission.AuthBasePermission
 	keyProvider x.JWTSignerVerifierProvider
+	perm        permission.AuthBasePermission
 	v1.UnimplementedAuthServiceServer
 }
 

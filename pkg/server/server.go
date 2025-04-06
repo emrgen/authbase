@@ -181,6 +181,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterRoleServiceServer(grpcServer, service.NewRoleService(s.provider))
 	v1.RegisterApplicationServiceServer(grpcServer, service.NewApplicationService(s.provider))
 	v1.RegisterProjectMemberServiceServer(grpcServer, service.NewProjectMemberService(perm, s.provider, redis))
+	v1.RegisterAdminAuthServiceServer(grpcServer, service.NewAdminAuthService(s.provider, s.config.AdminOrg))
 
 	// Register the http gateway
 	if err = v1.RegisterAdminProjectServiceHandlerFromEndpoint(context.TODO(), s.mux, endpoint, opts); err != nil {

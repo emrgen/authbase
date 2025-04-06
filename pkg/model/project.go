@@ -18,7 +18,7 @@ type Project struct {
 	ID                string `gorm:"primaryKey;uuid;not null;"`
 	ParentProjectID   string `gorm:"uuid;default:null"`
 	Name              string `gorm:"not null;unique;index:idx_project_name"` // unique project name
-	PoolID            string `gorm:"uuid"`
+	PoolID            string `gorm:"uuid"`                                   // default pool for the project
 	DisplayName       string `gorm:"not null"`
 	OwnerID           string `gorm:"not null"`
 	Owner             *Account
