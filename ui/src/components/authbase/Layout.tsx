@@ -8,7 +8,7 @@ interface LayoutProps{
 // It is used to wrap the sidebar and content components and provide a consistent layout
 export const Layout = (props: LayoutProps) => {
   return (
-    <HStack h='full' align={'start'} gap={0}>
+    <HStack h='full' align={'start'} gap={0} pos={'relative'} overflow={'hidden'}>
       {props.children}
     </HStack>
   )

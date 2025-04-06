@@ -253,12 +253,13 @@ func (s *Server) run() error {
 	// make sure to wait for the servers to stop before exiting
 	var wg sync.WaitGroup
 
+	logrus.Info("API documentation: http://localhost", s.httpPort, "/v1/docs/")
+
 	// Start the grpc server
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		logrus.Info("starting rest gateway on: ", s.httpPort)
-		logrus.Info("click on the following link to view the API documentation: http://localhost", s.httpPort, "/v1/docs/")
 		if err := restServer.Serve(s.rl); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				logrus.Errorf("error starting rest gateway: %v", err)
@@ -280,11 +281,14 @@ func (s *Server) run() error {
 
 	logrus.Infof("Press Ctrl+C to stop the server")
 
+	logrus.Infof("-----------------------------------------------")
+	logrus.Info("BOOTSTRAP: waiting for the server to be ready")
+	logrus.Infof("-----------------------------------------------")
+
 	// if an admin project is provided, create the org and the super admin user
 	// TODO: there are some issues with the admin project creation, need to fix it.
 	if s.config.AdminOrg.Valid() {
 		//TODO: remove this check as this logs the client secret
-		logrus.Infof("trying to create admin project: %v", s.config.AdminOrg)
 		adminOrgService := service.NewAdminProjectService(s.provider, s.redis)
 		_, err := adminOrgService.CreateAdminProject(context.TODO(), &v1.CreateAdminProjectRequest{
 			Name:         s.config.AdminOrg.OrgName,
