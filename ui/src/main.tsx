@@ -6,9 +6,9 @@ import { Provider } from "./components/ui/provider.tsx";
 import {router} from "./router.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  // <StrictMode>
+  <StrictMode>
     <Provider themes={['dark', 'light']}>
       <RouterProvider router={router} />
     </Provider>
-  // </StrictMode>
+  </StrictMode>
 );

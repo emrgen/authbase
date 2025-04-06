@@ -1,12 +1,46 @@
 import {Box, Heading, HStack, Stack, Table} from "@chakra-ui/react";
+import {useEffect} from "react";
+import {authbase} from "../api/client.ts";
+import {useAccountStore} from "../store/account.ts";
+import {useProjectStore} from "../store/project.ts";
 
-export const Users = () => {
+export const Accounts = () => {
+  const activeProject = useProjectStore(state => state.activeProject);
 
+  useEffect(() => {
+    if (!activeProject) {
+      return;
+    }
+    // load accounts for the current project or pool
+    authbase.account.listAccounts({
+      project_id: activeProject?.id,
+    }).then((res) => {
+      const {data} = res;
+      const accounts = data.accounts?.map((account) => ({
+        id: account.id!,
+        username: account.username!,
+        email: account.email!,
+      })) || [];
+      useAccountStore.getState().setAccounts(accounts);
+    }).finally(() => {
+      // useAccountStore.getState().setListAccountState('success');
+    })
+  }, [activeProject?.id]);
+
+  return (
+    <Box h={'full'} w={'full'}>
+      <AccountTable/>
+    </Box>
+  )
+}
+
+const AccountTable = () => {
+  const accounts = useAccountStore(state => state.accounts);
   return (
     <Stack p={4} pos={'relative'} w={'full'} h='full' gap={4}>
       <HStack px={2}>
         <Heading>
-          Users
+          Accounts
         </Heading>
       </HStack>
       <Box flex={1} overflow={'hidden'}>
@@ -14,7 +48,7 @@ export const Users = () => {
           <Table.ScrollArea height={'100%'}>
             <Table.Root stickyHeader>
               <Table.Header>
-                <Table.Row bg={'#333'}>
+                <Table.Row>
                   <Table.ColumnHeader fontWeight={'bold'}>
                     Username
                   </Table.ColumnHeader>
@@ -34,16 +68,16 @@ export const Users = () => {
               </Table.Header>
 
               <Table.Body>
-                {Array.from({length: 100}).map(() => (
-                  <Table.Row key={Math.random()}>
+                {accounts.map((account) => (
+                  <Table.Row key={account.id}>
                     <Table.Cell>
-                      admin
+                      {account.username}
                     </Table.Cell>
                     <Table.Cell>
-                      admin@mail.com
+                      {account.email}
                     </Table.Cell>
                     <Table.Cell>
-                      2021-10-01 12:00:00
+                      {/*{account.last_login}*/}
                     </Table.Cell>
                     <Table.Cell>
                       Active

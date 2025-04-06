@@ -7,7 +7,7 @@ import {Layout} from "./components/authbase/Layout";
 import {ProjectSelect} from "./components/authbase/ProjectSelect.tsx";
 import {Sidebar} from "./components/authbase/Sidebar";
 import {SidebarItem} from "./components/authbase/SidebarItem.tsx";
-import {Users} from "./pages/Users.tsx";
+import {Accounts} from "./pages/Accounts.tsx";
 import './main.styl';
 import {rotateAccessToken} from "./service/authbase.ts";
 import {useProjectStore} from "./store/project.ts";
@@ -69,7 +69,7 @@ function App() {
         </Stack>
       </Sidebar>
       <Content>
-        <Users/>
+        <Accounts/>
       </Content>
     </Layout>
   );

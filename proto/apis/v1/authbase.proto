@@ -894,6 +894,14 @@ service AccountService {
   // ListAccounts
   rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse) {
     option (google.api.http) = {get: "/v1/accounts"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateAccount

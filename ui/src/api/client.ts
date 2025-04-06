@@ -2,7 +2,8 @@ import {
   AdminAuthServiceApi,
   AuthServiceApi,
   Configuration,
-  ProjectServiceApi
+  ProjectServiceApi,
+  AccountServiceApi,
 } from '@emrgen/authbase-client-gen';
 import {AxiosInstance} from "axios";
 
@@ -21,7 +22,7 @@ export class Config {
 // AuthbaseClient is a wrapper around the Authbase API client
 export class AuthbaseClient {
   auth: AuthServiceApi;
-  // user: UserService;
+  account: AccountServiceApi;
   project: ProjectServiceApi;
   // member: MemberServiceApi;
   // token: OfflineTokenServiceApi;
@@ -30,7 +31,7 @@ export class AuthbaseClient {
   constructor(config: Configuration) {
 
 
-    // this.user = new UserService(config);
+    this.account = new AccountServiceApi(config);
     this.project = new ProjectServiceApi(config);
     // this.member = new MemberServiceApi(config);
     // this.token = new OfflineTokenServiceApi(config);
