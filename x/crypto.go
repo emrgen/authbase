@@ -14,6 +14,11 @@ func Keygen() string {
 	return generateSecureToken(64)
 }
 
+// KeygenSize creates a new random key
+func KeygenSize(size int) string {
+	return generateSecureToken(size)
+}
+
 func GenerateSalt() string {
 	return generateSecureToken(32)
 }
