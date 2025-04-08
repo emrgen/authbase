@@ -55,8 +55,10 @@ function App() {
             <SidebarItem path={'/'}>Dashboard</SidebarItem>
             <SidebarItem path={'/pool'}>Pools</SidebarItem>
             <SidebarItem path={'/account'}>Accounts</SidebarItem>
+            <SidebarItem path={'/session'}>Sessions</SidebarItem>
             <SidebarItem path={'/provider'}>Providers</SidebarItem>
-            <SidebarItem path={'/access-key'}>Access Token</SidebarItem>
+            <SidebarItem path={'/clients'}>Clients</SidebarItem>
+            <SidebarItem path={'/access-key'}>Access Tokens</SidebarItem>
           </Stack>
 
           <SidebarItem>

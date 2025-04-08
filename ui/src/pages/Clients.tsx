@@ -4,7 +4,7 @@ import {authbase} from "../api/client.ts";
 import {useAccountStore} from "../store/account.ts";
 import {usePoolStore} from "../store/pool.ts";
 
-export const Accounts = () => {
+export const Clients = () => {
   const activePool = usePoolStore(state => state.activePool);
 
   useEffect(() => {
@@ -22,8 +22,6 @@ export const Accounts = () => {
         email: account.email!,
       })) || [];
       useAccountStore.getState().setAccounts(accounts);
-    }).finally(() => {
-      // useAccountStore.getState().setListAccountState('success');
     })
   }, [activePool]);
 
@@ -40,7 +38,7 @@ const AccountTable = () => {
     <Stack p={4} pos={'relative'} w={'full'} h='full' gap={4}>
       <HStack px={2} justifyContent={'space-between'}>
         <Heading>
-          Accounts
+          Clients
         </Heading>
         <Button size={'sm'} colorScheme={'blue'}>Create Account</Button>
       </HStack>
