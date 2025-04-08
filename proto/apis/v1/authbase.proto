@@ -300,6 +300,14 @@ service PoolService {
   // ListPools
   rpc ListPools(ListPoolsRequest) returns (ListPoolsResponse) {
     option (google.api.http) = {get: "/v1/pools"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdatePool

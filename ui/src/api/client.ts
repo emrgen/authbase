@@ -4,6 +4,7 @@ import {
   Configuration,
   ProjectServiceApi,
   AccountServiceApi,
+  PoolServiceApi,
 } from '@emrgen/authbase-client-gen';
 import {AxiosInstance} from "axios";
 
@@ -24,6 +25,7 @@ export class AuthbaseClient {
   auth: AuthServiceApi;
   account: AccountServiceApi;
   project: ProjectServiceApi;
+  pool: PoolServiceApi;
   // member: MemberServiceApi;
   // token: OfflineTokenServiceApi;
   admin: AdminAuthServiceApi
@@ -33,6 +35,7 @@ export class AuthbaseClient {
 
     this.account = new AccountServiceApi(config);
     this.project = new ProjectServiceApi(config);
+    this.pool = new PoolServiceApi(config);
     // this.member = new MemberServiceApi(config);
     // this.token = new OfflineTokenServiceApi(config);
     this.auth = new AuthServiceApi(config);

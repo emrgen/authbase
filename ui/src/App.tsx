@@ -4,6 +4,7 @@ import {useEffect} from "react";
 import {authbase} from "./api/client.ts";
 import Content from "./components/authbase/Content";
 import {Layout} from "./components/authbase/Layout";
+import {PoolSelect} from "./components/authbase/PoolSelect.tsx";
 import {ProjectSelect} from "./components/authbase/ProjectSelect.tsx";
 import {Sidebar} from "./components/authbase/Sidebar";
 import {SidebarItem} from "./components/authbase/SidebarItem.tsx";
@@ -46,9 +47,9 @@ function App() {
         </Heading>
         <Separator/>
         {/*show pools only for non admin users*/}
-        {/*<Heading>*/}
-        {/*  <PoolSelect/>*/}
-        {/*</Heading>*/}
+        <Heading>
+          <PoolSelect/>
+        </Heading>
         <Separator/>
         <Stack h={'full'}>
           <Stack flex={1}>

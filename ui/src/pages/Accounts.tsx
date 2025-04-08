@@ -2,18 +2,18 @@ import {Box, Heading, HStack, Stack, Table} from "@chakra-ui/react";
 import {useEffect} from "react";
 import {authbase} from "../api/client.ts";
 import {useAccountStore} from "../store/account.ts";
-import {useProjectStore} from "../store/project.ts";
+import {usePoolStore} from "../store/pool.ts";
 
 export const Accounts = () => {
-  const activeProject = useProjectStore(state => state.activeProject);
+  const activePool = usePoolStore(state => state.activePool);
 
   useEffect(() => {
-    if (!activeProject) {
+    if (!activePool) {
       return;
     }
     // load accounts for the current project or pool
     authbase.account.listAccounts({
-      project_id: activeProject?.id,
+      pool_id: activePool?.id,
     }).then((res) => {
       const {data} = res;
       const accounts = data.accounts?.map((account) => ({
@@ -25,7 +25,7 @@ export const Accounts = () => {
     }).finally(() => {
       // useAccountStore.getState().setListAccountState('success');
     })
-  }, [activeProject?.id]);
+  }, [activePool]);
 
   return (
     <Box h={'full'} w={'full'}>

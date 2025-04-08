@@ -2,6 +2,8 @@
 
 import {createListCollection, ListCollection} from "@chakra-ui/react";
 import {useEffect, useState} from "react";
+import {authbase} from "../../api/client.ts";
+import {usePoolStore} from "../../store/pool.ts";
 import {useProjectStore} from "../../store/project.ts";
 import {
   SelectContent,
@@ -15,10 +17,24 @@ import {
 export const ProjectSelect = () => {
   const projects = useProjectStore((state) => state.projects);
   const activeProject = useProjectStore((state) => state.activeProject);
-  // const listProjectState = useProjectStore((state) => state.listProjectState);
   const setActiveProject = useProjectStore((state) => state.setActiveProject);
 
   const [collections, setCollections] = useState<ListCollection<any>>(createListCollection({items: []}));
+  const setPools = usePoolStore((state) => state.setPools)
+  useEffect(() => {
+    if (activeProject) {
+      authbase.pool.listPools({
+        project_id: activeProject.id,
+      }).then((res) => {
+        const {data} = res;
+        const pools = data.pools?.map((pool) => ({
+          id: pool.id!,
+          name: pool.name!,
+        })) || [];
+        setPools(pools);
+      })
+    }
+  }, [activeProject, setPools]);
 
   useEffect(() => {
     if (projects) {

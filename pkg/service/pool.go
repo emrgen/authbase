@@ -167,6 +167,7 @@ func (p *PoolService) ListPools(ctx context.Context, request *v1.ListPoolsReques
 		poolProtos = append(poolProtos, &v1.Pool{
 			Id:        pool.ID,
 			Name:      pool.Name,
+			ProjectId: projectID.String(),
 			CreatedAt: timestamppb.New(pool.CreatedAt),
 			UpdatedAt: timestamppb.New(pool.UpdatedAt),
 		})
