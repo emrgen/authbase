@@ -1,13 +1,22 @@
 import {Box} from "@chakra-ui/react";
-import {ReactNode} from "react";
+import {ReactNode, useEffect, useState} from "react";
+import {useLocation, useNavigate} from "react-router";
 
 interface SidebarItemProps {
     children: ReactNode;
     isActive?: boolean;
+    path?: string;
 }
 
 export const SidebarItem = (props: SidebarItemProps) => {
-    const {children, isActive = false} = props;
+    const {children, path} = props;
+    const navigate = useNavigate();
+    const [isActive, setIsActive] = useState(false);
+    const location = useLocation();
+
+    useEffect(() => {
+        setIsActive(location.pathname === path);
+    }, [location.pathname, path]);
 
     return (
         <Box
@@ -16,6 +25,11 @@ export const SidebarItem = (props: SidebarItemProps) => {
             bg={isActive ? "gray.700" : "transparent"}
             borderRadius="md"
             cursor="pointer"
+            onClick={() => {
+                if (path) {
+                    navigate(path);
+                }
+            }}
         >
             {children}
         </Box>

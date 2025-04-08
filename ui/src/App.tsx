@@ -1,6 +1,7 @@
 import {Heading, HStack, IconButton, Separator, Stack, Text} from "@chakra-ui/react";
 import "./App.css";
 import {useEffect} from "react";
+import {Outlet} from "react-router";
 import {authbase} from "./api/client.ts";
 import Content from "./components/authbase/Content";
 import {Layout} from "./components/authbase/Layout";
@@ -8,7 +9,6 @@ import {PoolSelect} from "./components/authbase/PoolSelect.tsx";
 import {ProjectSelect} from "./components/authbase/ProjectSelect.tsx";
 import {Sidebar} from "./components/authbase/Sidebar";
 import {SidebarItem} from "./components/authbase/SidebarItem.tsx";
-import {Accounts} from "./pages/Accounts.tsx";
 import './main.styl';
 import {rotateAccessToken} from "./service/authbase.ts";
 import {useProjectStore} from "./store/project.ts";
@@ -53,10 +53,10 @@ function App() {
         <Separator/>
         <Stack h={'full'}>
           <Stack flex={1}>
-            <SidebarItem isActive={true}>Dashboard</SidebarItem>
-            <SidebarItem>Accounts</SidebarItem>
-            <SidebarItem>Providers</SidebarItem>
-            <SidebarItem>Access Token</SidebarItem>
+            <SidebarItem path={'/'}>Dashboard</SidebarItem>
+            <SidebarItem path={'/account'}>Accounts</SidebarItem>
+            <SidebarItem path={'/provider'}>Providers</SidebarItem>
+            <SidebarItem path={'/access-key'}>Access Token</SidebarItem>
           </Stack>
 
           <SidebarItem>
@@ -70,7 +70,7 @@ function App() {
         </Stack>
       </Sidebar>
       <Content>
-        <Accounts/>
+        <Outlet/>
       </Content>
     </Layout>
   );
