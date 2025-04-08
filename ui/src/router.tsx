@@ -4,6 +4,7 @@ import {AccessKey} from "./pages/AccessKey.tsx";
 import {Accounts} from "./pages/Accounts.tsx";
 import {Dashboard} from "./pages/Dashboard.tsx";
 import {LoginPage} from "./pages/Login.tsx";
+import {Pool} from "./pages/Pool.tsx";
 import {Provider} from "./pages/Provider.tsx";
 
 
@@ -17,6 +18,9 @@ export const router = createBrowserRouter([
         element: <Dashboard/>,
       },
       {
+        path: '/pool',
+        element: <Pool/>,
+      }, {
         path: '/account',
         element: <Accounts/>,
       },

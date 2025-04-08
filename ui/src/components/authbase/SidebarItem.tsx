@@ -20,9 +20,9 @@ export const SidebarItem = (props: SidebarItemProps) => {
 
     return (
         <Box
-            _hover={{ bg: "gray.700" }}
+            _hover={{ bg: "gray.100" }}
             p={2}
-            bg={isActive ? "gray.700" : "transparent"}
+            bg={isActive ? "gray.100" : "transparent"}
             borderRadius="md"
             cursor="pointer"
             onClick={() => {

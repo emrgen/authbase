@@ -45,7 +45,6 @@ function App() {
         <Heading>
           <ProjectSelect/>
         </Heading>
-        <Separator/>
         {/*show pools only for non admin users*/}
         <Heading>
           <PoolSelect/>
@@ -54,6 +53,7 @@ function App() {
         <Stack h={'full'}>
           <Stack flex={1}>
             <SidebarItem path={'/'}>Dashboard</SidebarItem>
+            <SidebarItem path={'/pool'}>Pools</SidebarItem>
             <SidebarItem path={'/account'}>Accounts</SidebarItem>
             <SidebarItem path={'/provider'}>Providers</SidebarItem>
             <SidebarItem path={'/access-key'}>Access Token</SidebarItem>
@@ -61,7 +61,7 @@ function App() {
 
           <SidebarItem>
             <HStack gap={4}>
-              <IconButton borderRadius={'50%'} size={'xs'}/>
+              <IconButton borderRadius={'50%'} size={'xs'} bg={'gray.200'}/>
               <Text>
                 Username
               </Text>

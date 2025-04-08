@@ -1,4 +1,4 @@
-import {Box, Heading, HStack, Stack, Table} from "@chakra-ui/react";
+import {Box, Button, Heading, HStack, Stack, Table} from "@chakra-ui/react";
 import {useEffect} from "react";
 import {authbase} from "../api/client.ts";
 import {useAccountStore} from "../store/account.ts";
@@ -38,10 +38,11 @@ const AccountTable = () => {
   const accounts = useAccountStore(state => state.accounts);
   return (
     <Stack p={4} pos={'relative'} w={'full'} h='full' gap={4}>
-      <HStack px={2}>
+      <HStack px={2} justifyContent={'space-between'}>
         <Heading>
           Accounts
         </Heading>
+        <Button size={'sm'} colorScheme={'blue'}>Create Account</Button>
       </HStack>
       <Box flex={1} overflow={'hidden'}>
         <Box h={'full'}>
