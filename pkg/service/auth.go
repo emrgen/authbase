@@ -223,7 +223,7 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 
 // LoginUsingPassword logs in a user and returns an access token and a refresh token
 // TODO: should be rate limited to prevent brute force attacks
-// TODO: /admin/login should we separate the admin login url the user login?
+// TODO: /admin/login should we separate the admin login url from the other user logins?
 func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	password := request.GetPassword()
@@ -691,29 +691,30 @@ func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRe
 
 	// check if the email is already verified
 	err = as.Transaction(func(tx store.AuthBaseStore) error {
-		code, err := tx.GetVerificationCode(ctx, request.GetToken())
+		// TODO: use redis with TTL to store the verification code, for now we will use the provider (database)
+		code, err := tx.GetVerificationCode(ctx, request.GetCode())
 		if err != nil {
 			return err
 		}
 
 		if code.ExpiresAt.Before(time.Now()) {
-			return errors.New("verification code has expired")
+			return status.Errorf(codes.InvalidArgument, "verification code expired")
 		}
 
-		user, err := tx.GetAccountByID(ctx, uuid.MustParse(code.AccountID))
+		account, err := tx.GetAccountByID(ctx, uuid.MustParse(code.AccountID))
 		if err != nil {
 			return err
 		}
 
-		user.Verified = true
-		user.VerifiedAt = time.Now().UTC()
+		account.Verified = true
+		account.VerifiedAt = time.Now().UTC()
 
-		err = tx.UpdateAccount(ctx, user)
+		err = tx.UpdateAccount(ctx, account)
 		if err != nil {
 			return err
 		}
 
-		err = tx.DeleteVerificationCode(ctx, request.GetToken())
+		err = tx.DeleteVerificationCode(ctx, request.GetCode())
 		if err != nil {
 			return err
 		}
@@ -724,6 +725,6 @@ func (a *AuthService) VerifyEmail(ctx context.Context, request *v1.VerifyEmailRe
 		return nil, err
 	}
 
-	// if it is, return an error
+	// should redirect to the login page, let the UI handle the redirection
 	return &v1.VerifyEmailResponse{Message: "email verified"}, nil
 }
