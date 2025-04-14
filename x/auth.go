@@ -67,7 +67,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			}
 			client, err := as.GetClientByID(ctx, clientID)
 			if err != nil {
-				return nil, err
+				return nil, grpc.Errorf(codes.NotFound, "authbase: get client by id failed: %v", err)
 			}
 
 			// verify the client secret

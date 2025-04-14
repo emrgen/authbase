@@ -44,6 +44,7 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 	}
 
 	// check if the user has permission to create a pool for the project
+	// TODO: move the permission checks to interceptor
 	err = p.perm.CheckProjectPermission(ctx, accountID, permission.ProjectPermissionWrite)
 	if err != nil {
 		return nil, err
@@ -75,11 +76,11 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 			return err
 		}
 
-		logrus.Infof("pool created: %s", request.Client)
+		logrus.Infof("pool created: %v", request.Client)
 
 		// NOTE: once the pool is created it cant be used to create new accounts
 		// first the owner needs to create a client for the pool
-		// if the request is to create a client for the newly created pool
+		// if the request is to create a default client for the newly created pool
 		if request.GetClient() {
 			secret := x.GenerateClientSecret()
 			salt := x.GenerateSalt()
@@ -87,6 +88,7 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 
 			// we are saving the secret in the database,
 			// so that the user can check it later as client config
+			// TODO: move the secret to a secure vault, to avoid storing it in the database
 			client := model.Client{
 				ID:          uuid.New().String(),
 				PoolID:      pool.ID,
@@ -144,7 +146,6 @@ func (p *PoolService) GetPool(ctx context.Context, request *v1.GetPoolRequest) (
 			UpdatedAt: timestamppb.New(pool.UpdatedAt),
 		},
 	}, nil
-
 }
 
 // ListPools lists all pools for the given project.

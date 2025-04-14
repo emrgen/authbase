@@ -138,6 +138,7 @@ func VerifyJWTToken(tokenString string, verifier JWTVerifier) (*Claims, error) {
 
 // GetTokenClaims gets the token claims without verifying the token
 func GetTokenClaims(tokenString string) (*Claims, error) {
+	// FIXME: ParseUnverified is not safe, it should be used only for testing
 	token, _, err := jwt.NewParser().ParseUnverified(tokenString, jwt.MapClaims{})
 	if err != nil {
 		return nil, err

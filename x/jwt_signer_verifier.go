@@ -90,6 +90,7 @@ func newUnverifiedVerifier() *unverifiedVerifier {
 }
 
 func (v *unverifiedVerifier) Verify(tokenString string) (jwt.MapClaims, error) {
+	// FIXME: ParseUnverified is not safe, it should be used only for testing
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 	if err != nil {
 		return nil, err

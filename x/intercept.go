@@ -109,7 +109,6 @@ func VerifyTokenInterceptor(keyProvider VerifierProvider, accessKeyService v1.Ac
 			ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
 			ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))
 			ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
-			ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
 		} else {
 			if err != nil {
 				return nil, err
