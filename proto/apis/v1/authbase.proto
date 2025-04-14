@@ -186,16 +186,40 @@ service ProjectMemberService {
       post: "/v1/members/-/projects/{project_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetMember
   rpc GetProjectMember(GetProjectMemberRequest) returns (GetProjectMemberResponse) {
     option (google.api.http) = {get: "/v1/members/{member_id}/projects/{project_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListMember
   rpc ListProjectMember(ListProjectMemberRequest) returns (ListProjectMemberResponse) {
     option (google.api.http) = {get: "/v1/members/-/project/{project_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateMember
@@ -203,6 +227,14 @@ service ProjectMemberService {
     option (google.api.http) = {
       put: "/v1/members/{member_id}"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 
@@ -212,11 +244,27 @@ service ProjectMemberService {
       post: "/v1/members/projects/{project_id}/members/{member_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // RemoveMember
   rpc RemoveProjectMember(RemoveProjectMemberRequest) returns (RemoveProjectMemberResponse) {
     option (google.api.http) = {delete: "/v1/members/projects/{project_id}/members/{member_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -290,11 +338,27 @@ service PoolService {
       post: "/v1/pools/projects/{project_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetPool
   rpc GetPool(GetPoolRequest) returns (GetPoolResponse) {
     option (google.api.http) = {get: "/v1/pools/{pool_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListPools
@@ -316,11 +380,27 @@ service PoolService {
       put: "/v1/pools/{pool_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeletePool
   rpc DeletePool(DeletePoolRequest) returns (DeletePoolResponse) {
     option (google.api.http) = {delete: "/v1/pools/{pool_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -389,16 +469,40 @@ service PoolMemberService {
       post: "/v1/pool-members/pools/{pool_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetPoolMember
   rpc GetPoolMember(GetPoolMemberRequest) returns (GetPoolMemberResponse) {
     option (google.api.http) = {get: "/v1/pool-members/{pool_id}/{account_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListPoolMembers
   rpc ListPoolMembers(ListPoolMembersRequest) returns (ListPoolMembersResponse) {
     option (google.api.http) = {get: "/v1/pool-members"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdatePoolMember
@@ -407,11 +511,27 @@ service PoolMemberService {
       put: "/v1/pool-members/{pool_id}/{account_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeletePoolMember
   rpc DeletePoolMember(DeletePoolMemberRequest) returns (DeletePoolMemberResponse) {
     option (google.api.http) = {delete: "/v1/pool-members/{pool_id}/{account_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -486,16 +606,40 @@ service RoleService {
       post: "/v1/roles"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetRole
   rpc GetRole(GetRoleRequest) returns (GetRoleResponse) {
     option (google.api.http) = {get: "/v1/roles/{role_name}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListRoles
   rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
     option (google.api.http) = {get: "/v1/roles"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateRole
@@ -504,11 +648,27 @@ service RoleService {
       put: "/v1/roles/{role_name}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteRole
   rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse) {
     option (google.api.http) = {delete: "/v1/roles/{role_name}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -637,16 +797,40 @@ service GroupService {
       post: "/v1/groups"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetGroup
   rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
     option (google.api.http) = {get: "/v1/groups/{group_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListGroups
   rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
     option (google.api.http) = {get: "/v1/groups"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateGroup
@@ -655,11 +839,27 @@ service GroupService {
       put: "/v1/groups/{group_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteGroup
   rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse) {
     option (google.api.http) = {delete: "/v1/groups/{group_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // AddRole
@@ -668,11 +868,27 @@ service GroupService {
       post: "/v1/groups/{group_id}/roles"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // RemoveRole
   rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse) {
     option (google.api.http) = {delete: "/v1/groups/{group_id}/roles"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // AddGroupMember
@@ -681,16 +897,40 @@ service GroupService {
       post: "/v1/groups/{group_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // RemoveGroupMember
   rpc RemoveGroupMember(RemoveGroupMemberRequest) returns (RemoveGroupMemberResponse) {
     option (google.api.http) = {delete: "/v1/groups/{group_id}/members"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListGroupMembers
   rpc ListGroupMembers(ListGroupMembersRequest) returns (ListGroupMembersResponse) {
     option (google.api.http) = {get: "/v1/groups/{group_id}/members"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -761,16 +1001,40 @@ service ClientService {
       post: "/v1/clients/pools/{pool_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetClient
   rpc GetClient(GetClientRequest) returns (GetClientResponse) {
     option (google.api.http) = {get: "/v1/clients/{client_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListClients
   rpc ListClients(ListClientsRequest) returns (ListClientsResponse) {
     option (google.api.http) = {get: "/v1/clients/-/pools/{pool_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateClient
@@ -779,11 +1043,27 @@ service ClientService {
       put: "/v1/clients/{client_id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteClient
   rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse) {
     option (google.api.http) = {delete: "/v1/clients/{client_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -892,11 +1172,27 @@ service AccountService {
       post: "/v1/clients/{client_id}/accounts"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetAccount
   rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {
     option (google.api.http) = {post: "/v1/projects/-/users/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListAccounts
@@ -918,31 +1214,79 @@ service AccountService {
       put: "/v1/projects/{project_id}/users/{id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteAccount
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
     option (google.api.http) = {delete: "/v1/projects/{project_id}/users/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ActivateAccounts
   rpc ListActiveAccounts(ListActiveAccountsRequest) returns (ListActiveAccountsResponse) {
     option (google.api.http) = {get: "/v1/pool/{pool_id}/users/active"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // InactiveAccounts
   rpc ListInactiveAccounts(ListInactiveAccountsRequest) returns (ListInactiveAccountsResponse) {
     option (google.api.http) = {get: "/v1/projects/{project_id}/users/inactive"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DisableAccount
   rpc DisableAccount(DisableAccountRequest) returns (DisableAccountResponse) {
     option (google.api.http) = {delete: "/v1/projects/-/users/{account_id}/disable"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // EnableAccount
   rpc EnableAccount(EnableAccountRequest) returns (EnableAccountResponse) {
     option (google.api.http) = {delete: "/v1/projects/-/accounts/{account_id}/enable"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -1003,16 +1347,40 @@ service SessionService {
   // ListAccountSession
   rpc ListAccountSession(ListAccountSessionRequest) returns (ListAccountSessionResponse) {
     option (google.api.http) = {get: "/v1/accounts/{account_id}/sessions"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteSessions
   rpc DeleteSessions(DeleteSessionsRequest) returns (DeleteSessionsResponse) {
     option (google.api.http) = {delete: "/v1/accounts/-/sessions/{session_id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteAllSessions
   rpc DeleteAllSessions(DeleteAllSessionsRequest) returns (DeleteAllSessionsResponse) {
     option (google.api.http) = {delete: "/v1/accounts/{account_id}/sessions"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -1163,6 +1531,14 @@ service AuthService {
       post: "/v1/auth/check-user"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // RegisterUsingPassword
@@ -1170,6 +1546,14 @@ service AuthService {
     option (google.api.http) = {
       post: "/v1/auth/signup/password"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 
@@ -1179,7 +1563,9 @@ service AuthService {
       post: "/v1/auth/signin/password"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {operation_id: "LoginUsingPassword"};
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "LoginUsingPassword"
+    };
   }
 
   // LoginUsingIdp
@@ -1203,6 +1589,11 @@ service AuthService {
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       operation_id: "GetIdpToken"
       description: "Get idp token from code"
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 
@@ -1212,6 +1603,14 @@ service AuthService {
       post: "/v1/auth/singout"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // Refresh
@@ -1219,6 +1618,14 @@ service AuthService {
     option (google.api.http) = {
       post: "/v1/auth/refresh"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 
@@ -1228,6 +1635,14 @@ service AuthService {
       post: "/v1/auth/verify-email"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ResetPassword
@@ -1235,6 +1650,14 @@ service AuthService {
     option (google.api.http) = {
       post: "/v1/auth/reset-password"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 
@@ -1244,6 +1667,14 @@ service AuthService {
       post: "/v1/auth/change-password"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ForgotPassword
@@ -1251,6 +1682,14 @@ service AuthService {
     option (google.api.http) = {
       post: "/v1/auth/forgot-password"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 }
@@ -1355,25 +1794,65 @@ service AccessKeyService {
       post: "/v1/tokens"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetAccessKey
   rpc GetAccessKey(GetAccessKeyRequest) returns (GetAccessKeyResponse) {
     option (google.api.http) = {get: "/v1/tokens/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListAccessKeys
   rpc ListAccessKeys(ListAccessKeysRequest) returns (ListAccessKeysResponse) {
     option (google.api.http) = {get: "/v1/tokens"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteAccessKey
   rpc DeleteAccessKey(DeleteAccessKeyRequest) returns (DeleteAccessKeyResponse) {
     option (google.api.http) = {delete: "/v1/tokens/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   rpc GetAccessKeyAccount(GetAccessKeyAccountRequest) returns (GetAccessKeyAccountResponse) {
     option (google.api.http) = {delete: "/v1/tokens/-/account"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetTokenFromAccessKey
@@ -1381,6 +1860,14 @@ service AccessKeyService {
     option (google.api.http) = {
       post: "/v1/tokens/-/access-key"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 }
@@ -1508,6 +1995,14 @@ service OAuth2Service {
       post: "/v1/oauth2/auth"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // OAuth2Token
@@ -1515,6 +2010,14 @@ service OAuth2Service {
     option (google.api.http) = {
       post: "/v1/oauth2/token"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 }
@@ -1544,11 +2047,27 @@ service ProjectService {
       post: "/v1/projects"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetProject
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse) {
     option (google.api.http) = {get: "/v1/projects/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListProjects
@@ -1570,11 +2089,27 @@ service ProjectService {
       put: "/v1/projects/{id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteProject
   rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse) {
     option (google.api.http) = {delete: "/v1/projects/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // AddOauthProvider
@@ -1583,16 +2118,40 @@ service ProjectService {
       post: "/v1/idp"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetOauthProvider
   rpc GetOauthProvider(GetOauthProviderRequest) returns (GetOauthProviderResponse) {
     option (google.api.http) = {get: "/v1/projects/{project_id}/oauth-providers/{provider}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListOauthProviders
   rpc ListOauthProviders(ListOauthProvidersRequest) returns (ListOauthProvidersResponse) {
     option (google.api.http) = {get: "/v1/projects/{project_id}/oauth-providers"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateOauthProvider
@@ -1601,11 +2160,27 @@ service ProjectService {
       put: "/v1/idp"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteOauthProvider
   rpc DeleteOauthProvider(DeleteOauthProviderRequest) returns (DeleteOauthProviderResponse) {
     option (google.api.http) = {delete: "/v1/idp/{provider}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -1668,16 +2243,40 @@ service ApplicationService {
       post: "/v1/applications"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // GetApplication
   rpc GetApplication(GetApplicationRequest) returns (GetApplicationResponse) {
     option (google.api.http) = {get: "/v1/applications/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // ListApplications
   rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse) {
     option (google.api.http) = {get: "/v1/applications"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // UpdateApplication
@@ -1686,11 +2285,27 @@ service ApplicationService {
       put: "/v1/applications/{id}"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // DeleteApplication
   rpc DeleteApplication(DeleteApplicationRequest) returns (DeleteApplicationResponse) {
     option (google.api.http) = {delete: "/v1/applications/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }
 
@@ -1730,6 +2345,14 @@ service AdminProjectService {
       post: "/v1/admin/projects"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 
   // CreateMigration
@@ -1737,6 +2360,14 @@ service AdminProjectService {
     option (google.api.http) = {
       post: "/v1/admin/migrations"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 }
@@ -1759,6 +2390,14 @@ service TokenService {
     option (google.api.http) = {
       post: "/v1/token/verify"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 }
@@ -1783,6 +2422,14 @@ service AdminAuthService {
     option (google.api.http) = {
       post: "/v1/admin/signin/password"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
     };
   }
 }
@@ -1825,5 +2472,13 @@ message GetPublicKeyResponse {
 service PublicKeyService {
   rpc GetPublicKey(GetPublicKeyRequest) returns (GetPublicKeyResponse) {
     option (google.api.http) = {get: "/v1/public-keys/{id}"};
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
   }
 }

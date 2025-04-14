@@ -313,14 +313,15 @@ func (s *Server) run() error {
 		})
 		if err != nil {
 			if !errors.Is(err, store.ErrProjectExists) {
-				logrus.Infof("admin project already exists, skipping creation")
+				logrus.Infof("admin project already exists, admin project creation skipped")
 			} else {
 				logrus.Errorf("error creating admin project: %v", err)
 				return err
 			}
 		}
 	} else {
-		logrus.Infof("no admin project provided, skipping creation")
+		logrus.Errorf("no admin project provided, skipping admin project creation")
+		os.Exit(0)
 	}
 
 	go func() {
