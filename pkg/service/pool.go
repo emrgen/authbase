@@ -156,6 +156,12 @@ func (p *PoolService) ListPools(ctx context.Context, request *v1.ListPoolsReques
 		return nil, err
 	}
 
+	// check if the user has permission to list pools for the project
+	err = p.perm.CheckProjectPermission(ctx, projectID, permission.ProjectPermissionRead)
+	if err != nil {
+		return nil, err
+	}
+
 	page := x.GetPageFromRequest(request)
 
 	pools, total, err := as.ListPools(ctx, projectID, int(page.Page), int(page.Size))

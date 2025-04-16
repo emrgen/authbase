@@ -7,6 +7,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	"github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type ProjectPermission string
@@ -113,6 +114,7 @@ var permissionMap = map[string]uint32{
 
 // CheckProjectPermission checks if the user has the permission to perform the action on the project
 func (s *StoreBasedPermission) CheckProjectPermission(ctx context.Context, projectID uuid.UUID, relation ProjectPermission) error {
+	logrus.Warnf("TODO: CheckProjectPermission: %s", projectID.String())
 	//scopes, err := x.GetAuthbaseScopes(ctx)
 	//if err != nil {
 	//	return err

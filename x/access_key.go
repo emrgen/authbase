@@ -24,7 +24,7 @@ func IsAccessKey(key string) bool {
 	return strings.HasPrefix(key, AccessTokenPrefix)
 }
 
-// ParseAccessKey parses an access key
+// ParseAccessKey parses an access key(offline token) from a string
 func ParseAccessKey(key string) (*AccessKey, error) {
 	token, err := ParseToken(key)
 	if err != nil {

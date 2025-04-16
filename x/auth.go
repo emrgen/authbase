@@ -34,6 +34,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			logrus.Info(token, err)
 			// check if the token present in the header
 			if err == nil && token != "" {
+				// check if token is a offline token
 				accessKey, err := ParseAccessKey(token)
 				if !errors.Is(err, ErrInvalidToken) && err != nil {
 					logrus.Errorf("authbase: interceptor error parsing access key: %v", err)
@@ -67,7 +68,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			}
 			client, err := as.GetClientByID(ctx, clientID)
 			if err != nil {
-				return nil, grpc.Errorf(codes.NotFound, "authbase: get client by id failed: %v", err)
+				return nil, status.Errorf(codes.NotFound, "authbase: get client by id failed: %v", err)
 			}
 
 			// verify the client secret
