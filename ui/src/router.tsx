@@ -1,3 +1,4 @@
+import {LoginForm} from "@/old-pages/Login.tsx";
 import {createBrowserRouter} from "react-router";
 import App from "./App.tsx";
 
@@ -39,6 +40,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <div/>,
+    element: <LoginForm/>,
   },
 ]);

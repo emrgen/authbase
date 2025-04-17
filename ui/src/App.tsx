@@ -1,8 +1,9 @@
 import "./App.css";
 import {AppSidebar} from "@/components/sidebar/app-sidebar.tsx";
 import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar.tsx";
+import {useUserStore} from "@/store/user.ts";
 import {useEffect} from "react";
-import {Outlet} from "react-router";
+import {Outlet, useNavigate} from "react-router";
 import {authbase} from "./api/client.ts";
 
 import './main.styl';
@@ -11,8 +12,17 @@ import {useProjectStore} from "./store/project.ts";
 
 // This is the main entry point of the application
 function App() {
+  const navigate = useNavigate()
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const setProjects = useProjectStore((state) => state.setProjects);
   const setListProjectState = useProjectStore((state) => state.setListProjectState);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
   useEffect(() => {
     console.log("App mounted");
     rotateAccessToken();
