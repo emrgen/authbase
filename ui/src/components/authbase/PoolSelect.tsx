@@ -6,7 +6,6 @@ import {usePoolStore} from "../../store/pool.ts";
 import {
   SelectContent,
   SelectItem,
-  SelectRoot,
   SelectTrigger,
   SelectValueText,
 } from "../ui/select";

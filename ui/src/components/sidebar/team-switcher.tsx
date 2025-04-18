@@ -1,7 +1,7 @@
 "use client"
 
 import {useProjectStore} from "@/store/project.ts";
-import { ChevronsUpDown, Plus } from "lucide-react"
+import {Building2, ChevronsUpDown, Plus} from "lucide-react"
 
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ export function TeamSwitcher() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                {/*<activeProject.logo className="size-4" />*/}
+                <Building2/>
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
@@ -66,7 +66,7 @@ export function TeamSwitcher() {
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
-                  {/*<project.logo className="size-4 shrink-0" />*/}
+                  <Building2/>
                 </div>
                 {project.name}
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>

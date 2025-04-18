@@ -1087,6 +1087,14 @@ message Account {
   optional google.protobuf.Timestamp verified_at = 14;
 }
 
+message GetCurrentAccountRequest {
+}
+
+message GetCurrentAccountResponse {
+  Account account = 1;
+}
+
+
 message GetAccountRequest {
   string id = 1 [(validate.rules).string.uuid = true];
 }
@@ -1172,6 +1180,19 @@ service AccountService {
       post: "/v1/clients/{client_id}/accounts"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "OAuth2PasswordBearer",
+        }
+      }
+    };
+  }
+
+  // GetCurrentAccount
+  rpc GetCurrentAccount(GetCurrentAccountRequest) returns (GetCurrentAccountResponse) {
+    option (google.api.http) = {get: "/v1/accounts/me"};
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {

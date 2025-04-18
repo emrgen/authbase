@@ -107,6 +107,41 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 	}, nil
 }
 
+// GetCurrentAccount gets the current user.
+func (u *AccountService) GetCurrentAccount(ctx context.Context, request *v1.GetCurrentAccountRequest) (*v1.GetCurrentAccountResponse, error) {
+	as, err := store.GetProjectStore(ctx, u.store)
+	if err != nil {
+		return nil, err
+	}
+
+	accountID, err := x.GetAuthbaseAccountID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := as.GetAccountByID(ctx, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = u.perm.CheckProjectPermission(ctx, uuid.MustParse(user.ProjectID), "read")
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.GetCurrentAccountResponse{
+		Account: &v1.Account{
+			Id:        user.ID,
+			Email:     user.Email,
+			Username:  user.Username,
+			Disabled:  user.Disabled,
+			CreatedAt: timestamppb.New(user.CreatedAt),
+			UpdatedAt: timestamppb.New(user.UpdatedAt),
+			Member:    user.ProjectMember,
+		},
+	}, nil
+}
+
 // GetAccount gets a user by ID.
 func (u *AccountService) GetAccount(ctx context.Context, request *v1.GetAccountRequest) (*v1.GetAccountResponse, error) {
 	// get the user
