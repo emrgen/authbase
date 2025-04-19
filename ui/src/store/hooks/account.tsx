@@ -1,3 +1,4 @@
+import {useEffect} from "react";
 import {usePoolStore} from "../pool.ts";
 import {authbase} from "../../api/client.ts";
 import {useAccountStore} from "../account.ts";

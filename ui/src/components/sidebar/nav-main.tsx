@@ -14,11 +14,12 @@ import {
 } from "@/components/ui/sidebar"
 import {BookOpen, Bot, ChevronRight, Users} from "lucide-react"
 import {TbBrandOauth} from "react-icons/tb";
+import {useNavigate} from "react-router";
 
 const navMain: any[] = [
   {
     title: "Accounts",
-    url: "#",
+    url: "/account",
     icon: Users,
     isActive: true,
   },
@@ -41,6 +42,8 @@ const navMain: any[] = [
 
 
 export function NavMain() {
+  const navigate = useNavigate();
+
   return (
     <SidebarGroup>
 
@@ -54,7 +57,11 @@ export function NavMain() {
           if (!item.items?.length) {
             return (
               <SidebarMenuItem key={item.title} className={'cursor-pointer'}>
-                <SidebarMenuButton tooltip={item.title}>
+                <SidebarMenuButton tooltip={item.title} onClick={() => {
+                  if (item.url) {
+                    navigate(item.url);
+                  }
+                }}>
                   {item.icon && <item.icon/>}
                   <span>{item.title}</span>
                 </SidebarMenuButton>
