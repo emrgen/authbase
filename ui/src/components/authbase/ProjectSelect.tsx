@@ -8,7 +8,6 @@ import {useProjectStore} from "../../store/project.ts";
 import {
   SelectContent,
   SelectItem,
-  SelectRoot,
   SelectTrigger,
   SelectValueText,
 } from "../ui/select";

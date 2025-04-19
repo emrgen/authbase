@@ -1,5 +1,7 @@
 "use client"
 
+import {authbase} from "@/api/client.ts";
+import {usePoolStore} from "@/store/pool.ts";
 import {useProjectStore} from "@/store/project.ts";
 import {Building2, ChevronsUpDown, Plus} from "lucide-react"
 
@@ -18,12 +20,29 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import {useEffect} from "react";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar()
   const activeProject = useProjectStore((state) => state.activeProject)
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
+
+  const setPools = usePoolStore((state) => state.setPools)
+  useEffect(() => {
+    if (activeProject) {
+      authbase.pool.listPools({
+        project_id: activeProject.id,
+      }).then((res) => {
+        const {data} = res;
+        const pools = data.pools?.map((pool) => ({
+          id: pool.id!,
+          name: pool.name!,
+        })) || [];
+        setPools(pools);
+      })
+    }
+  }, [activeProject, setPools]);
 
   if (!activeProject) {
     return null
