@@ -29,7 +29,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			break
 		case v1.AccessKeyService_CreateAccessKey_FullMethodName:
 			logrus.Infof("authbase: interceptor create access key")
-			token, err := tokenFromHeader(ctx, "Bearer")
+			token, err := TokenFromHeader(ctx, "Bearer")
 
 			logrus.Info(token, err)
 			// check if the token present in the header
@@ -107,7 +107,7 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 
 			// TODO: if http cookie is present use that
 			// user Bearer token for authentication
-			token, err := tokenFromHeader(ctx, "Bearer")
+			token, err := TokenFromHeader(ctx, "Bearer")
 
 			accessKey, err := ParseAccessKey(token)
 			if !errors.Is(err, ErrInvalidToken) && err != nil {
@@ -185,7 +185,7 @@ func verifyJwtToken(ctx context.Context, keyProvider JWTSignerVerifierProvider, 
 	return ctx, claims, nil
 }
 
-func tokenFromHeader(ctx context.Context, expectedScheme string) (string, error) {
+func TokenFromHeader(ctx context.Context, expectedScheme string) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", errors.New("metadata not found")

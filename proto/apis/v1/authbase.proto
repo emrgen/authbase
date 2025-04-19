@@ -1467,7 +1467,6 @@ message GetIdpTokenResponse {
 }
 
 message LogoutRequest {
-  string access_token = 1;
 }
 
 message LogoutResponse {

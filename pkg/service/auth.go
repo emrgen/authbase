@@ -398,7 +398,10 @@ func (a *AuthService) Logout(ctx context.Context, request *v1.LogoutRequest) (*v
 		return nil, err
 	}
 	// check if the token is still valid
-	accessToken := request.GetAccessToken()
+	accessToken, err := x.TokenFromHeader(ctx, "Bearer")
+	if err != nil {
+		return nil, err
+	}
 	verifier, err := a.keyProvider.GetVerifier(poolID.String())
 	if err != nil {
 		return nil, err

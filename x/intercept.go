@@ -82,7 +82,7 @@ func InjectPermissionInterceptor(member v1.ProjectMemberServiceClient) grpc.Unar
 
 func VerifyTokenInterceptor(keyProvider VerifierProvider, accessKeyService v1.AccessKeyServiceClient) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-		token, err := tokenFromHeader(ctx, "Bearer")
+		token, err := TokenFromHeader(ctx, "Bearer")
 		if err != nil {
 			return nil, err
 		}

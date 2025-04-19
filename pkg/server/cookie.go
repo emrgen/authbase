@@ -12,7 +12,7 @@ import (
 // InjectCookie injects a cookie into the response based on the message type
 func InjectCookie(store CookieStore) func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
 	return func(ctx context.Context, w http.ResponseWriter, m proto.Message) error {
-		logrus.Infof("authbase: inject cookie: %T", m)
+		logrus.Warnf("TODO: authbase: inject cookie: %T", m)
 		//m = m.ProtoReflect().Interface()
 		//switch m.(type) {
 		//case *v1.LoginResponse:

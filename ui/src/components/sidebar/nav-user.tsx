@@ -1,5 +1,6 @@
 "use client"
 
+import {authbase} from "@/api/client.ts";
 import {
   BellIcon,
   LogOutIcon,
@@ -27,6 +28,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import {useNavigate} from "react-router";
 
 export function NavUser({
                           user,
@@ -38,6 +40,21 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await authbase.auth.logout({
+        body: {}
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("refreshToken")
+      navigate("/login")
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -93,7 +110,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>
