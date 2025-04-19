@@ -1,4 +1,3 @@
-import {authbase} from "@/api/client.ts";
 import {
   Select,
   SelectContent,
@@ -14,23 +13,28 @@ import {useEffect} from "react";
 export const SelectPool = () => {
   const pools = usePoolStore(state => state.pools);
   const activePool = usePoolStore(state => state.activePool);
-
   const setActivePool = usePoolStore(state => state.setActivePool);
-
-  const handleChange = (poolId: string) => {
-    const selectedPool = pools.find(pool => pool.id === poolId);
-    if (selectedPool) {
-      setActivePool(selectedPool);
-    }
-  };
 
   // if there are no pools, set the first pool as active
   useEffect(() => {
     if (pools.length > 0 && !pools.some(pool => pool.id === usePoolStore.getState().activePool?.id)) {
       const firstPool = pools[0];
       setActivePool(firstPool);
+    } else if (pools.length === 0) {
+      console.error("Each project has a default pool. So should not reach here");
     }
   }, [pools, setActivePool]);
+
+  // handleChange function to set the active pool when a new pool is selected
+  const handleChange = (poolId: string) => {
+    const selectedPool = pools.find(pool => pool.id === poolId);
+    if (selectedPool) {
+      setActivePool(selectedPool);
+    } else {
+      console.error(`Pool with id ${poolId} not found`);
+    }
+  };
+
 
   return (
     <Select value={activePool?.id} onValueChange={handleChange} defaultValue={activePool?.id}>

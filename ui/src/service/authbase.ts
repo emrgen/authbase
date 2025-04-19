@@ -14,9 +14,11 @@ export function rotateAccessToken() {
         refreshToken,
       },
     }).then((res) => {
-      console.log(res);
-      // localStorage.setItem("accessToken", accessToken.toString());
-      // localStorage.setItem("refreshToken", refreshToken.toString());
+      const {data} = res;
+      const {tokens = {}} = data;
+      const {accessToken = '', refreshToken = ''} = tokens;
+      localStorage.setItem("accessToken", accessToken.toString());
+      localStorage.setItem("refreshToken", refreshToken.toString());
     });
   }, 1000 * 60 * 5); // 5 minutes
 }

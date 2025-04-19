@@ -12,14 +12,14 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import {BookOpen, Bot, ChevronRight, SquareTerminal,} from "lucide-react"
+import {BookOpen, Bot, ChevronRight, Users} from "lucide-react"
 import {TbBrandOauth} from "react-icons/tb";
 
 const navMain: any[] = [
   {
     title: "Accounts",
     url: "#",
-    icon: SquareTerminal,
+    icon: Users,
     isActive: true,
   },
   {
