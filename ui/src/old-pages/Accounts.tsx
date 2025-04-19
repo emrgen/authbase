@@ -1,29 +1,9 @@
 import {Box, Button, Heading, HStack, Stack, Table} from "@chakra-ui/react";
-import {useEffect} from "react";
-import {authbase} from "../api/client.ts";
 import {useAccountStore} from "../store/account.ts";
-import {usePoolStore} from "../store/pool.ts";
+import {useListAccounts} from "../store/hooks/account.tsx";
 
-export const Clients = () => {
-  const activePool = usePoolStore(state => state.activePool);
-
-  useEffect(() => {
-    if (!activePool) {
-      return;
-    }
-    // load accounts for the current project or pool
-    authbase.account.listAccounts({
-      pool_id: activePool?.id,
-    }).then((res) => {
-      const {data} = res;
-      const accounts = data.accounts?.map((account) => ({
-        id: account.id!,
-        username: account.username!,
-        email: account.email!,
-      })) || [];
-      useAccountStore.getState().setAccounts(accounts);
-    })
-  }, [activePool]);
+export const Accounts = () => {
+  useListAccounts()
 
   return (
     <Box h={'full'} w={'full'}>
@@ -38,7 +18,7 @@ const AccountTable = () => {
     <Stack p={4} pos={'relative'} w={'full'} h='full' gap={4}>
       <HStack px={2} justifyContent={'space-between'}>
         <Heading>
-          Clients
+          Accounts
         </Heading>
         <Button size={'sm'} colorScheme={'blue'}>Create Account</Button>
       </HStack>

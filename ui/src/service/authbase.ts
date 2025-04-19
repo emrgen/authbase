@@ -1,6 +1,6 @@
 import {authbase} from "../api/client.ts";
 
-let interval: number = 0;
+let interval = null;
 
 export function rotateAccessToken() {
   clearInterval(interval);

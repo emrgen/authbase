@@ -1,19 +1,10 @@
 import {Box, Flex, Heading, Input, Stack, Field as FormField} from "@chakra-ui/react";
 import {Field, Formik} from "formik";
 import {authbase} from "../api/client.ts";
-import {Button} from "../components/ui/button";
 import {useNavigate}  from "react-router";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  // const bg = useColorModeValue("white", "gray.700");
-  // const toast = useToast();
-
-  // useEffect(() => {
-  //   if (user.id) {
-  //     navigate("/app");
-  //   }
-  // }, [ navigate, user ]);
 
   return (
     <Stack pos={'absolute'} w={'full'} h={'full'} justify={'center'} align={'center'}>

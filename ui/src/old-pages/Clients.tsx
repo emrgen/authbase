@@ -4,29 +4,8 @@ import {authbase} from "../api/client.ts";
 import {useAccountStore} from "../store/account.ts";
 import {usePoolStore} from "../store/pool.ts";
 
-export const Accounts = () => {
-  const activePool = usePoolStore(state => state.activePool);
-
-  useEffect(() => {
-    if (!activePool) {
-      return;
-    }
-    // load accounts for the current project or pool
-    authbase.account.listAccounts({
-      pool_id: activePool?.id,
-    }).then((res) => {
-      const {data} = res;
-      const accounts = data.accounts?.map((account) => ({
-        id: account.id!,
-        username: account.username!,
-        email: account.email!,
-      })) || [];
-      useAccountStore.getState().setAccounts(accounts);
-    }).finally(() => {
-      // useAccountStore.getState().setListAccountState('success');
-    })
-  }, [activePool]);
-
+export const Clients = () => {
+  useListAccounts();
   return (
     <Box h={'full'} w={'full'}>
       <AccountTable/>
@@ -40,7 +19,7 @@ const AccountTable = () => {
     <Stack p={4} pos={'relative'} w={'full'} h='full' gap={4}>
       <HStack px={2} justifyContent={'space-between'}>
         <Heading>
-          Accounts
+          Clients
         </Heading>
         <Button size={'sm'} colorScheme={'blue'}>Create Account</Button>
       </HStack>
