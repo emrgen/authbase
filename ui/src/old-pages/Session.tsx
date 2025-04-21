@@ -23,7 +23,7 @@ export const Session = () => {
       })) || [];
       useAccountStore.getState().setAccounts(accounts);
     }).finally(() => {
-      // useAccountStore.getState().setListAccountState('success');
+      // useClientStore.getState().setListAccountState('success');
     })
   }, [activePool]);
 

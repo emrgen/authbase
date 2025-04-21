@@ -12,11 +12,17 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import {BookOpen, Bot, ChevronRight, Users} from "lucide-react"
+import {BookOpen, Bot, ChevronRight, LayoutDashboardIcon, Users} from "lucide-react"
+import {useEffect, useState} from "react";
 import {TbBrandOauth} from "react-icons/tb";
-import {useNavigate} from "react-router";
+import {useLocation, useNavigate} from "react-router";
 
 const navMain: any[] = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: LayoutDashboardIcon,
+  },
   {
     title: "Accounts",
     url: "/account",
@@ -25,17 +31,17 @@ const navMain: any[] = [
   },
   {
     title: "Clients",
-    url: "#",
+    url: "/client",
     icon: Bot,
   },
   {
     title: "Offline tokens",
-    url: "#",
+    url: "/offline-token",
     icon: BookOpen,
   },
   {
     title: "Providers",
-    url: "#",
+    url: "provider",
     icon: TbBrandOauth,
   },
 ];
@@ -43,6 +49,19 @@ const navMain: any[] = [
 
 export function NavMain() {
   const navigate = useNavigate();
+  const path = useLocation().pathname;
+  const [activeItem, setActiveItem] = useState<string | null>(null);
+
+  useEffect(() => {
+    const activeNavItem = navMain.find((item) => item.url.indexOf(path) !== -1);
+    if (activeNavItem) {
+      setActiveItem(activeNavItem.url);
+    } else {
+      setActiveItem(null);
+    }
+  }, [path]);
+
+  console.log("activeItem", activeItem);
 
   return (
     <SidebarGroup>
@@ -56,12 +75,16 @@ export function NavMain() {
         {navMain.map((item) => {
           if (!item.items?.length) {
             return (
-              <SidebarMenuItem key={item.title} className={'cursor-pointer'}>
-                <SidebarMenuButton tooltip={item.title} onClick={() => {
-                  if (item.url) {
-                    navigate(item.url);
-                  }
-                }}>
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  className={'cursor-pointer'}
+                  isActive={item.url === activeItem}
+                  tooltip={item.title}
+                  onClick={() => {
+                    if (item.url) {
+                      navigate(item.url);
+                    }
+                  }}>
                   {item.icon && <item.icon/>}
                   <span>{item.title}</span>
                 </SidebarMenuButton>

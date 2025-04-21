@@ -9,6 +9,7 @@ import (
 	"github.com/emrgen/authbase/pkg/store"
 	x "github.com/emrgen/authbase/x"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // NewClientService creates a new ClientService.
@@ -141,9 +142,11 @@ func (c *ClientService) ListClients(ctx context.Context, request *v1.ListClients
 	var clientProtos []*v1.Client
 	for _, client := range clients {
 		clientProtos = append(clientProtos, &v1.Client{
-			Id:     client.ID,
-			PoolId: client.PoolID,
-			Name:   client.Name,
+			Id:           client.ID,
+			PoolId:       client.PoolID,
+			Name:         client.Name,
+			ClientSecret: client.Secret,
+			CreatedAt:    timestamppb.New(client.CreatedAt),
 		})
 	}
 

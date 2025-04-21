@@ -167,6 +167,7 @@ func verifyJwtToken(ctx context.Context, keyProvider JWTSignerVerifierProvider, 
 		return ctx, nil, err
 	}
 
+	logrus.Infof("authbase: interceptor claims pool id: %v", claims.PoolID)
 	verifier, err := keyProvider.GetVerifier(claims.PoolID)
 	if err != nil {
 		return ctx, nil, err
@@ -177,9 +178,16 @@ func verifyJwtToken(ctx context.Context, keyProvider JWTSignerVerifierProvider, 
 		return ctx, nil, err
 	}
 
+	poolID, err := uuid.Parse(claims.PoolID)
+	if err != nil {
+		logrus.Infof("claims pool id: %v", claims)
+		logrus.Errorf("authbase: parse pool id failed: %v", err)
+		return ctx, nil, err
+	}
+
 	ctx = context.WithValue(ctx, AccountIDKey, uuid.MustParse(claims.AccountID))
 	ctx = context.WithValue(ctx, ProjectIDKey, uuid.MustParse(claims.ProjectID))
-	ctx = context.WithValue(ctx, PoolIDKey, uuid.MustParse(claims.PoolID))
+	ctx = context.WithValue(ctx, PoolIDKey, poolID)
 	ctx = context.WithValue(ctx, ScopesKey, claims.Scopes)
 
 	return ctx, claims, nil
