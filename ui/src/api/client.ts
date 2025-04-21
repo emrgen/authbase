@@ -28,7 +28,6 @@ export class AuthbaseClient {
   project: ProjectServiceApi;
   pool: PoolServiceApi;
   client: ClientServiceApi;
-  // member: MemberServiceApi;
   // token: OfflineTokenServiceApi;
   admin: AdminAuthServiceApi
 
@@ -39,7 +38,6 @@ export class AuthbaseClient {
     this.project = new ProjectServiceApi(config);
     this.pool = new PoolServiceApi(config);
     this.client = new ClientServiceApi(config);
-    // this.member = new MemberServiceApi(config);
     // this.token = new OfflineTokenServiceApi(config);
     this.auth = new AuthServiceApi(config);
     this.admin = new AdminAuthServiceApi(config);

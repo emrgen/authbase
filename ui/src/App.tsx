@@ -1,7 +1,7 @@
 import "./App.css";
 import {AppSidebar} from "@/components/sidebar/app-sidebar.tsx";
-import {SiteHeader} from "@/components/sidebar/siteheader.tsx";
-import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar.tsx";
+import {SiteHeader} from "@/components/sidebar/site-header.tsx";
+import {SidebarInset, SidebarProvider, } from "@/components/ui/sidebar.tsx";
 import {useUserStore} from "@/store/user.ts";
 import {useEffect} from "react";
 import {Outlet, useNavigate} from "react-router";

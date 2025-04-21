@@ -1,12 +1,9 @@
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import {useState} from "react";
-import {useLocation, useNavigate} from "react-router";
+import {useAppStore} from "@/store/app.ts";
 
 export function SiteHeader() {
-  const navigate = useNavigate();
-  const path = useLocation().pathname;
-  const [activeItem, setActiveItem] = useState<string | null>(null);
+ const activeSidebarItem = useAppStore((state) => state.activeSidebarItem);
 
   return (
     <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
@@ -16,7 +13,9 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium">Documents</h1>
+        <h1 className="text-base font-medium">
+          {activeSidebarItem?.title}
+        </h1>
       </div>
     </header>
   )

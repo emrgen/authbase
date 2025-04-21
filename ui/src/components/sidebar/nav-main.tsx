@@ -13,7 +13,15 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import {useAppStore} from "@/store/app.ts";
-import {BookOpen, Bot, ChevronRight, LayoutDashboardIcon, Users} from "lucide-react"
+import {
+  BookOpen,
+  Bot,
+  ChevronRight, IdCard,
+  LayoutDashboardIcon,
+  Unplug,
+  Users,
+  WifiOff
+} from "lucide-react"
 import {useEffect} from "react";
 import {TbBrandOauth} from "react-icons/tb";
 import {useLocation, useNavigate} from "react-router";
@@ -33,17 +41,17 @@ export const navMain: any[] = [
   {
     title: "Clients",
     url: "/client",
-    icon: Bot,
+    icon: Unplug,
   },
   {
     title: "Offline tokens",
     url: "/offline-token",
-    icon: BookOpen,
+    icon: WifiOff,
   },
   {
-    title: "Providers",
-    url: "provider",
-    icon: TbBrandOauth,
+    title: "Identity Providers",
+    url: "/provider",
+    icon: IdCard,
   },
 ];
 
@@ -53,9 +61,11 @@ export function NavMain() {
   const setActiveSidebarItem = useAppStore((state) => state.setActiveSidebarItem);
   const activeSidebarItem = useAppStore((state) => state.activeSidebarItem);
 
-  const path = useLocation().pathname;
+  const location = useLocation();
 
   useEffect(() => {
+    const path = location.pathname;
+    console.log(path)
     const activeNavItem = navMain.find((item) => item.url.indexOf(path) !== -1);
     if (activeNavItem) {
       setActiveSidebarItem({
@@ -66,7 +76,7 @@ export function NavMain() {
     } else {
       setActiveSidebarItem(null);
     }
-  }, [path, setActiveSidebarItem]);
+  }, [location, setActiveSidebarItem]);
 
 
   return (

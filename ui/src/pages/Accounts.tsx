@@ -22,7 +22,6 @@ export const Accounts = () => {
 
 const AccountsTable = () => {
   const accounts = useAccountStore(state => state.accounts);
-  const activePool = usePoolStore(state => state.activePool);
 
   return (
     <Table>
@@ -31,18 +30,18 @@ const AccountsTable = () => {
         <TableRow>
           <TableHead className="w-[200px]">Username</TableHead>
           <TableHead>Email</TableHead>
+          <TableHead>Last login</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Pool</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {accounts.map((account) => (
           <TableRow key={account.id}>
-            <TableCell className="font-medium">{account.name}</TableCell>
+            <TableCell className="font-medium">{account.name ?? '-'}</TableCell>
             <TableCell className="font-medium">{account.email}</TableCell>
+            <TableCell className={"font-medium"}>{account.lastLogin ?? '-'}</TableCell>
             <TableCell className="font-medium">{account.status ?? '-'}</TableCell>
-            <TableCell className="font-medium">{activePool?.name ?? '-'}</TableCell>
             <TableCell className="text-right">Edit</TableCell>
           </TableRow>
         ))}

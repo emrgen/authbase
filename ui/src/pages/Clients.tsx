@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/table"
 import {useClientStore} from "@/store/clients.ts";
 import {useListClients} from "@/store/hooks/client.tsx";
-import { toast } from "sonner";
+import {toast} from "sonner";
 import {usePoolStore} from "@/store/pool.ts";
 import {Button} from "@/components/ui/button";
 import dayjs from "dayjs";
-import {ClipboardCopy,} from "lucide-react";
+import {ClipboardCopy, Pencil, Trash,} from "lucide-react";
 
 export const Clients = () => {
   useListClients();
@@ -87,7 +87,14 @@ const ClientsTable = () => {
             <TableCell className="font-medium">
               {client.createdBy ? client.createdBy : '-'}
             </TableCell>
-            <TableCell className="text-right">Rename</TableCell>
+            <TableCell className="text-right">
+              <Button variant={'ghost'} size={'xs'} className={'text-gray-400'}>
+                <Pencil className={'w-1 h-1'}/>
+              </Button>
+              <Button variant={'ghost'} size={'xs'} className={'hover:text-red-400 text-gray-400'}>
+                <Trash className={'w-1 h-1'}/>
+              </Button>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

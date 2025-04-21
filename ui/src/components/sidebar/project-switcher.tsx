@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sidebar"
 import {useEffect} from "react";
 
-export function TeamSwitcher() {
+export function ProjectSwitcher() {
   const { isMobile } = useSidebar()
   const activeProject = useProjectStore((state) => state.activeProject)
   const projects = useProjectStore((state) => state.projects)
@@ -76,7 +76,7 @@ export function TeamSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Teams
+              Projects
             </DropdownMenuLabel>
             {projects.map((project, index) => (
               <DropdownMenuItem
