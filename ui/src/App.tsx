@@ -8,12 +8,13 @@ import {Outlet, useNavigate} from "react-router";
 import {authbase} from "./api/client.ts";
 
 import './main.styl';
-import {rotateAccessToken} from "./service/authbase.ts";
+import {useRotateAccessToken} from "./service/authbase.ts";
 import {useProjectStore} from "./store/project.ts";
 
 // This is the main entry point of the application
 function App() {
   const navigate = useNavigate()
+  const rotateAccessToken = useRotateAccessToken();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const setProjects = useProjectStore((state) => state.setProjects);
   const setListProjectState = useProjectStore((state) => state.setListProjectState);
@@ -24,10 +25,11 @@ function App() {
     }
   }, [isAuthenticated, navigate]);
 
+  // This effect is used to rotate the access token
   useEffect(() => {
-    console.log("App mounted");
+    // console.log("App mounted");
     rotateAccessToken();
-  }, []);
+  }, [rotateAccessToken]);
 
   useEffect(() => {
     setListProjectState('loading');

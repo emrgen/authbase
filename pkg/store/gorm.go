@@ -135,27 +135,41 @@ func (g *GormStore) DeleteGroup(ctx context.Context, id uuid.UUID) error {
 	return g.db.Delete(&group).Error
 }
 
-func (g *GormStore) AddGroupMember(ctx context.Context, member *model.GroupMember) error {
+func (g *GormStore) AddGroupMember(ctx context.Context, member *model.GroupMemberAccount) error {
 	return g.db.Create(member).Error
 }
 
-func (g *GormStore) ListGroupMemberByAccount(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMember, error) {
-	var groups []*model.GroupMember
+func (g *GormStore) ListGroupMemberByAccount(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMemberAccount, error) {
+	var groups []*model.GroupMemberAccount
 	err := g.db.Where("account_id = ?", accountID.String()).Preload("Group.Roles").Find(&groups).Error
 	return groups, err
 }
 
+func (g *GormStore) CreateGroupMemberAccessKey(ctx context.Context, member []*model.GroupMemberAccessKey) error {
+	if err := g.db.CreateInBatches(member, 100).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (g *GormStore) ListGroupMemberByAccessKey(ctx context.Context, accessKeyID uuid.UUID) ([]*model.GroupMemberAccessKey, error) {
+	var groups []*model.GroupMemberAccessKey
+	err := g.db.Where("access_key_id = ?", accessKeyID.String()).Preload("Group.Roles").Find(&groups).Error
+	return groups, err
+}
+
 func (g *GormStore) RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error {
-	member := model.GroupMember{GroupID: groupID.String(), AccountID: accountID.String()}
+	member := model.GroupMemberAccount{GroupID: groupID.String(), AccountID: accountID.String()}
 	return g.db.Delete(&member).Error
 }
 
-func (g *GormStore) ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMember, int, error) {
-	var members []*model.GroupMember
+func (g *GormStore) ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMemberAccount, int, error) {
+	var members []*model.GroupMemberAccount
 	var total int64
 
 	err := g.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.GroupMember{}).Preload("Account").Where("group_id = ?", groupID).Count(&total).Error; err != nil {
+		if err := tx.Model(&model.GroupMemberAccount{}).Preload("Account").Where("group_id = ?", groupID).Count(&total).Error; err != nil {
 			return err
 		}
 		return tx.Limit(perPage).Offset(page*perPage).Preload("Account").Find(&members, "group_id = ?", groupID).Error
@@ -452,6 +466,7 @@ func (g *GormStore) ListPoolAccounts(ctx context.Context, member bool, poolID uu
 
 			return nil
 		} else {
+			// TODO: join with sessions to get the active users(not expired) and last login time
 			if err := tx.Model(&model.Account{}).Where("pool_id = ?", poolID.String()).Count(&total).Error; err != nil {
 				return err
 			}

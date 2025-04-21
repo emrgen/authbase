@@ -18,7 +18,7 @@ import (
 // on success, it sets the accountID and projectID and account permission in the context.
 func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvider, provider store.Provider) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		logrus.Infof("authbase: interceptor method: %s", info.FullMethod)
+		logrus.Debugf("authbase: interceptor method: %s", info.FullMethod)
 		switch info.FullMethod {
 		case
 			v1.AdminAuthService_AdminLoginUsingPassword_FullMethodName,
@@ -42,12 +42,12 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 				}
 
 				if accessKey != nil {
-					ctx, _, err = verifyAccessKey(ctx, verifier, accessKey)
+					ctx, _, err = VerifyAccessKey(ctx, verifier, accessKey)
 					if err != nil {
 						return nil, err
 					}
 				} else {
-					ctx, _, err = verifyJwtToken(ctx, keyProvider, token)
+					ctx, _, err = VerifyJwtToken(ctx, keyProvider, token)
 					if err == nil {
 						return nil, err
 					}
@@ -116,12 +116,12 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			}
 
 			if accessKey != nil {
-				ctx, _, err = verifyAccessKey(ctx, verifier, accessKey)
+				ctx, _, err = VerifyAccessKey(ctx, verifier, accessKey)
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				ctx, _, err = verifyJwtToken(ctx, keyProvider, token)
+				ctx, _, err = VerifyJwtToken(ctx, keyProvider, token)
 				if err != nil {
 					return nil, err
 				}
@@ -145,7 +145,7 @@ func verifyPassword(ctx context.Context, verifier TokenVerifier, poolID uuid.UUI
 	return ctx, nil, nil
 }
 
-func verifyAccessKey(ctx context.Context, verifier TokenVerifier, accessKey *AccessKey) (context.Context, *Claims, error) {
+func VerifyAccessKey(ctx context.Context, verifier TokenVerifier, accessKey *AccessKey) (context.Context, *Claims, error) {
 	if accessKey != nil {
 		claims, err := verifier.VerifyAccessKey(ctx, accessKey.ID, accessKey.Value)
 		if err != nil {
@@ -161,13 +161,12 @@ func verifyAccessKey(ctx context.Context, verifier TokenVerifier, accessKey *Acc
 	return ctx, nil, nil
 }
 
-func verifyJwtToken(ctx context.Context, keyProvider JWTSignerVerifierProvider, token string) (context.Context, *Claims, error) {
+func VerifyJwtToken(ctx context.Context, keyProvider JWTSignerVerifierProvider, token string) (context.Context, *Claims, error) {
 	claims, err := GetTokenClaims(token)
 	if err != nil {
 		return ctx, nil, err
 	}
 
-	logrus.Infof("authbase: interceptor claims pool id: %v", claims.PoolID)
 	verifier, err := keyProvider.GetVerifier(claims.PoolID)
 	if err != nil {
 		return ctx, nil, err
@@ -180,7 +179,6 @@ func verifyJwtToken(ctx context.Context, keyProvider JWTSignerVerifierProvider, 
 
 	poolID, err := uuid.Parse(claims.PoolID)
 	if err != nil {
-		logrus.Infof("claims pool id: %v", claims)
 		logrus.Errorf("authbase: parse pool id failed: %v", err)
 		return ctx, nil, err
 	}

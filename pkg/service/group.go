@@ -234,7 +234,7 @@ func (g *GroupService) AddGroupMember(ctx context.Context, request *v1.AddGroupM
 
 	groupID := uuid.MustParse(request.GetGroupId())
 	accountID := uuid.MustParse(request.GetAccountId())
-	groupMember := &model.GroupMember{
+	groupMember := &model.GroupMemberAccount{
 		GroupID:   groupID.String(),
 		AccountID: accountID.String(),
 	}

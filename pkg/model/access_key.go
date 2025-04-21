@@ -19,7 +19,6 @@ type AccessKey struct {
 	Pool      *Pool    `gorm:"foreignKey:PoolID;constraint:OnDelete:CASCADE"`
 	Token     string   // hashed token
 	Scopes    string   `gorm:"default:[]"`
-	Roles     string   `gorm:"default:[]"`
 	ExpireAt  time.Time
 }
 

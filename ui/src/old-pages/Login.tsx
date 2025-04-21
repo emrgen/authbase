@@ -85,9 +85,10 @@ export function LoginForm() {
                   }).then((res) => {
                     const {data} = res;
                     const {token = {}, account = {}} = data;
-                    const {accessToken = '', refreshToken = ''} = token;
+                    const {accessToken = '', refreshToken = '', expiresAt = ''} = token;
                     localStorage.setItem("accessToken", accessToken.toString());
                     localStorage.setItem("refreshToken", refreshToken.toString());
+                    localStorage.setItem("expiresAt", expiresAt.toString());
                     setUser({
                       id: account.id!,
                       name: account.username!,

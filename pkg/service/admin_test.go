@@ -33,9 +33,11 @@ type authbase struct {
 func createAdminProject(t *testing.T) *authbase {
 	db := tester.TestDB()
 	provider := store.NewDefaultProvider(store.NewGormStore(db))
+	keyProvider := x.NewUnverifiedKeyProvider()
 	redis := tester.TestRedis()
 	adminProjectService := NewAdminProjectService(provider, redis)
-	accessTokenService := NewAccessKeyService(permission.NewNullAuthbasePermission(), provider, redis)
+	verifier := x.NewUnverifiedVerifier()
+	accessTokenService := NewAccessKeyService(permission.NewNullAuthbasePermission(), provider, redis, keyProvider, verifier)
 
 	ctx := context.TODO()
 
@@ -52,7 +54,7 @@ func createAdminProject(t *testing.T) *authbase {
 	ctx = context.WithValue(ctx, x.AccountIDKey, uuid.MustParse(res.Account.Id))
 
 	access, err := accessTokenService.CreateAccessKey(ctx, &v1.CreateAccessKeyRequest{
-		PoolId:   res.Project.PoolId,
+		//PoolId:   res.Project.PoolId,
 		Email:    testAdminProjectEmail,
 		Password: testAdminProjectPassword,
 	})

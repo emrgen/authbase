@@ -225,13 +225,17 @@ type GroupStore interface {
 	// DeleteGroup deletes a group from the database.
 	DeleteGroup(ctx context.Context, id uuid.UUID) error
 	// AddGroupMember creates a new group member in the database.
-	AddGroupMember(ctx context.Context, member *model.GroupMember) error
+	AddGroupMember(ctx context.Context, member *model.GroupMemberAccount) error
 	// ListGroupMemberByAccount retrieves a group by its account ID.
-	ListGroupMemberByAccount(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMember, error)
+	ListGroupMemberByAccount(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMemberAccount, error)
+	// CreateGroupMemberAccessKey creates a new group member access key in the database.
+	CreateGroupMemberAccessKey(ctx context.Context, member []*model.GroupMemberAccessKey) error
+	// ListGroupMemberByAccessKey retrieves a group by its access key ID.
+	ListGroupMemberByAccessKey(ctx context.Context, accountID uuid.UUID) ([]*model.GroupMemberAccessKey, error)
 	// RemoveGroupMember deletes a group member from the database.
 	RemoveGroupMember(ctx context.Context, groupID, accountID uuid.UUID) error
 	// ListGroupMembers retrieves a list of group members.
-	ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMember, int, error)
+	ListGroupMembers(ctx context.Context, groupID uuid.UUID, page, perPage int) ([]*model.GroupMemberAccount, int, error)
 }
 
 type RoleStore interface {

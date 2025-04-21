@@ -22,8 +22,8 @@ import (
 )
 
 // NewAuthService creates a new AuthService
-func NewAuthService(store store.Provider, keyProvider x.JWTSignerVerifierProvider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis) *AuthService {
-	return &AuthService{store: store, keyProvider: keyProvider, perm: perm, mailer: mailer, cache: cache}
+func NewAuthService(store store.Provider, keyProvider x.JWTSignerVerifierProvider, perm permission.AuthBasePermission, mailer mail.MailerProvider, cache *cache.Redis, verifier *x.StoreBasedUserVerifier) *AuthService {
+	return &AuthService{store: store, keyProvider: keyProvider, perm: perm, mailer: mailer, cache: cache, verifier: verifier}
 }
 
 var _ v1.AuthServiceServer = new(AuthService)
@@ -35,6 +35,7 @@ type AuthService struct {
 	cache       *cache.Redis
 	keyProvider x.JWTSignerVerifierProvider
 	perm        permission.AuthBasePermission
+	verifier    *x.StoreBasedUserVerifier
 	v1.UnimplementedAuthServiceServer
 }
 
@@ -245,21 +246,60 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	// client secret is optional for master project
 	clientSecret := request.GetClientSecret()
 	if clientSecret == "" {
-		project, err := as.GetProjectByID(ctx, uuid.MustParse(client.Pool.ProjectID))
-		if err != nil {
-			return nil, err
-		}
+		// if authbase offline token is provided use that to login
+		token, err := x.TokenFromHeader(ctx, "Bearer")
+		if err == nil && token != "" {
+			accessKey, err := x.ParseAccessKey(token)
+			if err != nil {
+				return nil, err
+			}
 
-		if project == nil {
-			return nil, errors.New("project not found for the client")
-		}
+			if accessKey != nil {
+				ctx, _, err = x.VerifyAccessKey(ctx, a.verifier, accessKey)
+				if err != nil {
+					return nil, err
+				}
+			}
 
-		if !client.Pool.Default {
-			return nil, status.New(codes.FailedPrecondition, "client is not for default project pool, need client secret").Err()
-		}
+			projectID, err := uuid.Parse(client.Pool.ProjectID)
+			if err != nil {
+				return nil, err
+			}
 
-		if !project.Master {
-			return nil, status.New(codes.FailedPrecondition, "project is not a master project, need client secret").Err()
+			pool, err := as.GetMasterPool(ctx, projectID)
+			if err != nil {
+				return nil, err
+			}
+			poolID, err := x.GetAuthbaseProjectID(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			if pool == nil {
+				return nil, errors.New("pool not found")
+			}
+
+			if pool.ID != poolID.String() {
+				return nil, errors.New("pool id mismatch")
+			}
+
+			// check if token claims include client login
+		} else {
+			project, err := as.GetProjectByID(ctx, uuid.MustParse(client.Pool.ProjectID))
+			if err != nil {
+				return nil, err
+			}
+
+			if project == nil {
+				return nil, errors.New("project not found for the client")
+			}
+			if !client.Pool.Default {
+				return nil, status.New(codes.FailedPrecondition, "client is not for default project pool, need client secret").Err()
+			}
+
+			if !project.Master {
+				return nil, status.New(codes.FailedPrecondition, "project is not a master project, need client secret").Err()
+			}
 		}
 	} else {
 		yes := x.CompareHashAndPassword(clientSecret, client.Salt, client.SecretHash)

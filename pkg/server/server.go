@@ -155,12 +155,12 @@ func (s *Server) registerServices() error {
 		}),
 		gatewayfile.WithHTTPBodyMarshaler(),
 		runtime.WithForwardResponseOption(InjectCookie(cookieStore)),
-		runtime.WithMetadata(ExtractCookie(cookieStore)),
+		//runtime.WithMetadata(ExtractCookie(cookieStore)),
 	)
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
+		//grpc.WithUnaryInterceptor(UnaryRequestTimeInterceptor()),
 	}
 	endpoint := "localhost" + s.grpcPort
 
@@ -173,7 +173,7 @@ func (s *Server) registerServices() error {
 	v1.RegisterAdminProjectServiceServer(grpcServer, service.NewAdminProjectService(s.provider, redis))
 	v1.RegisterProjectServiceServer(grpcServer, service.NewProjectService(perm, s.provider, redis))
 	v1.RegisterClientServiceServer(grpcServer, service.NewClientService(perm, s.provider, secrets))
-	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, keyProvider, perm, s.mailer, redis))
+	v1.RegisterAuthServiceServer(grpcServer, service.NewAuthService(s.provider, keyProvider, perm, s.mailer, redis, verifier))
 	v1.RegisterAccountServiceServer(grpcServer, service.NewAccountService(perm, s.provider, redis))
 	v1.RegisterAccessKeyServiceServer(grpcServer, service.NewAccessKeyService(perm, s.provider, redis, keyProvider, verifier))
 	v1.RegisterPoolServiceServer(grpcServer, service.NewPoolService(s.provider, perm))
@@ -244,9 +244,6 @@ func (s *Server) run() error {
 	apiMux.Handle(docsPath, http.StripPrefix(docsPath, http.FileServer(openapiDocs)))
 	apiMux.Handle("/", s.mux)
 
-	logger := logrus.New()
-	logger.SetReportCaller(true)
-
 	grpclog.SetLoggerV2(grpclog.NewLoggerV2(io.Discard, io.Discard, io.Discard))
 
 	// CORS middleware
@@ -255,7 +252,6 @@ func (s *Server) run() error {
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		Logger:           logger,
 	})
 
 	restServer := &http.Server{

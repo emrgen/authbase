@@ -5,6 +5,7 @@ import (
 	"github.com/emrgen/authbase/pkg/tester"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 var (
@@ -119,4 +120,16 @@ func TestProjectService_DeleteProject(t *testing.T) {
 		Id: project.Id,
 	})
 	assert.Error(t, err, "project should not exist")
+}
+
+func Test_InsertProject(t *testing.T) {
+	m := make(map[int]int)
+	now := time.Now()
+	for i := 0; i < 100_000_000; i++ {
+		m[i] = i
+	}
+
+	elapsed := time.Since(now)
+
+	t.Logf("Time taken to insert 10 elements: %s", elapsed)
 }

@@ -15,11 +15,19 @@ type Group struct {
 	Internal bool    `gorm:"not null;default:false"` // Internal groups are not allowed to be deleted
 }
 
-// GroupMember represents a member of a group.
-type GroupMember struct {
+// GroupMemberAccount represents a member of a group.
+type GroupMemberAccount struct {
 	GroupID   string `gorm:"uuid;not null;primaryKey"`
 	AccountID string `gorm:"uuid;not null;primaryKey"`
 
 	Group   *Group   `gorm:"foreignKey:GroupID;OnDelete:CASCADE"`
 	Account *Account `gorm:"foreignKey:AccountID;OnDelete:CASCADE"`
+}
+
+type GroupMemberAccessKey struct {
+	GroupID     string `gorm:"uuid;not null;primaryKey"`
+	AccessKeyID string `gorm:"uuid;not null;primaryKey"`
+
+	Group     *Group     `gorm:"foreignKey:GroupID;OnDelete:CASCADE"`
+	AccessKey *AccessKey `gorm:"foreignKey:AccessKeyID;OnDelete:CASCADE"`
 }

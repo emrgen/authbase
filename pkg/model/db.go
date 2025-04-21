@@ -59,7 +59,11 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	if err := db.AutoMigrate(&GroupMember{}); err != nil {
+	if err := db.AutoMigrate(&GroupMemberAccount{}); err != nil {
+		return err
+	}
+	
+	if err := db.AutoMigrate(&GroupMemberAccessKey{}); err != nil {
 		return err
 	}
 

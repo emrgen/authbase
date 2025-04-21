@@ -8,7 +8,6 @@ import "protoc-gen-openapiv2/options/annotations.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/emrgen/authbase/proto/v1";
-
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   security_definitions: {
     security: {
@@ -189,9 +188,7 @@ service ProjectMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -202,9 +199,7 @@ service ProjectMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -215,9 +210,7 @@ service ProjectMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -231,9 +224,7 @@ service ProjectMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -247,9 +238,7 @@ service ProjectMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -260,9 +249,7 @@ service ProjectMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -341,9 +328,7 @@ service PoolService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -354,9 +339,7 @@ service PoolService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -367,9 +350,7 @@ service PoolService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -383,9 +364,7 @@ service PoolService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -396,9 +375,7 @@ service PoolService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -472,9 +449,7 @@ service PoolMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -485,9 +460,7 @@ service PoolMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -498,9 +471,7 @@ service PoolMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -514,9 +485,7 @@ service PoolMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -527,9 +496,7 @@ service PoolMemberService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -609,9 +576,7 @@ service RoleService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -622,9 +587,7 @@ service RoleService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -635,9 +598,7 @@ service RoleService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -651,9 +612,7 @@ service RoleService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -664,9 +623,7 @@ service RoleService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -800,9 +757,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -813,9 +768,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -826,9 +779,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -842,9 +793,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -855,9 +804,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -871,9 +818,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -884,9 +829,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -900,9 +843,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -913,9 +854,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -926,9 +865,7 @@ service GroupService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1004,9 +941,7 @@ service ClientService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1017,9 +952,7 @@ service ClientService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1030,9 +963,7 @@ service ClientService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1046,9 +977,7 @@ service ClientService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1059,9 +988,7 @@ service ClientService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1087,13 +1014,11 @@ message Account {
   optional google.protobuf.Timestamp verified_at = 14;
 }
 
-message GetCurrentAccountRequest {
-}
+message GetCurrentAccountRequest {}
 
 message GetCurrentAccountResponse {
   Account account = 1;
 }
-
 
 message GetAccountRequest {
   string id = 1 [(validate.rules).string.uuid = true];
@@ -1183,9 +1108,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1196,9 +1119,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1209,9 +1130,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1222,9 +1141,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1238,9 +1155,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1251,9 +1166,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1264,9 +1177,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1277,9 +1188,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1290,9 +1199,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1303,9 +1210,7 @@ service AccountService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1371,9 +1276,7 @@ service SessionService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1384,9 +1287,7 @@ service SessionService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1397,9 +1298,7 @@ service SessionService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1466,8 +1365,7 @@ message GetIdpTokenResponse {
   google.protobuf.Timestamp refresh_expires_at = 5;
 }
 
-message LogoutRequest {
-}
+message LogoutRequest {}
 
 message LogoutResponse {
   string message = 1;
@@ -1554,9 +1452,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1570,9 +1466,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1583,9 +1477,7 @@ service AuthService {
       post: "/v1/auth/signin/password"
       body: "*"
     };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      operation_id: "LoginUsingPassword"
-    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {operation_id: "LoginUsingPassword"};
   }
 
   // LoginUsingIdp
@@ -1610,9 +1502,7 @@ service AuthService {
       operation_id: "GetIdpToken"
       description: "Get idp token from code"
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1626,9 +1516,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1642,9 +1530,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1658,9 +1544,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1674,9 +1558,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1690,9 +1572,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1706,9 +1586,7 @@ service AuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1731,8 +1609,12 @@ message AccessKey {
   google.protobuf.Timestamp expires_at = 11;
 }
 
+message GroupID {
+  string id = 1 [(validate.rules).string.uuid = true];
+}
+
 message CreateAccessKeyRequest {
-  string client_id = 1;
+  string client_id = 1 [(validate.rules).string.uuid = true];
   string client_secret = 2;
   string email = 3 [
     (validate.rules).string.min_len = 6,
@@ -1744,8 +1626,8 @@ message CreateAccessKeyRequest {
   ];
   optional int64 expires_in = 5; // in seconds
   optional string name = 6;
-  repeated string scopes = 7;
-  repeated string roles = 8;
+  repeated GroupID groups = 7;
+  repeated string scopes = 8;
 }
 
 message CreateAccessKeyResponse {
@@ -1817,9 +1699,7 @@ service AccessKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1830,9 +1710,7 @@ service AccessKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1843,9 +1721,7 @@ service AccessKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1856,9 +1732,7 @@ service AccessKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1868,9 +1742,7 @@ service AccessKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -1884,9 +1756,7 @@ service AccessKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2018,9 +1888,7 @@ service OAuth2Service {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2034,9 +1902,7 @@ service OAuth2Service {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2070,9 +1936,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2083,9 +1947,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2096,9 +1958,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2112,9 +1972,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2125,9 +1983,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2141,9 +1997,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2154,9 +2008,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2167,9 +2019,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2183,9 +2033,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2196,9 +2044,7 @@ service ProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2266,9 +2112,7 @@ service ApplicationService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2279,9 +2123,7 @@ service ApplicationService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2292,9 +2134,7 @@ service ApplicationService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2308,9 +2148,7 @@ service ApplicationService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2321,9 +2159,7 @@ service ApplicationService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2368,9 +2204,7 @@ service AdminProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2384,9 +2218,7 @@ service AdminProjectService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2414,9 +2246,7 @@ service TokenService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2446,9 +2276,7 @@ service AdminAuthService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }
@@ -2495,9 +2323,7 @@ service PublicKeyService {
 
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
-        security_requirement: {
-          key: "OAuth2PasswordBearer",
-        }
+        security_requirement: {key: "OAuth2PasswordBearer"}
       }
     };
   }

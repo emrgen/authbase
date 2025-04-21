@@ -77,19 +77,15 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		expireAfter = time.Second * time.Duration(request.GetExpiresIn())
 	}
 
-	//perm, err := as.GetProjectMemberByID(ctx, clientIDpoolID, accountID)
+	//perm, err := as.GetProjectMemberByID(ctx, clientID, accountID)
 	//if err != nil {
 	//	return nil, err
 	//}
 
-	// TODO: check if the user has the permission to include the scopes
-	scopes := make([]string, 0)
-	if request.Scopes != nil {
-		scopes = request.GetScopes()
-	}
+	// TODO: check if the user has the permission to create the access key for the pool
 
 	// custom permissions from the downstream service
-	roles := request.GetRoles()
+	scopes := request.GetScopes()
 
 	expireAt := time.Now().Add(expireAfter)
 	token := x.NewAccessKey()
@@ -108,8 +104,20 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		Name:      request.GetName(),
 		Token:     token.Value,
 		Scopes:    strings.Join(scopes, ","),
-		Roles:     strings.Join(roles, ","),
 		ExpireAt:  expireAt,
+	}
+
+	groupIDs := make([]string, 0)
+	for _, group := range request.GetGroups() {
+		groupIDs = append(groupIDs, group.GetId())
+	}
+	groupMembers := make([]*model.GroupMemberAccessKey, 0)
+	for _, groupID := range groupIDs {
+		groupMember := &model.GroupMemberAccessKey{
+			GroupID:     groupID,
+			AccessKeyID: accessKey.ID,
+		}
+		groupMembers = append(groupMembers, groupMember)
 	}
 
 	// save the token into the database
@@ -122,6 +130,14 @@ func (t *AccessKeyService) CreateAccessKey(ctx context.Context, request *v1.Crea
 		err = tx.CreateAccessKey(ctx, accessKey)
 		if err != nil {
 			return err
+		}
+
+		if len(groupMembers) == 0 {
+			// create group membership
+			err := tx.CreateGroupMemberAccessKey(ctx, groupMembers)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

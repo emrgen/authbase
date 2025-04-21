@@ -65,7 +65,6 @@ export function NavMain() {
 
   useEffect(() => {
     const path = location.pathname;
-    console.log(path)
     const activeNavItem = navMain.find((item) => item.url.indexOf(path) !== -1);
     if (activeNavItem) {
       setActiveSidebarItem({

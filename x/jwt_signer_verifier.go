@@ -1,8 +1,11 @@
 package x
 
 import (
+	"context"
 	"errors"
+	"github.com/emrgen/authbase/pkg/model"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type staticVerifier struct {
@@ -83,13 +86,28 @@ func (r *UnverifiedKeyProvider) GetVerifier(id string) (JWTVerifier, error) {
 	return nil, nil
 }
 
-type unverifiedVerifier struct{}
+type UnverifiedVerifier struct{}
 
-func newUnverifiedVerifier() *unverifiedVerifier {
-	return &unverifiedVerifier{}
+func (v *UnverifiedVerifier) VerifyEmailPassword(ctx context.Context, poolID uuid.UUID, email, password string) (*model.Account, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (v *unverifiedVerifier) Verify(tokenString string) (jwt.MapClaims, error) {
+func (v *UnverifiedVerifier) VerifyToken(ctx context.Context, token string, poolID string) (*Claims, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (v *UnverifiedVerifier) VerifyAccessKey(ctx context.Context, id uuid.UUID, accessKey string) (*Claims, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func NewUnverifiedVerifier() *UnverifiedVerifier {
+	return &UnverifiedVerifier{}
+}
+
+func (v *UnverifiedVerifier) Verify(tokenString string) (jwt.MapClaims, error) {
 	// FIXME: ParseUnverified is not safe, it should be used only for testing
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 	if err != nil {
