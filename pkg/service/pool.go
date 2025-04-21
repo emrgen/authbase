@@ -82,10 +82,6 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 		// first the owner needs to create a client for the pool
 		// if the request is to create a default client for the newly created pool
 		if request.GetClient() {
-			secret := x.GenerateClientSecret()
-			salt := x.GenerateSalt()
-			hash := x.HashPassword(secret, salt)
-
 			// we are saving the secret in the database,
 			// so that the user can check it later as client config
 			// TODO: move the secret to a secure vault, to avoid storing it in the database
@@ -93,9 +89,6 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 				ID:          uuid.New().String(),
 				PoolID:      pool.ID,
 				Name:        "default",
-				SecretHash:  string(hash),
-				Secret:      secret,
-				Salt:        salt,
 				CreatedByID: accountID.String(),
 			}
 			err = tx.CreateClient(ctx, &client)

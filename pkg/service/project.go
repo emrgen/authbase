@@ -88,17 +88,10 @@ func (o *ProjectService) CreateProject(ctx context.Context, request *v1.CreatePr
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
-	clientSecret := x.GenerateClientSecret()
-	clientSalt := x.GenerateSalt()
-	hash := x.HashPassword(clientSecret, clientSalt)
-
 	client := model.Client{
 		ID:          uuid.New().String(),
 		PoolID:      pool.ID,
 		Name:        "default",
-		SecretHash:  string(hash),
-		Salt:        clientSalt,
-		Secret:      clientSecret,
 		CreatedByID: user.ID,
 	}
 

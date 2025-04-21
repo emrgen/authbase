@@ -87,25 +87,10 @@ func (a *AdminProjectService) CreateAdminProject(ctx context.Context, request *v
 		Permission: uint32(v1.Permission_OWNER),
 	}
 
-	// TODO: if clientSecret is not provided, generate a random one
-	clientSecret := request.GetClientSecret()
-	clientSalt := x.GenerateSalt()
-	clientSecretHash := x.HashPassword(clientSecret, clientSalt)
-	if err != nil {
-		logrus.Infof("account: %v", err)
-		return nil, err
-	}
-
-	logrus.Infof("clientSecretHash: %v", string(clientSecretHash))
-	logrus.Infof("clientSecretHash: %v", clientSecretHash)
-
 	client := model.Client{
 		ID:          request.GetClientId(),
 		PoolID:      pool.ID,
 		Name:        "default",
-		SecretHash:  string(clientSecretHash),
-		Secret:      clientSecret,
-		Salt:        clientSalt,
 		CreatedByID: account.ID,
 		Default:     true,
 	}

@@ -3,6 +3,7 @@ package x
 import (
 	"context"
 	"errors"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/emrgen/authbase/pkg/cache"
 	"github.com/emrgen/authbase/pkg/model"
 	"github.com/emrgen/authbase/pkg/store"
@@ -77,13 +78,13 @@ func (v *StoreBasedUserVerifier) VerifyToken(ctx context.Context, token string, 
 }
 
 // VerifyAccessKey verifies the access key.
-func (v *StoreBasedUserVerifier) VerifyAccessKey(ctx context.Context, id uuid.UUID, key string) (*Claims, error) {
+func (v *StoreBasedUserVerifier) VerifyAccessKey(ctx context.Context, accessKeyID uuid.UUID, key string) (*Claims, error) {
 	as, err := store.GetProjectStore(ctx, v.store)
 	if err != nil {
 		return nil, err
 	}
 
-	accessKey, err := as.GetAccessKeyByID(ctx, id)
+	accessKey, err := as.GetAccessKeyByID(ctx, accessKeyID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +98,24 @@ func (v *StoreBasedUserVerifier) VerifyAccessKey(ctx context.Context, id uuid.UU
 		return nil, errors.New("invalid access key")
 	}
 
+	memberships, err := as.ListGroupMemberByAccessKey(ctx, accessKeyID)
+	if err != nil {
+		return nil, err
+	}
+
+	roles := mapset.NewSet[string]()
+	for _, group := range memberships {
+		for _, role := range group.Group.Roles {
+			roles.Add(role.Name)
+		}
+	}
+
 	claims := &Claims{
 		ProjectID: accessKey.ProjectID,
 		AccountID: accessKey.AccountID,
 		PoolID:    accessKey.PoolID,
+		Scopes:    []string{},
+		Roles:     roles.ToSlice(),
 	}
 
 	if accessKey.Scopes != "" {

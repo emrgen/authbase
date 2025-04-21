@@ -72,11 +72,6 @@ func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvid
 			}
 
 			// verify the client secret
-			clientSecret := request.GetClientSecret()
-			ok := CompareHashAndPassword(clientSecret, client.Salt, client.SecretHash)
-			if !ok {
-				return nil, errors.New("invalid client secret")
-			}
 
 			poolID, err := uuid.Parse(client.PoolID)
 			if err != nil {

@@ -54,17 +54,10 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 		return nil, err
 	}
 
-	clientSecret := x.GenerateClientSecret()
-	salt := x.GenerateSalt()
-	hash := x.HashPassword(clientSecret, salt)
-
 	client := model.Client{
 		ID:          uuid.New().String(),
 		PoolID:      pool.ID,
 		Name:        request.GetName(),
-		SecretHash:  string(hash),
-		Secret:      clientSecret,
-		Salt:        salt,
 		CreatedByID: accountID.String(),
 	}
 	err = as.CreateClient(ctx, &client)
@@ -80,10 +73,9 @@ func (c *ClientService) CreateClient(ctx context.Context, request *v1.CreateClie
 	// TODO: should we return the client secret to the user?
 	return &v1.CreateClientResponse{
 		Client: &v1.Client{
-			Id:           client.ID,
-			PoolId:       request.GetPoolId(),
-			ClientSecret: clientSecret,
-			Name:         client.Name,
+			Id:     client.ID,
+			PoolId: request.GetPoolId(),
+			Name:   client.Name,
 			CreatedByUser: &v1.Account{
 				Id:          accountID.String(),
 				VisibleName: account.VisibleName,
@@ -142,11 +134,10 @@ func (c *ClientService) ListClients(ctx context.Context, request *v1.ListClients
 	var clientProtos []*v1.Client
 	for _, client := range clients {
 		clientProtos = append(clientProtos, &v1.Client{
-			Id:           client.ID,
-			PoolId:       client.PoolID,
-			Name:         client.Name,
-			ClientSecret: client.Secret,
-			CreatedAt:    timestamppb.New(client.CreatedAt),
+			Id:        client.ID,
+			PoolId:    client.PoolID,
+			Name:      client.Name,
+			CreatedAt: timestamppb.New(client.CreatedAt),
 		})
 	}
 

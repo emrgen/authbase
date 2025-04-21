@@ -54,8 +54,8 @@ func clientCreateCmd() *cobra.Command {
 			}
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
-			table.SetHeader([]string{"Pool ID", "Client ID", "Client Secret", "Name", "Created By"})
-			table.Append([]string{res.Client.PoolId, res.Client.Id, res.Client.ClientSecret, res.Client.Name, res.Client.CreatedByUser.VisibleName})
+			table.SetHeader([]string{"Pool ID", "Client ID", "Name", "Created By"})
+			table.Append([]string{res.Client.PoolId, res.Client.Id, res.Client.Name, res.Client.CreatedByUser.VisibleName})
 			table.Render()
 
 		},
@@ -133,9 +133,9 @@ func clientListCmd() *cobra.Command {
 			}
 
 			table := tablewriter.NewWriter(cmd.OutOrStdout())
-			table.SetHeader([]string{"ID", "Name", "Secret"})
+			table.SetHeader([]string{"ID", "Name"})
 			for _, client := range res.Clients {
-				table.Append([]string{client.Id, client.Name, client.ClientSecret})
+				table.Append([]string{client.Id, client.Name})
 			}
 			table.Render()
 		},
