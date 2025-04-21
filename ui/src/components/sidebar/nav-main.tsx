@@ -12,12 +12,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import {useAppStore} from "@/store/app.ts";
 import {BookOpen, Bot, ChevronRight, LayoutDashboardIcon, Users} from "lucide-react"
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import {TbBrandOauth} from "react-icons/tb";
 import {useLocation, useNavigate} from "react-router";
 
-const navMain: any[] = [
+export const navMain: any[] = [
   {
     title: "Dashboard",
     url: "/",
@@ -49,19 +50,24 @@ const navMain: any[] = [
 
 export function NavMain() {
   const navigate = useNavigate();
+  const setActiveSidebarItem = useAppStore((state) => state.setActiveSidebarItem);
+  const activeSidebarItem = useAppStore((state) => state.activeSidebarItem);
+
   const path = useLocation().pathname;
-  const [activeItem, setActiveItem] = useState<string | null>(null);
 
   useEffect(() => {
     const activeNavItem = navMain.find((item) => item.url.indexOf(path) !== -1);
     if (activeNavItem) {
-      setActiveItem(activeNavItem.url);
+      setActiveSidebarItem({
+        title: activeNavItem.title,
+        url: activeNavItem.url,
+        icon: activeNavItem.icon,
+      });
     } else {
-      setActiveItem(null);
+      setActiveSidebarItem(null);
     }
-  }, [path]);
+  }, [path, setActiveSidebarItem]);
 
-  console.log("activeItem", activeItem);
 
   return (
     <SidebarGroup>
@@ -78,7 +84,7 @@ export function NavMain() {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   className={'cursor-pointer'}
-                  isActive={item.url === activeItem}
+                  isActive={item.url === activeSidebarItem?.url}
                   tooltip={item.title}
                   onClick={() => {
                     if (item.url) {

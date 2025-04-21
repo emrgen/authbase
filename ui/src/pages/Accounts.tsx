@@ -26,8 +26,8 @@ const AccountsTable = () => {
 
   return (
     <Table>
-      <TableCaption>A list of your accounts in pool: {activePool?.name ?? '-'}</TableCaption>
-      <TableHeader>
+      {/*<TableCaption>List of your accounts in the <b>{activePool?.name ?? '-'}</b> pool</TableCaption>*/}
+      <TableHeader className={'bg-gray-50'}>
         <TableRow>
           <TableHead className="w-[200px]">Username</TableHead>
           <TableHead>Email</TableHead>

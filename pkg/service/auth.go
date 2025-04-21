@@ -647,6 +647,7 @@ func (a *AuthService) Refresh(ctx context.Context, request *v1.RefreshRequest) (
 	jti := uuid.New().String()
 	claims = &x.Claims{
 		ProjectID: projectID,
+		PoolID:    claims.PoolID,
 		AccountID: user.ID,
 		Username:  claims.Username,
 		Email:     claims.Email,

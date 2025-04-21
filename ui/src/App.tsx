@@ -1,5 +1,6 @@
 import "./App.css";
 import {AppSidebar} from "@/components/sidebar/app-sidebar.tsx";
+import {SiteHeader} from "@/components/sidebar/siteheader.tsx";
 import {SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {useUserStore} from "@/store/user.ts";
 import {useEffect} from "react";
@@ -48,15 +49,9 @@ function App() {
     <SidebarProvider>
       <AppSidebar/>
       <SidebarInset>
-        <header
-          className="fixed flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-white z-10 w-full
-             shadow-sm">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1"/>
-          </div>
-        </header>
-        <main className="flex-1 px-4 mt-20">
-         <Outlet/>
+        <SiteHeader/>
+        <main className="flex-1 px-4 pt-4">
+          <Outlet/>
         </main>
       </SidebarInset>
     </SidebarProvider>

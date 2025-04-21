@@ -26,12 +26,11 @@ export const Clients = () => {
 
 const ClientsTable = () => {
   const clients = useClientStore(state => state.clients);
-  const activePool = usePoolStore(state => state.activePool);
 
   return (
     <Table>
-      <TableCaption>A list of your accounts in pool: {activePool?.name ?? '-'}</TableCaption>
-      <TableHeader>
+      {/*<TableCaption>List of your accounts</TableCaption>*/}
+      <TableHeader className={'bg-gray-50'}>
         <TableRow>
           <TableHead className="w-[200px]">Name</TableHead>
           <TableHead>Client ID</TableHead>
