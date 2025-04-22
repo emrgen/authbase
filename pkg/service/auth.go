@@ -290,6 +290,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 	token, err := x.GenerateJWTToken(&x.Claims{
 		Username:  account.Username,
 		Email:     account.Email,
+		ClientID:  clientID.String(),
 		ProjectID: account.ProjectID,
 		PoolID:    account.PoolID,
 		AccountID: account.ID,
