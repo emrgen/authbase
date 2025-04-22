@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+var (
+	NoAuthHeaderError = errors.New("no auth header found")
+)
+
 // AuthInterceptor authenticates the request using the provided verifier.
 // on success, it sets the accountID and projectID and account permission in the context.
 func AuthInterceptor(verifier TokenVerifier, keyProvider JWTSignerVerifierProvider, provider store.Provider) grpc.UnaryServerInterceptor {
@@ -194,7 +198,7 @@ func TokenFromHeader(ctx context.Context, expectedScheme string) (string, error)
 
 	val, ok := md["authorization"]
 	if !ok {
-		return "", errors.New("no authorization header found")
+		return "", NoAuthHeaderError
 	}
 
 	if len(val) == 0 {

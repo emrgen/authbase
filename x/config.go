@@ -8,14 +8,17 @@ import (
 
 type AuthbaseConfig struct {
 	AccessKey string
+	ClientID  string
 }
 
 func ConfigFromEnv() (*AuthbaseConfig, error) {
 	// load tiny config
 	authbaseKey := os.Getenv("AUTHBASE_KEY")
+	clientID := os.Getenv("AUTHBASE_CLIENT_ID")
 
 	return &AuthbaseConfig{
 		AccessKey: authbaseKey,
+		ClientID:  clientID,
 	}, nil
 }
 

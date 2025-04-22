@@ -1333,7 +1333,7 @@ message LoginUsingPasswordRequest {
 }
 
 message LoginUsingPasswordResponse {
-  Account user = 1;
+  Account account = 1;
   AuthToken token = 2;
 }
 

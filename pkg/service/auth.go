@@ -228,7 +228,7 @@ func (a *AuthService) RegisterUsingPassword(ctx context.Context, request *v1.Reg
 func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginUsingPasswordRequest) (*v1.LoginUsingPasswordResponse, error) {
 	email := request.GetEmail()
 	password := request.GetPassword()
-	
+
 	clientID := uuid.MustParse(request.GetClientId())
 	as, err := store.GetProjectStore(ctx, a.store)
 	if err != nil {
@@ -349,7 +349,7 @@ func (a *AuthService) LoginUsingPassword(ctx context.Context, request *v1.LoginU
 
 	// return tokens
 	return &v1.LoginUsingPasswordResponse{
-		User: &v1.Account{
+		Account: &v1.Account{
 			Id:        account.ID,
 			Username:  account.Username,
 			Email:     account.Email,

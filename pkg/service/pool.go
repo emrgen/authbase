@@ -59,6 +59,7 @@ func (p *PoolService) CreatePool(ctx context.Context, request *v1.CreatePoolRequ
 		ProjectID: projectID.String(),
 	}
 
+	// notice that the account is not part of the pool
 	member := &model.PoolMember{
 		PoolID:     pool.ID,
 		AccountID:  accountID.String(),

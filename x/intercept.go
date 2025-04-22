@@ -23,7 +23,9 @@ const (
 	AccountIDKey = "authbase_account_id"
 	// ScopesKey is the key to store the scopes in the context
 	ScopesKey = "authbase_scopes"
-	RolesKey  = "authbase_roles"
+	// TokenMissingKey is the key to store the token in the context
+	TokenMissingKey = "authbase_token_missing"
+	RolesKey        = "authbase_roles"
 )
 
 type ProjectID interface {
@@ -83,6 +85,11 @@ func InjectPermissionInterceptor(member v1.ProjectMemberServiceClient) grpc.Unar
 func VerifyTokenInterceptor(keyProvider VerifierProvider, accessKeyService v1.AccessKeyServiceClient) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		token, err := TokenFromHeader(ctx, "Bearer")
+		if errors.Is(err, NoAuthHeaderError) {
+			// No auth header, skip the interceptor
+			ctx = context.WithValue(ctx, TokenMissingKey, true)
+			return handler(ctx, req)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -164,6 +171,15 @@ func GetAuthbaseAccountID(ctx context.Context) (uuid.UUID, error) {
 	}
 
 	return accountID, nil
+}
+
+func IsAuthbaseTokenMissing(ctx context.Context) bool {
+	missing, ok := ctx.Value(TokenMissingKey).(bool)
+	if !ok {
+		return false
+	}
+
+	return missing
 }
 
 func GetAuthbaseProjectPermission(ctx context.Context) (v1.Permission, error) {

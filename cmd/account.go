@@ -480,8 +480,8 @@ func loginUserCommand() *cobra.Command {
 				return
 			}
 
-			cmd.Printf("Name: %v\n", res.User.VisibleName)
-			cmd.Printf("Email: %v\n", res.User.Email)
+			cmd.Printf("Name: %v\n", res.Account.VisibleName)
+			cmd.Printf("Email: %v\n", res.Account.Email)
 			cmd.Printf("AccessToken: %v\n", res.Token.AccessToken)
 			cmd.Printf("RefreshToken: %v\n", res.Token.RefreshToken)
 		},
