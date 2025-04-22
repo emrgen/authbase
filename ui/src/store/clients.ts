@@ -1,10 +1,12 @@
 import {create} from 'zustand';
+import { Account } from './account';
 
 interface Client {
   id: string;
   name?: string;
   clientSecret?: string;
   createdAt?: Date;
+  account?: Account;
 }
 
 interface AccountState {

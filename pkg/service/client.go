@@ -138,6 +138,11 @@ func (c *ClientService) ListClients(ctx context.Context, request *v1.ListClients
 			PoolId:    client.PoolID,
 			Name:      client.Name,
 			CreatedAt: timestamppb.New(client.CreatedAt),
+			CreatedByUser: &v1.Account{
+				Id:          client.CreatedByID,
+				VisibleName: client.CreatedByAccount.VisibleName,
+				Email:       client.CreatedByAccount.Email,
+			},
 		})
 	}
 

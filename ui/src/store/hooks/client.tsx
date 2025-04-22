@@ -19,8 +19,12 @@ export const useListClients = () => {
       const clients = data.clients?.map((client) => ({
         id: client.id!,
         name: client.name!,
-        clientSecret: client.clientSecret!,
         createdAt: dayjs(client.createdAt).toDate() ?? undefined,
+        account: {
+          id: client.CreatedByUser?.id ?? '',
+          name: client.CreatedByUser?.name,
+          email: client.CreatedByUser?.email ?? '',
+        }
       })) || [];
       useClientStore.getState().setClients(clients);
     })

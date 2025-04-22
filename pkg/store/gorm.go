@@ -301,7 +301,7 @@ func (g *GormStore) ListClients(ctx context.Context, projectID uuid.UUID, page, 
 		if err := tx.Model(&model.Client{}).Where("pool_id = ?", projectID).Count(&total).Error; err != nil {
 			return err
 		}
-		return tx.Order("created_at DESC").Limit(perPage).Offset(page*perPage).Find(&clients, "pool_id = ?", projectID).Error
+		return tx.Order("created_at DESC").Limit(perPage).Offset(page*perPage).Preload("CreatedByAccount").Find(&clients, "pool_id = ?", projectID).Error
 	})
 
 	return clients, int(total), err

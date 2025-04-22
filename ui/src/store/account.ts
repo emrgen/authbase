@@ -1,6 +1,6 @@
 import {create} from 'zustand';
 
-interface Account {
+export interface Account {
   id: string;
   name?: string;
   email: string;
