@@ -33,8 +33,8 @@ func NewAccountService(perm permission.AuthBasePermission, store store.Provider,
 // CreateAccount creates a new user.
 func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAccountRequest) (*v1.CreateAccountResponse, error) {
 	var err error
-	if request.GetClientId() == "" || request.GetClientSecret() == "" {
-		return nil, status.Error(codes.InvalidArgument, "client_id and client_secret is required")
+	if request.GetPoolId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "client_id is required")
 	}
 
 	// create a new user
@@ -43,21 +43,20 @@ func (u *AccountService) CreateAccount(ctx context.Context, request *v1.CreateAc
 		return nil, err
 	}
 
-	clientID, err := uuid.Parse(request.GetClientId())
+	poolID, err := uuid.Parse(request.GetPoolId())
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := as.GetClientByID(ctx, clientID)
+	pool, err := as.GetPoolByID(ctx, poolID)
 	if err != nil {
 		return nil, err
 	}
 
-	projectID, err := uuid.Parse(client.Pool.ProjectID)
+	projectID, err := uuid.Parse(pool.ProjectID)
 	if err != nil {
 		return nil, err
 	}
-	poolID := uuid.MustParse(client.PoolID)
 
 	visibleName := request.GetVisibleName()
 	userName := request.GetUsername()

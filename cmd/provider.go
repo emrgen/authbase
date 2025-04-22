@@ -41,11 +41,6 @@ func idpCreateCommand() *cobra.Command {
 				return
 			}
 
-			if clientSecret == "" {
-				logrus.Infof("missing required flag: --client-secret")
-				return
-			}
-
 			client, err := authbase.NewClient(":4000")
 			if err != nil {
 				logrus.Errorf("failed to create client: %v", err)

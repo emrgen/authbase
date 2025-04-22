@@ -1,4 +1,4 @@
-import {LoginForm} from "@/old-pages/Login.tsx";
+import {LoginForm} from "@/pages/Login.tsx";
 import {Accounts} from "@/pages/Accounts.tsx";
 import {Clients} from "@/pages/Clients.tsx";
 import {Dashboard} from "@/pages/Dashboard.tsx";

@@ -33,10 +33,10 @@ func main() {
     }
 
     // Create a new user. (the user is crated within the organization)
-    user, err := client.CreateAccount(context.Background(), &v1.CreateAccessKeyRequest{
+    account, err := client.CreateAccount(context.Background(), &v1.CreateAccountRequest{
+		PoolID: "pool-id",
         Email:    "user@mail.com",
         Passowrd: "password",
-		PoolID: "pool-id",
     })
     if err != nil {
         log.Fatal(err)
@@ -116,7 +116,7 @@ authbase org migrate ---p=project-id
 
 # Add a oauth provider
 # adding a prover automatically enables the strategy=oauth2
-authbase provider add --name=org --provider=google --client-id=client-id --client-secret=client-secret
+authbase provider add --name=org --provider=google --client-id=client-id
 
 # Enable login strategy
 authbase strategy enable ---p=project-id --strategy=password

@@ -42,8 +42,7 @@ func init() {
 }
 
 func createUserCommand() *cobra.Command {
-	var clientID string
-	var clientSecret string
+	var poolID string
 	var username string
 	var password string
 	var email string
@@ -52,13 +51,8 @@ func createUserCommand() *cobra.Command {
 		Use:   "create",
 		Short: "create account",
 		Run: func(cmd *cobra.Command, args []string) {
-			if clientID == "" {
+			if poolID == "" {
 				logrus.Errorf("missing required flag: --client-id")
-				return
-			}
-
-			if clientSecret == "" {
-				logrus.Errorf("missing required flag: --client-secret")
 				return
 			}
 
@@ -85,11 +79,10 @@ func createUserCommand() *cobra.Command {
 
 			ctx := tokenContext()
 			user, err := client.CreateAccount(ctx, &v1.CreateAccountRequest{
-				ClientId:     clientID,
-				ClientSecret: clientSecret,
-				Email:        email,
-				Username:     username,
-				Password:     password,
+				PoolId:   poolID,
+				Email:    email,
+				Username: username,
+				Password: password,
 			})
 			if err != nil {
 				logrus.Errorf("failed to create user: %v", err)
@@ -109,8 +102,7 @@ func createUserCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&clientID, "client-id", "c", "", "client id")
-	command.Flags().StringVarP(&clientSecret, "client-secret", "s", "", "client secret")
+	command.Flags().StringVarP(&poolID, "pool-id", "c", "", "pool id")
 	command.Flags().StringVarP(&username, "username", "u", "", "username")
 	command.Flags().StringVarP(&email, "email", "e", "", "email")
 	command.Flags().StringVarP(&password, "password", "p", "", "password")

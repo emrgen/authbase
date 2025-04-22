@@ -1101,7 +1101,7 @@ service AccountService {
   // CreateAccount
   rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse) {
     option (google.api.http) = {
-      post: "/v1/clients/{client_id}/accounts"
+      post: "/v1/clients/{pool_id}/accounts"
       body: "*"
     };
 
@@ -1906,8 +1906,7 @@ service OAuth2Service {
 }
 
 message CreateAccountRequest {
-  string client_id = 1 [(validate.rules).string.uuid = true];
-  string client_secret = 2;
+  string pool_id = 1 [(validate.rules).string.uuid = true];
   string email = 3 [(validate.rules).string.email = true];
   string username = 4;
   string visible_name = 5;
